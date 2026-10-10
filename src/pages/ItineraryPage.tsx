@@ -15,7 +15,7 @@ import { ItinerarySummary } from '../components/ItinerarySummary'
 import { destinations } from '../data/destinations'
 import { downloadItineraryJson } from '../services/itineraryExport'
 import {
-  buildItineraryId,
+  buildPlanningFingerprint,
   saveItinerary,
 } from '../services/itineraryStorage'
 import type { Itinerary, SavedItinerary } from '../types'
@@ -39,6 +39,7 @@ export function ItineraryPage({
   onNewPlanning,
 }: ItineraryPageProps) {
   const [savedRecord, setSavedRecord] = useState<SavedItinerary | null>(saved)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -49,14 +50,21 @@ export function ItineraryPage({
   )
 
   function handleSave() {
-    setSavedRecord(saveItinerary(itinerary))
+    const result = saveItinerary(itinerary)
+    if (!result.ok) {
+      // TP-04: nunca informar sucesso quando a operação falhou.
+      setSaveError(result.message)
+      return
+    }
+    setSaveError(null)
+    setSavedRecord(result.record)
   }
 
   function handleExport() {
     if (!destination) return
     const record =
       savedRecord ?? {
-        id: buildItineraryId(itinerary.input),
+        id: buildPlanningFingerprint(itinerary.input),
         savedAt: new Date().toISOString(),
         itinerary,
       }
@@ -142,6 +150,16 @@ export function ItineraryPage({
             </button>
           </div>
         </div>
+
+        {/* Falha ao salvar (TP-04: erro recuperável, sem falso sucesso) */}
+        {saveError && (
+          <p
+            role="alert"
+            className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+          >
+            {saveError}
+          </p>
+        )}
 
         {/* Avisos */}
         {itinerary.warnings.length > 0 && (

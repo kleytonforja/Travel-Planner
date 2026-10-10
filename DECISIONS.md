@@ -147,6 +147,57 @@ inválidos/corrompidos sem quebrar a aplicação.
 valores aleatórios; a validação estrutural na leitura protege contra
 edições manuais, versões antigas e corrupção do LocalStorage.
 
+**Revisão (correções TP-02 a TP-05)**: substituída parcialmente pela D21.
+O hash do planejamento deixou de ser a identidade do registro (colisões
+substituíam roteiros diferentes silenciosamente) e a leitura passou a
+distinguir vazio/válido/corrompido/indisponível, com validação semântica
+profunda e quarentena de dados ilegíveis.
+
+## D21 — Endurecimento da persistência (TP-02 a TP-05)
+
+**Decisão**: `src/services/itineraryStorage.ts` foi reestruturado em
+quatro frentes:
+
+1. **Validação estrutural e semântica (TP-02)**: `isSavedItinerary`
+   valida data ISO real, identificador não vazio, destino existente na
+   base local, quantidade e numeração dos dias, atividades completas
+   (categorias, estilos e períodos conhecidos; duração e custo finitos e
+   coerentes), horários dentro do dia e coerentes com a duração, sem
+   sobreposição dentro do dia (invariante TP-01) e consistência
+   financeira (totais fecham com as atividades agendadas e com o
+   orçamento). Registros inválidos não são renderizados; a interface
+   informa quantos foram ignorados.
+2. **Identidade separada de comparação (TP-03)**: o registro recebe id
+   único (`crypto.randomUUID()`, com fallback). A antiga função de hash
+   virou `buildPlanningFingerprint`, usada apenas para detectar
+   planejamentos equivalentes — que substituem o registro anterior
+   **preservando o id original**, inclusive de registros legados cujo id
+   é o hash (compatibilidade com o formato v1).
+3. **Erros de armazenamento como resultado (TP-04)**: salvar, excluir e
+   descartar retornam `{ ok: true, ... } | { ok: false, message }` e
+   nunca lançam exceções para a interface. `QuotaExceededError` tem
+   mensagem própria; falhas preservam o estado anterior (a escrita é
+   atômica: ou substitui a chave inteira ou não altera nada).
+4. **Dados corrompidos nunca sobrescritos (TP-05)**: a leitura distingue
+   `empty`/`ok`/`corrupted`/`unavailable`. Escritas movem payload ilegível
+   (ou com registros descartados) para a chave de quarentena
+   `travel-planner:saved-itineraries:v1:quarentena` antes de gravar. O
+   descarte definitivo só ocorre por ação explícita do usuário
+   (`discardCorruptedData`), sem migração destrutiva automática.
+
+**Justificativa**: a auditoria comprovou registros inválidos quebrando a
+renderização, colisão de ids, exceções não tratadas e sobrescrita
+silenciosa de JSON corrompido. A estratégia mantém a arquitetura
+(LocalStorage, sem dependências novas) e preserva os registros válidos
+já existentes — eles satisfazem todas as invariantes validadas.
+
+**Limitações restantes**: a quarentena guarda apenas o último payload
+ilegível; se ela própria falhar (ex.: quota esgotada), o salvamento
+seguinte pode sobrescrever o conteúdo corrompido original. Registros
+salvos antes da correção TP-01 que contenham sobreposição de horários
+são rejeitados pela validação (ficam invisíveis na lista, mas o payload
+permanece no armazenamento até escrita ou descarte).
+
 ## D15 — Formulário conectado ao gerador (substitui D11)
 
 **Decisão**: o botão do formulário passou a se chamar "Gerar roteiro" e,

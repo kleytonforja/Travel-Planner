@@ -138,6 +138,10 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
 | #     | Problema                                                        | Status | Critério de aceite                              |
 | ----- | --------------------------------------------------------------- | ------ | ----------------------------------------------- |
 | TP-01 | Sobreposição entre passeio de dia inteiro e atividade da tarde  | ✅     | Sem sobreposição em nenhum dia; teste de regressão do cenário auditado |
+| TP-02 | Persistência aceitava registros inválidos (data, dias, totais)  | ✅     | Validação estrutural e semântica; inválidos nunca renderizados |
+| TP-03 | Colisão de hash substituía roteiros diferentes silenciosamente  | ✅     | Id único por registro; equivalência por fingerprint; teste de regressão de colisão |
+| TP-04 | Falhas de escrita lançavam exceções não tratadas na interface   | ✅     | Operações retornam resultado; mensagens acessíveis; estado anterior preservado |
+| TP-05 | JSON corrompido era tratado como vazio e podia ser sobrescrito  | ✅     | Leitura distingue vazio/válido/corrompido/indisponível; quarentena; descarte só com autorização |
 
 ## Relatório da correção TP-01 (2026-10-10)
 
@@ -177,3 +181,59 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
   pausa de 30 minutos é garantida entre atividades consecutivas no mesmo
   período e após passeios de dia inteiro, mas não entre períodos distintos
   (as janelas fixas já embatem os intervalos de almoço e descanso).
+
+## Relatório das correções TP-02 a TP-05 (2026-10-10)
+
+- **TP-02 — Validação de dados persistidos**. Causa: `isSavedItinerary`
+  fazia apenas verificação estrutural rasa (tipos dos campos de primeiro
+  nível), aceitando datas ilegíveis ("ontem"), dias como objetos vazios e
+  totais financeiros incoerentes. Correção: validação estrutural e
+  semântica completa em `src/services/itineraryStorage.ts` — data ISO
+  real, id não vazio, destino existente na base, dias numerados e em
+  quantidade exata, atividades com categorias/estilos/períodos conhecidos,
+  duração/custo finitos e coerentes, horários dentro do dia, coerentes com
+  a duração e sem sobreposição (invariante TP-01), e totais que fecham com
+  as atividades e com o orçamento. Registros inválidos não são renderizados
+  e a página inicial informa a quantidade ignorada (erro recuperável).
+- **TP-03 — Colisão de identificadores**. Causa: o id do registro era o
+  hash djb2 do planejamento; roteiros diferentes com o mesmo hash se
+  substituíam silenciosamente. Correção: id único por registro
+  (`crypto.randomUUID()`, com fallback); o hash virou
+  `buildPlanningFingerprint`, usado só para detectar planejamento
+  equivalente — que substitui o registro anterior preservando o id
+  original. Compatibilidade: registros legados (id = hash) continuam
+  válidos e são substituídos corretamente ao salvar o mesmo planejamento.
+- **TP-04 — Erros de armazenamento**. Causa: `setItem`/`getItem` sem
+  tratamento lançavam exceções (ex.: `QuotaExceededError`) e a interface
+  podia informar sucesso em caso de falha. Correção: todas as operações
+  retornam `{ ok: true, ... } | { ok: false, message }`; mensagens em
+  pt-BR com `role="alert"` na página do roteiro (salvar) e na inicial
+  (excluir); a escrita é atômica, preservando o estado anterior.
+- **TP-05 — Dados corrompidos**. Causa: JSON inválido caía no mesmo
+  `catch` de armazenamento vazio e podia ser sobrescrito em qualquer
+  escrita. Correção: a leitura distingue `empty`/`ok`/`corrupted`/
+  `unavailable`; escritas movem payload ilegível (ou com registros
+  descartados) para a chave de quarentena
+  `travel-planner:saved-itineraries:v1:quarentena` antes de gravar; o
+  descarte definitivo só ocorre por ação explícita do usuário na página
+  inicial (botão "Descartar dados ilegíveis"), sem migração destrutiva
+  automática.
+- **Arquivos modificados**: `src/services/itineraryStorage.ts`,
+  `src/pages/HomePage.tsx`, `src/pages/ItineraryPage.tsx`,
+  `src/tests/itineraryStorage.test.ts`, `src/tests/itineraryExport.test.ts`,
+  `TASKS.md`, `DECISIONS.md` (revisão da D14, nova D21).
+- **Testes**: suíte de persistência reescrita com 27 testes (9 anteriores
+  atualizados + 18 novos), cobrindo data inválida, estrutura incompleta,
+  totais inconsistentes, valores monetários inválidos, colisão de
+  identificadores, quota excedida, armazenamento indisponível, JSON
+  corrompido, quarentena, descarte autorizado, preservação de registros
+  anteriores, exclusão (sucesso e falha) e reabertura de roteiros válidos.
+  Total da suíte: 83 testes em 6 arquivos.
+- **Validações executadas (resultados reais)**: `npm run typecheck` (sem
+  erros), `npm run test:run` (83 testes, todos passando), `npm run lint`
+  (0 erros, 0 avisos), `npm run build` (sucesso).
+- **Limitações restantes**: a quarentena guarda apenas o último payload
+  ilegível; se a própria quarentena falhar (quota esgotada), uma escrita
+  posterior pode sobrescrever o conteúdo corrompido. Registros salvos
+  antes da correção TP-01 com sobreposição de horários são rejeitados
+  pela nova validação (ficam invisíveis, mas não são apagados).

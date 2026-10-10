@@ -28,7 +28,9 @@ function buildSavedSample(): {
     destination,
   )
   if (!result.ok) throw new Error('falha ao gerar roteiro de teste')
-  return { saved: saveItinerary(result.itinerary), destination }
+  const saved = saveItinerary(result.itinerary)
+  if (!saved.ok) throw new Error(`falha ao salvar roteiro de teste: ${saved.message}`)
+  return { saved: saved.record, destination }
 }
 
 describe('itineraryExport', () => {
