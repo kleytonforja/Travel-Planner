@@ -1,0 +1,22 @@
+# Dependências
+node_modules/
+
+# Build de produção
+dist/
+
+# Arquivos de ambiente e segredos (nunca versionar)
+.env
+.env.*
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/

@@ -1,0 +1,65 @@
+import { Plane } from 'lucide-react'
+
+/**
+ * Ano exibido no rodapé. Calculado uma única vez no carregamento do módulo
+ * (fora da renderização) para manter os componentes puros.
+ */
+const CURRENT_YEAR = new Date().getFullYear()
+
+/** Rodapé da aplicação. */
+export function Footer() {
+  return (
+    <footer className="border-t border-slate-200 bg-white">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+              <Plane className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <span className="text-base font-bold text-slate-900">
+              Travel Planner
+            </span>
+          </div>
+
+          <nav aria-label="Navegação do rodapé">
+            <ul className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <li>
+                <a
+                  href="#planejar"
+                  className="text-sm text-slate-600 hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                >
+                  Planejar
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#destinos"
+                  className="text-sm text-slate-600 hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                >
+                  Destinos
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#como-funciona"
+                  className="text-sm text-slate-600 hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                >
+                  Como funciona
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+
+        <p className="mt-8 border-t border-slate-200 pt-6 text-sm text-slate-500">
+          Custos e durações exibidos são valores ilustrativos para fins de
+          demonstração e não representam cotações, horários oficiais ou
+          disponibilidade real de serviços.
+        </p>
+        <p className="mt-2 text-sm text-slate-500">
+          © {CURRENT_YEAR} Travel Planner. Projeto de código aberto.
+        </p>
+      </div>
+    </footer>
+  )
+}
