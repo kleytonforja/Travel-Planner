@@ -130,3 +130,50 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
   do `BudgetSummary`: 5). Total da suíte: 58 testes em 6 arquivos.
 - **Pendências**: publicação no GitHub Pages e primeiro commit/push dependem
   de autorização explícita.
+
+---
+
+## CORREÇÕES PÓS-AUDITORIA
+
+| #     | Problema                                                        | Status | Critério de aceite                              |
+| ----- | --------------------------------------------------------------- | ------ | ----------------------------------------------- |
+| TP-01 | Sobreposição entre passeio de dia inteiro e atividade da tarde  | ✅     | Sem sobreposição em nenhum dia; teste de regressão do cenário auditado |
+
+## Relatório da correção TP-01 (2026-10-10)
+
+- **Problema**: o gerador de roteiros permitia sobreposição entre um
+  passeio de dia inteiro e uma atividade já posicionada à tarde. Cenário
+  reproduzido pela auditoria: Florianópolis, 2 dias, interesse Natureza,
+  estilo Equilibrado, orçamento R$ 300 — o dia 2 exibia Ilha do Campeche
+  (09:00–15:00) sobreposta à Lagoa da Conceição (14:00–17:00).
+- **Causa raiz**: `trySchedule` verificava apenas o cursor do período de
+  destino (para passeios de dia inteiro, apenas o cursor da manhã) e os
+  limites da janela do período, sem conferir conflitos contra atividades
+  já agendadas em **outros** períodos do mesmo dia.
+- **Correção aplicada**: nova verificação `hasScheduleConflict` em
+  `src/services/itineraryGenerator.ts`, executada em `trySchedule` antes
+  de qualquer alocação, contra todas as atividades já agendadas no dia,
+  independentemente do período. Intervalos que apenas se tocam (término
+  de uma = início da outra) não configuram sobreposição. Determinismo,
+  regras de orçamento e de preferências preservados; nenhuma mudança em
+  persistência, interface ou arquitetura.
+- **Comportamento no cenário auditado (após correção)**: a Ilha do
+  Campeche não encontra dia com intervalo livre e é deixada de fora, com
+  aviso ao usuário ("atividade compatível não coube na agenda sugerida").
+- **Testes adicionados**: 7, todos em `src/tests/itineraryGenerator.test.ts`:
+  regressão do cenário exato da auditoria; exclusão com aviso do passeio
+  que não cabe sem sobreposição; atividade longa seguida de atividade da
+  tarde (pausa de 30 min); atividades curtas em sequência com término no
+  limite da janela; distribuição por manhã/tarde/noite no mesmo dia; dias
+  sem atividades; varredura determinística (3 destinos × 3 estilos × 5
+  conjuntos de interesses × 4 durações × 4 orçamentos) garantindo ausência
+  de sobreposição. Total da suíte: 65 testes em 6 arquivos.
+- **Validações executadas (resultados reais)**: `npm run typecheck` (sem
+  erros), `npm run test:run` (65 testes, 6 arquivos, todos passando),
+  `npm run lint` (0 erros, 0 avisos), `npm run build` (sucesso).
+- **Riscos remanescentes**: o empacotamento permanece ganancioso —
+  atividades podem ficar de fora mesmo havendo combinação alternativa que
+  as acomodasse (comportamento pré-existente, transparente via avisos); a
+  pausa de 30 minutos é garantida entre atividades consecutivas no mesmo
+  período e após passeios de dia inteiro, mas não entre períodos distintos
+  (as janelas fixas já embatem os intervalos de almoço e descanso).

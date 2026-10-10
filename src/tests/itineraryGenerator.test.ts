@@ -2,10 +2,17 @@ import { describe, expect, it } from 'vitest'
 
 import { destinations } from '../data/destinations'
 import {
+  BUFFER_MINUTES,
   generateItinerary,
   SLOT_WINDOWS,
 } from '../services/itineraryGenerator'
-import type { Destination, Itinerary, PlanningInput } from '../types'
+import type {
+  Destination,
+  InterestCategory,
+  Itinerary,
+  PlanningInput,
+  TravelStyle,
+} from '../types'
 
 function getDestination(id: string): Destination {
   const destination = destinations.find((item) => item.id === id)
@@ -259,6 +266,208 @@ describe('generateItinerary', () => {
       expect(overlaps, `${item.activity.name} sobrepõe o passeio a Sintra`).toBe(
         false,
       )
+    }
+  })
+})
+
+describe('TP-01 — regressão: sobreposição entre passeio de dia inteiro e atividade já agendada', () => {
+  // Cenário reproduzido pela auditoria independente: Florianópolis,
+  // 2 dias, interesse Natureza, estilo Equilibrado, orçamento R$ 300.
+  // Antes da correção, o dia 2 exibia Ilha do Campeche (09:00–15:00)
+  // sobreposta à Lagoa da Conceição (14:00–17:00), com 1 h de conflito.
+  const auditInput = makeInput({
+    destinationId: 'florianopolis',
+    days: 2,
+    interests: ['natureza'],
+    style: 'equilibrado',
+    budget: 300,
+  })
+
+  function expectDayWithoutOverlap(itinerary: Itinerary) {
+    for (const day of itinerary.days) {
+      const ordered = [...day.activities].sort(
+        (a, b) => a.startMinutes - b.startMinutes,
+      )
+      for (let index = 1; index < ordered.length; index += 1) {
+        expect(
+          ordered[index].startMinutes,
+          `${ordered[index].activity.name} sobrepõe ${ordered[index - 1].activity.name} no dia ${day.dayNumber}`,
+        ).toBeGreaterThanOrEqual(ordered[index - 1].endMinutes)
+      }
+    }
+  }
+
+  it('reproduz o cenário da auditoria sem sobreposição de horários', () => {
+    const itinerary = generate(auditInput)
+    expectDayWithoutOverlap(itinerary)
+
+    const campeche = scheduledItems(itinerary).find(
+      (item) => item.activity.id === 'fln-ilha-do-campeche',
+    )
+    const lagoa = scheduledItems(itinerary).find(
+      (item) => item.activity.id === 'fln-lagoa-da-conceicao',
+    )
+    expect(lagoa).toBeDefined()
+    if (campeche && lagoa) {
+      const overlaps =
+        campeche.day === lagoa.day &&
+        campeche.startMinutes < lagoa.endMinutes &&
+        campeche.endMinutes > lagoa.startMinutes
+      expect(
+        overlaps,
+        'Ilha do Campeche não pode sobrepor a Lagoa da Conceição',
+      ).toBe(false)
+    }
+  })
+
+  it('deixa de fora (com aviso) o passeio de dia inteiro que não cabe sem sobreposição', () => {
+    // No cenário da auditoria, a Ilha do Campeche não encontra dia com
+    // intervalo livre e deve virar aviso, nunca sobreposição.
+    const itinerary = generate(auditInput)
+    expect(
+      scheduledItems(itinerary).some(
+        (item) => item.activity.id === 'fln-ilha-do-campeche',
+      ),
+    ).toBe(false)
+    expect(
+      itinerary.warnings.some((warning) => warning.includes('não coube')),
+    ).toBe(true)
+  })
+
+  it('atividade longa seguida de atividade da tarde mantém a pausa de 30 minutos', () => {
+    // Florianópolis: Trilha da Lagoinha do Leste (5 h) no dia 1 e
+    // Lagoa da Conceição (3 h, tarde) em sequência no mesmo dia.
+    const itinerary = generate(
+      makeInput({
+        destinationId: 'florianopolis',
+        interests: ['aventura', 'natureza'],
+        style: 'equilibrado',
+        days: 2,
+        budget: 1000,
+      }),
+    )
+    const trilha = scheduledItems(itinerary).find(
+      (item) => item.activity.id === 'fln-trilha-lagoinha-do-leste',
+    )
+    const lagoa = scheduledItems(itinerary).find(
+      (item) => item.activity.id === 'fln-lagoa-da-conceicao',
+    )
+    expect(trilha).toBeDefined()
+    expect(lagoa).toBeDefined()
+    expect(lagoa!.day).toBe(trilha!.day)
+    expect(lagoa!.startMinutes).toBeGreaterThanOrEqual(
+      trilha!.endMinutes + BUFFER_MINUTES,
+    )
+    expectDayWithoutOverlap(itinerary)
+  })
+
+  it('agenda atividades curtas em sequência no mesmo período, respeitando pausa e limite da janela', () => {
+    // Lisboa: Pastéis de Belém (1 h) e Time Out Market (2 h), ambos
+    // "qualquer" — caem na manhã do único dia.
+    const itinerary = generate(
+      makeInput({
+        destinationId: 'lisboa',
+        interests: ['gastronomia'],
+        style: 'equilibrado',
+        days: 1,
+        budget: 200,
+      }),
+    )
+    const items = scheduledItems(itinerary)
+    expect(items).toHaveLength(2)
+    const ordered = [...items].sort((a, b) => a.startMinutes - b.startMinutes)
+    expect(ordered[0].period).toBe('manha')
+    expect(ordered[1].period).toBe('manha')
+    // Pausa de 30 minutos entre atividades consecutivas.
+    expect(ordered[1].startMinutes).toBe(ordered[0].endMinutes + BUFFER_MINUTES)
+    // Limite da janela: terminar exatamente no fim da manhã (12:30) é
+    // aceito — o limite é inclusivo.
+    expect(ordered[1].endMinutes).toBe(SLOT_WINDOWS.manha.end)
+    expectDayWithoutOverlap(itinerary)
+  })
+
+  it('distribui atividades por manhã, tarde e noite no mesmo dia, cada uma dentro da sua janela', () => {
+    const itinerary = generate(
+      makeInput({
+        interests: ['cultura', 'gastronomia', 'vida-noturna'],
+        style: 'equilibrado',
+        days: 1,
+        budget: 1000,
+      }),
+    )
+    const items = scheduledItems(itinerary)
+    const periods = new Set(items.map((item) => item.period))
+    expect(periods).toEqual(new Set(['manha', 'tarde', 'noite']))
+    for (const item of items) {
+      const window = SLOT_WINDOWS[item.period]
+      expect(
+        item.startMinutes,
+        `${item.activity.name} começa antes da janela de ${item.period}`,
+      ).toBeGreaterThanOrEqual(window.start)
+      expect(
+        item.endMinutes,
+        `${item.activity.name} termina depois da janela de ${item.period}`,
+      ).toBeLessThanOrEqual(window.end)
+    }
+    expectDayWithoutOverlap(itinerary)
+  })
+
+  it('mantém dias sem atividades quando faltam opções, sem quebrar a agenda', () => {
+    // Rio: apenas uma atividade de compras para o estilo econômico.
+    const itinerary = generate(
+      makeInput({ interests: ['compras'], style: 'economico', days: 5 }),
+    )
+    expect(itinerary.days).toHaveLength(5)
+    const emptyDays = itinerary.days.filter(
+      (day) => day.activities.length === 0,
+    )
+    expect(emptyDays).toHaveLength(4)
+    expect(
+      itinerary.warnings.some((warning) =>
+        warning.includes('sem atividades sugeridas'),
+      ),
+    ).toBe(true)
+    expectDayWithoutOverlap(itinerary)
+  })
+
+  it('nunca gera sobreposição: varredura por destinos, estilos, interesses, dias e orçamentos', () => {
+    const interestSets: InterestCategory[][] = [
+      ['natureza'],
+      ['cultura'],
+      ['gastronomia', 'cultura'],
+      ['aventura', 'natureza', 'relaxamento'],
+      [
+        'gastronomia',
+        'natureza',
+        'cultura',
+        'aventura',
+        'compras',
+        'relaxamento',
+        'vida-noturna',
+      ],
+    ]
+    const styles: TravelStyle[] = ['economico', 'equilibrado', 'confortavel']
+    for (const destination of destinations) {
+      for (const style of styles) {
+        for (const interests of interestSets) {
+          for (const days of [1, 2, 3, 7]) {
+            for (const budget of [50, 300, 1000, 100000]) {
+              const result = generateItinerary(
+                makeInput({
+                  destinationId: destination.id,
+                  style,
+                  interests,
+                  days,
+                  budget,
+                }),
+                destination,
+              )
+              if (!result.ok) continue
+              expectDayWithoutOverlap(result.itinerary)
+            }
+          }
+        }
+      }
     }
   })
 })

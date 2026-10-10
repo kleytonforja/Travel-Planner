@@ -25,6 +25,12 @@ import type {
  * Cada atividade é alocada integralmente em um período, sem sobreposição.
  * Atividades longas (mais de 4,5 h) são tratadas como passeio de dia
  * inteiro, iniciados às 09:00 e empurrando o início dos períodos seguintes.
+ *
+ * Antes de alocar, o algoritmo verifica conflitos contra TODAS as
+ * atividades já agendadas no dia, independentemente do período (os
+ * cursores por período, sozinhos, não impediam que um passeio de dia
+ * inteiro fosse inserido sobre uma atividade da tarde já posicionada —
+ * correção TP-01).
  */
 
 export const SLOT_WINDOWS: Record<ScheduledPeriod, { start: number; end: number }> = {
@@ -88,6 +94,22 @@ function candidatePeriods(activity: Activity): ScheduledPeriod[] {
 }
 
 /**
+ * Indica se o intervalo [start, end) conflita com alguma atividade já
+ * agendada no dia, independentemente do período. Intervalos que apenas se
+ * tocam (término de uma = início da outra) não configuram sobreposição.
+ */
+function hasScheduleConflict(
+  day: DayScheduleState,
+  start: number,
+  end: number,
+): boolean {
+  return day.activities.some(
+    (scheduled) =>
+      start < scheduled.endMinutes && end > scheduled.startMinutes,
+  )
+}
+
+/**
  * Tenta alocar a atividade no período indicado do dia. Retorna a atividade
  * agendada em caso de sucesso (atualizando os cursores do dia) ou `null`.
  */
@@ -99,6 +121,12 @@ function trySchedule(
   const window = SLOT_WINDOWS[period]
   const start = day.cursors[period]
   const end = start + durationMinutes(activity)
+
+  // TP-01: nunca inserir em intervalo ocupado por outra atividade do
+  // mesmo dia, ainda que em período diferente.
+  if (hasScheduleConflict(day, start, end)) {
+    return null
+  }
 
   if (isFullDayActivity(activity)) {
     // Exige manhã livre e término até o fim da tarde.

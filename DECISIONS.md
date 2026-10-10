@@ -114,6 +114,14 @@ e livre de sobreposições por construção (cursores por período), sem
 inventar horários reais de funcionamento — os horários são sugestões
 rotuladas como ilustrativas.
 
+**Revisão (correção TP-01)**: os cursores por período, sozinhos, **não**
+garantiam ausência de sobreposição — um passeio de dia inteiro podia ser
+inserido sobre uma atividade da tarde já posicionada. `trySchedule` passou
+a verificar conflitos contra todas as atividades já agendadas no dia,
+independentemente do período, antes de alocar (intervalos que apenas se
+tocam não configuram sobreposição). O modelo de janelas e cursores foi
+mantido.
+
 ## D13 — Seleção de atividades: ordenação determinística + orçamento ganancioso
 
 **Decisão**: as atividades elegíveis (interesses ∩ categorias ≠ ∅ e estilo
