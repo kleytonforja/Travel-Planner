@@ -128,7 +128,13 @@ export type ItineraryGenerationResult =
 
 /** Roteiro persistido no LocalStorage. */
 export interface SavedItinerary {
-  /** Identificador determinístico derivado do PlanningInput. */
+  /**
+   * Identificador único do registro. Registros novos usam UUID
+   * (`crypto.randomUUID()`); registros históricos conservam seus IDs
+   * originais, inclusive os legados derivados de hash do formato v1.
+   * O id NÃO é derivado do planejamento: equivalência entre
+   * planejamentos é decidida por comparação direta de campos.
+   */
   id: string
   /** Data/hora ISO em que o roteiro foi salvo. */
   savedAt: string

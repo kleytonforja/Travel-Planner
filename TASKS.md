@@ -138,10 +138,15 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
 | #     | Problema                                                        | Status | Critério de aceite                              |
 | ----- | --------------------------------------------------------------- | ------ | ----------------------------------------------- |
 | TP-01 | Sobreposição entre passeio de dia inteiro e atividade da tarde  | ✅     | Sem sobreposição em nenhum dia; teste de regressão do cenário auditado |
-| TP-02 | Persistência aceitava registros inválidos (data, dias, totais)  | ✅     | Validação estrutural e semântica; inválidos nunca renderizados |
-| TP-03 | Colisão de hash substituía roteiros diferentes silenciosamente  | ✅     | Id único por registro; equivalência por fingerprint; teste de regressão de colisão |
-| TP-04 | Falhas de escrita lançavam exceções não tratadas na interface   | ✅     | Operações retornam resultado; mensagens acessíveis; estado anterior preservado |
-| TP-05 | JSON corrompido era tratado como vazio e podia ser sobrescrito  | ✅     | Leitura distingue vazio/válido/corrompido/indisponível; quarentena; descarte só com autorização |
+| TP-02 | Persistência aceitava registros inválidos (data, dias, totais)  | 🚧     | Validação estrutural e semântica completa (P1 ✅); integração ao novo fluxo de gravação pendente (P2) |
+| TP-03 | Colisão de hash substituía roteiros diferentes silenciosamente  | 🚧     | Identidade UUID + equivalência por campos (P1 ✅); confirmação de substituição vinculada ao conteúdo pendente (P2) |
+| TP-04 | Falhas de escrita lançavam exceções não tratadas na interface   | 🚧     | Resultados sem exceções (✅ anterior); resultado incerto, confirmação por releitura e Web Locks pendentes (P2) |
+| TP-05 | JSON corrompido era tratado como vazio e podia ser sobrescrito  | 🚧     | Leitura com estados e quarentena (✅ anterior); recuperação explícita e bloqueio de escrita em coleção corrompida pendentes (P2) |
+
+> TP-02 a TP-05 estão em remediação conforme
+> `docs/PERSISTENCE_REMEDIATION_PLAN.md`. O checkpoint P1 (identidade e
+> validação) foi concluído e validado; a declaração de correção total só
+> ocorrerá após a integração final (P2). Ver relatório abaixo.
 
 ## Relatório da correção TP-01 (2026-10-10)
 
@@ -237,3 +242,82 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
   posterior pode sobrescrever o conteúdo corrompido. Registros salvos
   antes da correção TP-01 com sobreposição de horários são rejeitados
   pela nova validação (ficam invisíveis, mas não são apagados).
+
+## Relatório do CHECKPOINT P1 — Remediação de persistência: identidade e validação (2026-10-10)
+
+- **Escopo entregue** (conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`,
+  seções 4 e 5; sem novo fluxo de gravação, sem Web Locks, sem
+  recuperação completa, sem alterações extensas de interface):
+  - **Identidade (TP-03)**: registros novos usam `crypto.randomUUID()`
+    confrontado com os IDs existentes (máx. 10 tentativas; esgotamento
+    ou indisponibilidade retorna erro, sem escrita); removido o fallback
+    de horário/Math.random. Equivalência passou a ser comparação direta
+    de campos (`arePlanningsEquivalent`: destino, dias, estilo,
+    orçamento exato e conjunto de interesses sem ordem) — o hash djb2
+    (`buildPlanningFingerprint`) não participa mais de nenhuma decisão
+    de persistência (resta apenas no nome do arquivo de exportação de
+    roteiro não salvo, uso permitido pelo plano). Mais de um equivalente
+    bloqueia a substituição automática com mensagem de ambiguidade.
+    Identificadores históricos válidos (inclusive legados de hash) são
+    preservados e substituídos corretamente.
+  - **Validação (TP-02)**: datas reais de calendário por comparação de
+    componentes UTC (30/02, 31/04, 29/02 não bissexto e 24:00 rejeitados;
+    fração de 1–3 dígitos aceita); id não vazio nem só de espaços; dias
+    em quantidade exata e numeração sequencial; atividades completas,
+    sem repetição no roteiro, compatíveis com estilo e ao menos um
+    interesse; horários inteiros, coerentes com a duração, dentro das
+    janelas `SLOT_WINDOWS` (mantida a exceção do passeio longo iniciado
+    às 09:00) e sem sobreposição (contato permitido); integridade
+    financeira com tolerância ABSOLUTA de 1e-6 (custo = soma das
+    atividades, saldo = orçamento − custo, média = custo ÷ dias),
+    rejeitando custo superior ao orçamento, saldo negativo e valores/somas
+    não finitos. A mesma validação é aplicada antes de gravar um novo
+    estado. A leitura retorna motivos de rejeição por registro
+    (`rejections`) e marca como corrompida a coleção com IDs duplicados
+    (`duplicateIds`), sem expor integrantes do grupo a ações individuais.
+  - **Tipos**: descrição do `SavedItinerary.id` corrigida (identidade
+    única, não mais derivada do planejamento).
+- **Arquivos modificados**: `src/services/itineraryStorage.ts`,
+  `src/types/index.ts`, `TASKS.md`, `DECISIONS.md` (nova D22).
+- **Arquivos criados**: `src/tests/fixtures/savedItineraries.ts`
+  (registro histórico válido, registro sobreposto pré-TP-01, coleção com
+  IDs duplicados, par de colisão), `src/tests/itineraryStorageIdentity.test.ts`
+  (10 testes), `src/tests/itineraryStorageValidation.test.ts` (35 testes).
+- **Cenários de colisão testados**: registro legado cujo id coincide com
+  o fingerprint de outro planejamento é preservado ao salvar (o par exato
+  da auditoria, fingerprint `roteiro-2cd27b6e`, não foi transcrito no
+  plano — ambiguidade nº 9 — e o mecanismo foi reproduzido com
+  planejamentos da base local); interesses em ordens diferentes;
+  UUID repetido com geração de alternativa; esgotamento das 10
+  tentativas sem escrita; indisponibilidade de `crypto.randomUUID`;
+  mais de um equivalente bloqueado; IDs duplicados na coleção.
+- **Validações executadas (resultados reais)**: `npm run typecheck` (sem
+  erros), `npm run test:run` (128 testes, 8 arquivos, todos passando),
+  `npm run lint` (0 erros, 0 avisos), `npm run build` (sucesso).
+- **Dependências de P2 (registradas, não implementadas)**:
+  1. Confirmação de substituição vinculada ao id e ao conteúdo bruto
+     observado (hoje um único equivalente ainda é substituído sem
+     confirmação — comportamento pré-existente mantido para não quebrar
+     o fluxo atual).
+  2. Novo fluxo de gravação: leitura única de decisão, escrita atômica,
+     confirmação por releitura e resultado incerto com mensagem própria.
+  3. Web Locks (`travel-planner:storage:v1`) tornando as mutações
+     assíncronas, com bloqueio de mutações na ausência da API.
+  4. Reclassificação de coleção parcialmente válida como `corrupted`
+     (hoje: `ok` + `discardedCount`) junto com o bloqueio de escritas em
+     coleção corrompida — depende do fluxo de recuperação para não
+     deixar o usuário sem caminho seguro.
+  5. Recuperação explícita, restauração e descarte vinculado da
+     quarentena, com exportação de recuperação.
+  6. Bloqueio de ações individuais na interface para estados de
+     armazenamento incompatíveis (a leitura já não expõe registros de
+     grupos com IDs duplicados; a interface será adaptada no P1 de
+     interface do plano).
+- **Riscos remanescentes**: além das limitações já registradas na D21
+  (quarentena de melhor esforço, registros sobrepostos antigos
+  invisíveis), permanecem os riscos mapeados no plano enquanto P2 não é
+  integrado: ausência de coordenação entre abas, ausência de confirmação
+  de gravação por releitura e substituição de equivalente sem
+  confirmação do usuário.
+- **TP-02 e TP-03 NÃO estão declarados totalmente corrigidos**: a
+  conclusão depende da integração final (P2) e de nova auditoria.

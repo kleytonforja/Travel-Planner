@@ -198,6 +198,57 @@ salvos antes da correção TP-01 que contenham sobreposição de horários
 são rejeitados pela validação (ficam invisíveis na lista, mas o payload
 permanece no armazenamento até escrita ou descarte).
 
+**Revisão (remediação P1)**: ver D22. TP-02 a TP-05 permanecem em
+remediação até a integração final (P2) e nova auditoria.
+
+## D22 — Remediação da persistência, checkpoint P1: identidade e validação
+
+**Decisão**: primeira etapa da implementação de
+`docs/PERSISTENCE_REMEDIATION_PLAN.md`, restrita a identidade,
+equivalência e validação, sem alterar o fluxo de produção:
+
+1. **Identidade**: registros novos usam exclusivamente
+   `crypto.randomUUID()`, com cada candidato confrontado com os IDs já
+   existentes na coleção (limite de 10 tentativas; esgotamento ou
+   indisponibilidade retorna erro, sem escrita). O fallback de
+   horário/Math.random foi removido. O hash djb2
+   (`buildPlanningFingerprint`) não participa de nenhuma decisão de
+   persistência — resta apenas como sufixo do nome do arquivo na
+   exportação de roteiro não salvo, uso explicitamente permitido pelo
+   plano (não concede identidade nem autorização).
+2. **Equivalência**: `arePlanningsEquivalent` compara diretamente os
+   campos normalizados — destino, dias, estilo, orçamento numérico exato
+   (sem arredondamento) e conjunto de interesses independentemente da
+   ordem. Mais de um equivalente bloqueia a substituição automática
+   (mensagem de ambiguidade, sem escrita). Um único equivalente ainda é
+   substituído preservando o id (comportamento pré-existente; a
+   confirmação vinculada ao conteúdo observado é dependência de P2).
+3. **Validação**: datas reais por comparação de componentes UTC
+   (rejeita 30/02, 24:00 etc.); id não vazio nem só de espaços; dias em
+   quantidade exata e sequenciais; atividades completas, únicas no
+   roteiro e compatíveis com estilo/interesses; horários inteiros,
+   coerentes com a duração, dentro das `SLOT_WINDOWS` (com a exceção do
+   passeio longo às 09:00) e sem sobreposição; relações financeiras com
+   tolerância ABSOLUTA de 1e-6, rejeitando custo acima do orçamento,
+   saldo negativo e valores/somas não finitos. A mesma validação é
+   aplicada na leitura e antes de gravar. A leitura expõe motivos de
+   rejeição (`rejections`) e classifica como corrompida a coleção com
+   IDs duplicados (`duplicateIds`), sem expor integrantes do grupo a
+   ações individuais.
+
+**Justificativa**: o plano exige identidade separada de equivalência,
+sem hash em decisões de persistência, e validação integral única. As
+partes inseparáveis do novo fluxo de gravação (confirmação de
+substituição, releitura de confirmação, Web Locks, bloqueio de escrita
+em coleção corrompida, recuperação explícita) NÃO foram integradas
+parcialmente: ficam registradas como dependências de P2 em TASKS.md.
+
+**Limitações desta etapa**: coleção parcialmente válida continua
+classificada como `ok` + `discardedCount` (a reclassificação para
+`corrupted` exige o fluxo de recuperação do P2 para não deixar o usuário
+sem caminho seguro); a substituição de equivalente único ainda não pede
+confirmação; mutações seguem síncronas e sem coordenação entre abas.
+
 ## D15 — Formulário conectado ao gerador (substitui D11)
 
 **Decisão**: o botão do formulário passou a se chamar "Gerar roteiro" e,
