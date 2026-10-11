@@ -5,14 +5,18 @@ import { generateItinerary } from '../services/itineraryGenerator'
 import {
   buildPlanningFingerprint,
   CORRUPTED_BACKUP_KEY,
-  discardCorruptedData,
   isSavedItinerary,
   loadSavedItineraries,
   removeSavedItinerary,
   saveItinerary,
   STORAGE_KEY,
+  type ReplaceConfirmation,
 } from '../services/itineraryStorage'
 import type { Itinerary, PlanningInput, SavedItinerary } from '../types'
+import {
+  installWebLocksMock,
+  uninstallWebLocksMock,
+} from './helpers/webLocksMock'
 
 function buildSampleItinerary(
   overrides: Partial<PlanningInput> = {},
@@ -32,8 +36,8 @@ function buildSampleItinerary(
   return result.itinerary
 }
 
-function saveOk(itinerary: Itinerary): SavedItinerary {
-  const result = saveItinerary(itinerary)
+async function saveOk(itinerary: Itinerary): Promise<SavedItinerary> {
+  const result = await saveItinerary(itinerary)
   if (!result.ok) throw new Error(`falha ao salvar roteiro de teste: ${result.message}`)
   return result.record
 }
@@ -47,11 +51,11 @@ function readRawStorage(): string | null {
 }
 
 /** Salva um roteiro válido, aplica uma mutação no registro cru e regrava. */
-function seedMutatedRecord(
+async function seedMutatedRecord(
   mutate: (record: Record<string, unknown>) => void,
   itinerary: Itinerary = buildSampleItinerary(),
-): void {
-  const record = saveOk(itinerary)
+): Promise<void> {
+  const record = await saveOk(itinerary)
   const parsed = JSON.parse(readRawStorage() ?? '[]') as Record<string, unknown>[]
   const target = parsed.find((item) => item.id === record.id)
   if (!target) throw new Error('registro de teste não encontrado')
@@ -59,18 +63,29 @@ function seedMutatedRecord(
   overwriteStorage(parsed)
 }
 
+function expectNeedsConfirmation(
+  result: Awaited<ReturnType<typeof saveItinerary>>,
+): ReplaceConfirmation {
+  if (result.ok || result.outcome !== 'needs-confirmation') {
+    throw new Error('esperado resultado needs-confirmation')
+  }
+  return result.confirmation
+}
+
 describe('itineraryStorage', () => {
   beforeEach(() => {
     localStorage.clear()
+    installWebLocksMock()
   })
 
   afterEach(() => {
+    uninstallWebLocksMock()
     vi.restoreAllMocks()
   })
 
-  it('salva e recupera um roteiro válido (round-trip/reabertura)', () => {
+  it('salva e recupera um roteiro válido (round-trip/reabertura)', async () => {
     const itinerary = buildSampleItinerary()
-    const record = saveOk(itinerary)
+    const record = await saveOk(itinerary)
 
     expect(record.id).toBeTruthy()
     expect(record.savedAt).toBeTruthy()
@@ -88,20 +103,40 @@ describe('itineraryStorage', () => {
   it('retorna status "empty" quando não há nada salvo', () => {
     const load = loadSavedItineraries()
     expect(load.status).toBe('empty')
+    expect(load.raw).toBeNull()
     expect(load.records).toEqual([])
   })
 
-  it('substitui o registro ao salvar o mesmo planejamento, preservando o identificador', () => {
-    const itinerary = buildSampleItinerary()
-    const first = saveOk(itinerary)
-    const second = saveOk(itinerary)
+  it('TP-05: string vazia armazenada é conteúdo corrompido, não ausência de dados', () => {
+    localStorage.setItem(STORAGE_KEY, '')
+    const load = loadSavedItineraries()
+    expect(load.status).toBe('corrupted')
+    expect(load.records).toEqual([])
+    // A leitura não altera o conteúdo.
+    expect(readRawStorage()).toBe('')
+  })
 
-    expect(second.id).toBe(first.id)
+  it('substituição de planejamento equivalente exige confirmação e preserva o identificador', async () => {
+    const itinerary = buildSampleItinerary()
+    const first = await saveOk(itinerary)
+    const rawBefore = readRawStorage()
+
+    // Sem confirmação: nenhuma substituição, nenhuma escrita.
+    const attempt = await saveItinerary(itinerary)
+    const confirmation = expectNeedsConfirmation(attempt)
+    expect(confirmation.targetId).toBe(first.id)
+    expect(confirmation.expectedRaw).toBe(rawBefore)
+    expect(readRawStorage()).toBe(rawBefore)
+
+    // Com a confirmação vinculada: somente o alvo é substituído.
+    const second = await saveItinerary(itinerary, confirmation)
+    expect(second.ok).toBe(true)
+    if (second.ok) expect(second.record.id).toBe(first.id)
     const load = loadSavedItineraries()
     expect(load.records).toHaveLength(1)
   })
 
-  it('mantém compatibilidade: planejamento equivalente substitui o registro legado com id de hash', () => {
+  it('mantém compatibilidade: planejamento equivalente substitui o registro legado com id de hash', async () => {
     // Registro no formato antigo (id = hash do planejamento).
     const itinerary = buildSampleItinerary()
     const legacyId = buildPlanningFingerprint(itinerary.input)
@@ -112,21 +147,25 @@ describe('itineraryStorage', () => {
     }
     overwriteStorage([legacyRecord])
 
-    const result = saveItinerary(itinerary)
+    const attempt = await saveItinerary(itinerary)
+    const confirmation = expectNeedsConfirmation(attempt)
+    expect(confirmation.targetId).toBe(legacyId)
+
+    const result = await saveItinerary(itinerary, confirmation)
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.record.id).toBe(legacyId)
     expect(loadSavedItineraries().records).toHaveLength(1)
   })
 
-  it('mantém roteiros de planejamentos diferentes, com identificadores únicos', () => {
-    const first = saveOk(buildSampleItinerary())
-    const second = saveOk(buildSampleItinerary({ days: 5 }))
+  it('mantém roteiros de planejamentos diferentes, com identificadores únicos', async () => {
+    const first = await saveOk(buildSampleItinerary())
+    const second = await saveOk(buildSampleItinerary({ days: 5 }))
 
     expect(first.id).not.toBe(second.id)
     expect(loadSavedItineraries().records).toHaveLength(2)
   })
 
-  it('TP-03: não substitui roteiro diferente cujo id legado colide com a impressão digital do novo', () => {
+  it('TP-03: não substitui roteiro diferente cujo id legado colide com a impressão digital do novo', async () => {
     const itineraryA = buildSampleItinerary()
     const itineraryB = buildSampleItinerary({ days: 5 })
 
@@ -139,7 +178,7 @@ describe('itineraryStorage', () => {
     }
     overwriteStorage([legacyRecord])
 
-    const result = saveItinerary(itineraryB)
+    const result = await saveItinerary(itineraryB)
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.record.id).not.toBe(legacyRecord.id)
 
@@ -150,16 +189,31 @@ describe('itineraryStorage', () => {
     expect(preserved?.itinerary.input).toEqual(itineraryA.input)
   })
 
-  it('remove um roteiro pelo identificador', () => {
-    const first = saveOk(buildSampleItinerary())
-    const second = saveOk(buildSampleItinerary({ days: 5 }))
+  it('remove um roteiro pelo identificador, vinculado ao conteúdo observado', async () => {
+    const first = await saveOk(buildSampleItinerary())
+    const second = await saveOk(buildSampleItinerary({ days: 5 }))
 
-    const result = removeSavedItinerary(first.id)
+    const observed = loadSavedItineraries()
+    const result = await removeSavedItinerary(first.id, {
+      expectedRaw: observed.raw,
+    })
     expect(result.ok).toBe(true)
 
     const load = loadSavedItineraries()
     expect(load.records).toHaveLength(1)
     expect(load.records[0].id).toBe(second.id)
+  })
+
+  it('excluir o último roteiro grava um array vazio e não remove a chave principal', async () => {
+    const record = await saveOk(buildSampleItinerary())
+    const observed = loadSavedItineraries()
+
+    const result = await removeSavedItinerary(record.id, {
+      expectedRaw: observed.raw,
+    })
+    expect(result.ok).toBe(true)
+    expect(readRawStorage()).toBe('[]')
+    expect(loadSavedItineraries().status).toBe('empty')
   })
 
   it('TP-05: JSON corrompido é "corrupted", nunca tratado como vazio, e não é alterado na leitura', () => {
@@ -168,6 +222,7 @@ describe('itineraryStorage', () => {
     const load = loadSavedItineraries()
     expect(load.status).toBe('corrupted')
     expect(load.records).toEqual([])
+    expect(load.raw).toBe('{json-invalido')
     // A leitura não toca no conteúdo original.
     expect(readRawStorage()).toBe('{json-invalido')
   })
@@ -179,32 +234,25 @@ describe('itineraryStorage', () => {
     expect(load.records).toEqual([])
   })
 
-  it('TP-05: salvar com dados corrompidos move o payload para quarentena em vez de sobrescrevê-lo', () => {
+  it('TP-05: salvar com coleção corrompida é bloqueado, sem quarentena automática nem escrita', async () => {
     localStorage.setItem(STORAGE_KEY, '{json-invalido')
 
-    const result = saveItinerary(buildSampleItinerary())
-    expect(result.ok).toBe(true)
+    const result = await saveItinerary(buildSampleItinerary())
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.outcome).toBe('failure')
+      expect(result.message).toContain('bloqueadas')
+    }
 
-    // O conteúdo ilegível foi preservado na quarentena...
-    expect(localStorage.getItem(CORRUPTED_BACKUP_KEY)).toBe('{json-invalido')
-    // ...e a chave principal passou a conter apenas o novo registro válido.
-    const load = loadSavedItineraries()
-    expect(load.status).toBe('ok')
-    expect(load.records).toHaveLength(1)
+    // O conteúdo original permanece intacto e nenhuma cópia é criada
+    // como efeito colateral — a preservação é parte da recuperação
+    // explícita, não do salvamento.
+    expect(readRawStorage()).toBe('{json-invalido')
+    expect(localStorage.getItem(CORRUPTED_BACKUP_KEY)).toBeNull()
   })
 
-  it('TP-05: descarte de dados corrompidos exige ação explícita e mantém cópia em quarentena', () => {
-    localStorage.setItem(STORAGE_KEY, '{json-invalido')
-
-    const result = discardCorruptedData()
-    expect(result.ok).toBe(true)
-
-    expect(localStorage.getItem(CORRUPTED_BACKUP_KEY)).toBe('{json-invalido')
-    expect(loadSavedItineraries().status).toBe('empty')
-  })
-
-  it('descarta entradas com estrutura inválida, mantém as válidas e informa o descarte', () => {
-    const valid = saveOk(buildSampleItinerary())
+  it('TP-05: coleção parcialmente válida é corrompida e bloqueia escritas normais', async () => {
+    const valid = await saveOk(buildSampleItinerary())
     overwriteStorage([
       { foo: 'bar' },
       null,
@@ -212,32 +260,39 @@ describe('itineraryStorage', () => {
       valid,
       { id: 123, savedAt: '2026-10-10T12:00:00.000Z', itinerary: {} },
     ])
+    const rawBefore = readRawStorage()
 
     const load = loadSavedItineraries()
-    expect(load.status).toBe('ok')
+    expect(load.status).toBe('corrupted')
     expect(load.discardedCount).toBe(4)
+    // Registros íntegros permanecem disponíveis para consulta.
     expect(load.records).toHaveLength(1)
     expect(load.records[0].id).toBe(valid.id)
+
+    const save = await saveItinerary(buildSampleItinerary({ days: 5 }))
+    expect(save.ok).toBe(false)
+    expect(readRawStorage()).toBe(rawBefore)
   })
 
-  it('TP-02: rejeita registro com data inválida ("ontem")', () => {
-    seedMutatedRecord((record) => {
+  it('TP-02: rejeita registro com data inválida ("ontem")', async () => {
+    await seedMutatedRecord((record) => {
       record.savedAt = 'ontem'
     })
     const load = loadSavedItineraries()
+    expect(load.status).toBe('corrupted')
     expect(load.records).toEqual([])
     expect(load.discardedCount).toBe(1)
   })
 
-  it('TP-02: rejeita registro com identificador vazio', () => {
-    seedMutatedRecord((record) => {
+  it('TP-02: rejeita registro com identificador vazio', async () => {
+    await seedMutatedRecord((record) => {
       record.id = ''
     })
     expect(loadSavedItineraries().records).toEqual([])
   })
 
-  it('TP-02: rejeita registro com destino desconhecido', () => {
-    seedMutatedRecord((record) => {
+  it('TP-02: rejeita registro com destino desconhecido', async () => {
+    await seedMutatedRecord((record) => {
       const itinerary = record.itinerary as Record<string, unknown>
       const input = itinerary.input as Record<string, unknown>
       input.destinationId = 'atlantida'
@@ -245,8 +300,8 @@ describe('itineraryStorage', () => {
     expect(loadSavedItineraries().records).toEqual([])
   })
 
-  it('TP-02: rejeita registro cujos dias são objetos vazios', () => {
-    seedMutatedRecord((record) => {
+  it('TP-02: rejeita registro cujos dias são objetos vazios', async () => {
+    await seedMutatedRecord((record) => {
       const itinerary = record.itinerary as Record<string, unknown>
       const input = itinerary.input as PlanningInput
       itinerary.days = Array.from({ length: input.days }, () => ({}))
@@ -256,8 +311,8 @@ describe('itineraryStorage', () => {
     expect(load.discardedCount).toBe(1)
   })
 
-  it('TP-02: rejeita registro com quantidade de dias incoerente com o planejamento', () => {
-    seedMutatedRecord((record) => {
+  it('TP-02: rejeita registro com quantidade de dias incoerente com o planejamento', async () => {
+    await seedMutatedRecord((record) => {
       const itinerary = record.itinerary as Record<string, unknown>
       const days = itinerary.days as unknown[]
       itinerary.days = days.slice(1)
@@ -265,12 +320,12 @@ describe('itineraryStorage', () => {
     expect(loadSavedItineraries().records).toEqual([])
   })
 
-  it('TP-02: rejeita registro com sobreposição de horários dentro do dia', () => {
+  it('TP-02: rejeita registro com sobreposição de horários dentro do dia', async () => {
     const itinerary = buildSampleItinerary()
     const dayWithTwo = itinerary.days.find((day) => day.activities.length >= 2)
     if (!dayWithTwo) throw new Error('cenário de teste precisa de um dia com 2+ atividades')
 
-    seedMutatedRecord((record) => {
+    await seedMutatedRecord((record) => {
       const stored = record.itinerary as Itinerary
       const day = stored.days.find((item) => item.dayNumber === dayWithTwo.dayNumber)
       if (!day) throw new Error('dia de teste não encontrado')
@@ -281,24 +336,24 @@ describe('itineraryStorage', () => {
     expect(loadSavedItineraries().records).toEqual([])
   })
 
-  it('TP-02: rejeita totais financeiros incompatíveis com o orçamento', () => {
-    seedMutatedRecord((record) => {
+  it('TP-02: rejeita totais financeiros incompatíveis com o orçamento', async () => {
+    await seedMutatedRecord((record) => {
       const itinerary = record.itinerary as Itinerary
       itinerary.totals.unallocatedBudget += 1
     })
     expect(loadSavedItineraries().records).toEqual([])
   })
 
-  it('TP-02: rejeita custo estimado que não corresponde às atividades agendadas', () => {
-    seedMutatedRecord((record) => {
+  it('TP-02: rejeita custo estimado que não corresponde às atividades agendadas', async () => {
+    await seedMutatedRecord((record) => {
       const itinerary = record.itinerary as Itinerary
       itinerary.totals.estimatedActivitiesCost += 10
     })
     expect(loadSavedItineraries().records).toEqual([])
   })
 
-  it('TP-02: rejeita valores monetários inválidos (NaN, negativos)', () => {
-    const record = saveOk(buildSampleItinerary())
+  it('TP-02: rejeita valores monetários inválidos (NaN, negativos)', async () => {
+    const record = await saveOk(buildSampleItinerary())
     const valid = JSON.parse(readRawStorage() ?? '[]')[0] as SavedItinerary
     expect(isSavedItinerary(valid)).toBe(true)
 
@@ -321,8 +376,8 @@ describe('itineraryStorage', () => {
     expect(record.id).toBe(valid.id)
   })
 
-  it('TP-02: rejeita categoria de interesse desconhecida', () => {
-    seedMutatedRecord((record) => {
+  it('TP-02: rejeita categoria de interesse desconhecida', async () => {
+    await seedMutatedRecord((record) => {
       const itinerary = record.itinerary as Record<string, unknown>
       const input = itinerary.input as Record<string, unknown>
       input.interests = ['natureza', 'categoria-inexistente']
@@ -343,24 +398,30 @@ describe('itineraryStorage', () => {
     ).toBe(false)
   })
 
-  it('TP-04: falha por quota excedida retorna erro e preserva os registros anteriores', () => {
-    const first = saveOk(buildSampleItinerary())
+  it('TP-04: falha por quota excedida retorna erro e preserva exatamente a chave principal', async () => {
+    const first = await saveOk(buildSampleItinerary())
+    const rawBefore = readRawStorage()
 
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('sem espaço', 'QuotaExceededError')
     })
 
-    const result = saveItinerary(buildSampleItinerary({ days: 5 }))
+    const result = await saveItinerary(buildSampleItinerary({ days: 5 }))
     expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.message).toContain('cheio')
+    if (!result.ok && result.outcome !== 'needs-confirmation') {
+      expect(result.outcome).toBe('failure')
+      expect(result.message).toContain('cheio')
+    }
 
     vi.restoreAllMocks()
+    // Conteúdo bruto idêntico ao estado anterior.
+    expect(readRawStorage()).toBe(rawBefore)
     const load = loadSavedItineraries()
     expect(load.records).toHaveLength(1)
     expect(load.records[0].id).toBe(first.id)
   })
 
-  it('TP-04: armazenamento indisponível é sinalizado na leitura, no salvamento e na exclusão', () => {
+  it('TP-04: armazenamento indisponível é sinalizado na leitura, no salvamento e na exclusão', async () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new DOMException('bloqueado', 'SecurityError')
     })
@@ -369,25 +430,31 @@ describe('itineraryStorage', () => {
     expect(load.status).toBe('unavailable')
     expect(load.records).toEqual([])
 
-    const save = saveItinerary(buildSampleItinerary())
+    const save = await saveItinerary(buildSampleItinerary())
     expect(save.ok).toBe(false)
-    if (!save.ok) expect(save.message).toContain('armazenamento')
+    if (!save.ok && save.outcome !== 'needs-confirmation') {
+      expect(save.message).toContain('armazenamento')
+    }
 
-    const remove = removeSavedItinerary('qualquer')
+    const remove = await removeSavedItinerary('qualquer', { expectedRaw: null })
     expect(remove.ok).toBe(false)
   })
 
-  it('TP-04: falha de escrita na exclusão retorna erro e mantém o registro', () => {
-    const record = saveOk(buildSampleItinerary())
+  it('TP-04: falha de escrita na exclusão retorna erro e mantém o registro', async () => {
+    const record = await saveOk(buildSampleItinerary())
+    const rawBefore = readRawStorage()
 
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('falha genérica', 'UnknownError')
     })
 
-    const result = removeSavedItinerary(record.id)
+    const result = await removeSavedItinerary(record.id, {
+      expectedRaw: rawBefore,
+    })
     expect(result.ok).toBe(false)
 
     vi.restoreAllMocks()
+    expect(readRawStorage()).toBe(rawBefore)
     const load = loadSavedItineraries()
     expect(load.records).toHaveLength(1)
     expect(load.records[0].id).toBe(record.id)

@@ -4,8 +4,10 @@ import {
   arePlanningsEquivalent,
   loadSavedItineraries,
   MAX_ID_GENERATION_ATTEMPTS,
+  removeSavedItinerary,
   saveItinerary,
   STORAGE_KEY,
+  type ReplaceConfirmation,
 } from '../services/itineraryStorage'
 import type { Itinerary, PlanningInput, SavedItinerary } from '../types'
 import {
@@ -14,6 +16,10 @@ import {
   buildHistoricalValidRecord,
   buildItineraryFromInput,
 } from './fixtures/savedItineraries'
+import {
+  installWebLocksMock,
+  uninstallWebLocksMock,
+} from './helpers/webLocksMock'
 
 /**
  * Testes de regressão de IDENTIDADE E EQUIVALÊNCIA (TP-03), conforme
@@ -28,8 +34,8 @@ const SAMPLE_INPUT: PlanningInput = {
   budget: 2000,
 }
 
-function saveOk(itinerary: Itinerary): SavedItinerary {
-  const result = saveItinerary(itinerary)
+async function saveOk(itinerary: Itinerary): Promise<SavedItinerary> {
+  const result = await saveItinerary(itinerary)
   if (!result.ok) throw new Error(`falha ao salvar roteiro de teste: ${result.message}`)
   return result.record
 }
@@ -38,32 +44,43 @@ function readRawStorage(): string | null {
   return localStorage.getItem(STORAGE_KEY)
 }
 
+function expectNeedsConfirmation(
+  result: Awaited<ReturnType<typeof saveItinerary>>,
+): ReplaceConfirmation {
+  if (result.ok || result.outcome !== 'needs-confirmation') {
+    throw new Error('esperado resultado needs-confirmation')
+  }
+  return result.confirmation
+}
+
 const UUID_ID_PATTERN =
   /^roteiro-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 describe('identidade e equivalência (TP-03)', () => {
   beforeEach(() => {
     localStorage.clear()
+    installWebLocksMock()
   })
 
   afterEach(() => {
+    uninstallWebLocksMock()
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
   })
 
-  it('novos registros usam UUID (crypto.randomUUID), nunca hash ou horário', () => {
-    const record = saveOk(buildItineraryFromInput(SAMPLE_INPUT))
+  it('novos registros usam UUID (crypto.randomUUID), nunca hash ou horário', async () => {
+    const record = await saveOk(buildItineraryFromInput(SAMPLE_INPUT))
     expect(record.id).toMatch(UUID_ID_PATTERN)
   })
 
-  it('TP-03: colisão real — registro legado cujo id coincide com o fingerprint de outro planejamento é preservado', () => {
+  it('TP-03: colisão real — registro legado cujo id coincide com o fingerprint de outro planejamento é preservado', async () => {
     // O par exato da auditoria (fingerprint roteiro-2cd27b6e) não foi
     // transcrito no plano (ambiguidade nº 9); esta fixture reproduz o
     // mesmo mecanismo com planejamentos da base local.
     const { legacyRecord, collidingItinerary } = buildCollisionPair()
     localStorage.setItem(STORAGE_KEY, JSON.stringify([legacyRecord]))
 
-    const result = saveItinerary(collidingItinerary)
+    const result = await saveItinerary(collidingItinerary)
     expect(result.ok).toBe(true)
     if (!result.ok) return
 
@@ -81,15 +98,19 @@ describe('identidade e equivalência (TP-03)', () => {
     expect(preserved?.savedAt).toBe(legacyRecord.savedAt)
   })
 
-  it('TP-03: interesses em ordens diferentes configuram planejamento equivalente', () => {
-    const first = saveOk(buildItineraryFromInput(SAMPLE_INPUT))
+  it('TP-03: interesses em ordens diferentes configuram planejamento equivalente', async () => {
+    const first = await saveOk(buildItineraryFromInput(SAMPLE_INPUT))
     const reordered = buildItineraryFromInput({
       ...SAMPLE_INPUT,
       interests: ['gastronomia', 'natureza'],
     })
 
-    const second = saveOk(reordered)
-    expect(second.id).toBe(first.id)
+    // Equivalente exige confirmação; confirmada, preserva o id do alvo.
+    const attempt = await saveItinerary(reordered)
+    const confirmation = expectNeedsConfirmation(attempt)
+    const second = await saveItinerary(reordered, confirmation)
+    expect(second.ok).toBe(true)
+    if (second.ok) expect(second.record.id).toBe(first.id)
     expect(loadSavedItineraries().records).toHaveLength(1)
   })
 
@@ -111,8 +132,8 @@ describe('identidade e equivalência (TP-03)', () => {
     }
   })
 
-  it('TP-03: UUID repetido gera alternativa confrontando com os IDs existentes', () => {
-    const existing = saveOk(buildItineraryFromInput(SAMPLE_INPUT))
+  it('TP-03: UUID repetido gera alternativa confrontando com os IDs existentes', async () => {
+    const existing = await saveOk(buildItineraryFromInput(SAMPLE_INPUT))
     const freshId = '11111111-2222-4333-8444-555555555555'
 
     const randomUUID = vi
@@ -121,7 +142,7 @@ describe('identidade e equivalência (TP-03)', () => {
       .mockReturnValue(freshId)
     vi.stubGlobal('crypto', { randomUUID })
 
-    const result = saveItinerary(
+    const result = await saveItinerary(
       buildItineraryFromInput({ ...SAMPLE_INPUT, days: 5 }),
     )
     expect(result.ok).toBe(true)
@@ -132,8 +153,8 @@ describe('identidade e equivalência (TP-03)', () => {
     expect(loadSavedItineraries().records).toHaveLength(2)
   })
 
-  it('TP-03: esgotamento das 10 tentativas de UUID falha sem nenhuma escrita', () => {
-    const existing = saveOk(buildItineraryFromInput(SAMPLE_INPUT))
+  it('TP-03: esgotamento das 10 tentativas de UUID falha sem nenhuma escrita', async () => {
+    const existing = await saveOk(buildItineraryFromInput(SAMPLE_INPUT))
     const before = readRawStorage()
 
     const randomUUID = vi
@@ -141,11 +162,11 @@ describe('identidade e equivalência (TP-03)', () => {
       .mockReturnValue(existing.id.replace('roteiro-', ''))
     vi.stubGlobal('crypto', { randomUUID })
 
-    const result = saveItinerary(
+    const result = await saveItinerary(
       buildItineraryFromInput({ ...SAMPLE_INPUT, days: 5 }),
     )
     expect(result.ok).toBe(false)
-    if (result.ok) return
+    if (result.ok || result.outcome === 'needs-confirmation') return
 
     expect(randomUUID).toHaveBeenCalledTimes(MAX_ID_GENERATION_ATTEMPTS)
     expect(result.message).toContain('identificador único')
@@ -153,19 +174,19 @@ describe('identidade e equivalência (TP-03)', () => {
     expect(readRawStorage()).toBe(before)
   })
 
-  it('TP-03: indisponibilidade da geração de UUID falha sem nenhuma escrita', () => {
+  it('TP-03: indisponibilidade da geração de UUID falha sem nenhuma escrita', async () => {
     const before = readRawStorage()
     vi.stubGlobal('crypto', {})
 
-    const result = saveItinerary(buildItineraryFromInput(SAMPLE_INPUT))
+    const result = await saveItinerary(buildItineraryFromInput(SAMPLE_INPUT))
     expect(result.ok).toBe(false)
-    if (result.ok) return
+    if (result.ok || result.outcome === 'needs-confirmation') return
 
     expect(result.message).toContain('identificador único')
     expect(readRawStorage()).toBe(before)
   })
 
-  it('TP-03: mais de um planejamento equivalente bloqueia a substituição automática', () => {
+  it('TP-03: mais de um planejamento equivalente bloqueia a substituição automática', async () => {
     // Dois registros válidos, com IDs distintos, para o MESMO
     // planejamento (só possível via edição manual ou versões antigas).
     const first = buildHistoricalValidRecord()
@@ -177,7 +198,7 @@ describe('identidade e equivalência (TP-03)', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([first, second]))
     const before = readRawStorage()
 
-    const result = saveItinerary(
+    const result = await saveItinerary(
       buildItineraryFromInput({
         destinationId: 'florianopolis',
         days: 2,
@@ -187,7 +208,7 @@ describe('identidade e equivalência (TP-03)', () => {
       }),
     )
     expect(result.ok).toBe(false)
-    if (result.ok) return
+    if (result.ok || result.outcome === 'needs-confirmation') return
 
     expect(result.message).toContain('mais de um roteiro salvo equivalente')
     // Nenhuma escolha automática: a chave principal permanece idêntica.
@@ -208,7 +229,18 @@ describe('identidade e equivalência (TP-03)', () => {
     expect(readRawStorage()).toBe(raw)
   })
 
-  it('registros históricos com id legado de hash continuam utilizáveis', () => {
+  it('TP-03: IDs duplicados bloqueiam a exclusão individual de qualquer registro', async () => {
+    const { payload, duplicateId } = buildDuplicateIdsPayload()
+    const raw = JSON.stringify(payload)
+    localStorage.setItem(STORAGE_KEY, raw)
+
+    const result = await removeSavedItinerary(duplicateId, { expectedRaw: raw })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.message).toContain('bloqueadas')
+    expect(readRawStorage()).toBe(raw)
+  })
+
+  it('registros históricos com id legado de hash continuam utilizáveis', async () => {
     const legacy = buildHistoricalValidRecord()
     localStorage.setItem(STORAGE_KEY, JSON.stringify([legacy]))
 
@@ -218,16 +250,20 @@ describe('identidade e equivalência (TP-03)', () => {
     expect(load.records[0].id).toBe(legacy.id)
     expect(load.records[0].savedAt).toBe(legacy.savedAt)
 
-    // Salvar o planejamento equivalente preserva o identificador legado.
-    const result = saveItinerary(
-      buildItineraryFromInput({
-        destinationId: 'florianopolis',
-        days: 2,
-        interests: ['natureza', 'gastronomia'],
-        style: 'equilibrado',
-        budget: 500,
-      }),
-    )
+    // Salvar o planejamento equivalente exige confirmação e preserva o
+    // identificador legado.
+    const equivalent = buildItineraryFromInput({
+      destinationId: 'florianopolis',
+      days: 2,
+      interests: ['natureza', 'gastronomia'],
+      style: 'equilibrado',
+      budget: 500,
+    })
+    const attempt = await saveItinerary(equivalent)
+    const confirmation = expectNeedsConfirmation(attempt)
+    expect(confirmation.targetId).toBe(legacy.id)
+
+    const result = await saveItinerary(equivalent, confirmation)
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.record.id).toBe(legacy.id)
     expect(loadSavedItineraries().records).toHaveLength(1)

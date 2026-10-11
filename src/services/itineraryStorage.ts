@@ -15,8 +15,8 @@ import {
 } from './itineraryGenerator'
 
 /**
- * Persistência de roteiros no LocalStorage (ver DECISIONS.md, D7, D14 e
- * o plano docs/PERSISTENCE_REMEDIATION_PLAN.md).
+ * Persistência de roteiros no LocalStorage (ver DECISIONS.md, D7, D14,
+ * D21, D22 e o plano docs/PERSISTENCE_REMEDIATION_PLAN.md).
  *
  * Correções pós-auditoria:
  *
@@ -32,32 +32,40 @@ import {
  *   `crypto.randomUUID()`, confrontados com os IDs já existentes (limite
  *   de 10 tentativas; esgotamento ou indisponibilidade retorna erro, sem
  *   escrita e sem fallback inseguro). Planejamentos equivalentes são
- *   comparados diretamente pelos campos normalizados (destino, dias,
- *   estilo, orçamento exato e conjunto de interesses), sem hash em
- *   nenhuma decisão de persistência. IDs históricos válidos, inclusive
- *   os legados derivados de hash, são preservados.
- * - TP-04: operações tratam falhas de leitura/escrita (quota excedida,
- *   armazenamento indisponível) e as devolvem como resultado — nenhuma
- *   exceção é lançada para a interface e o estado anterior é preservado.
+ *   comparados diretamente pelos campos normalizados, sem hash em
+ *   nenhuma decisão de persistência. A substituição de um equivalente
+ *   exige confirmação explícita vinculada ao ID do alvo e ao conteúdo
+ *   bruto observado.
+ * - TP-04: operações seguras com UMA leitura de decisão por operação,
+ *   novo estado construído e validado integralmente em memória, UM
+ *   único setItem na chave principal e confirmação por releitura.
+ *   Resultados distinguem sucesso confirmado, falha sem alteração e
+ *   resultado incerto (sem repetição nem rollback automático). Nenhuma
+ *   falha de leitura é convertida em lista vazia. As mutações são
+ *   coordenadas entre abas pelo lock exclusivo Web Locks
+ *   `travel-planner:storage:v1`; sem a API, as mutações são bloqueadas
+ *   (não há fallback de escrita sem coordenação).
  * - TP-05: a leitura distingue armazenamento vazio, válido, corrompido
- *   (inclusive coleções com IDs duplicados) e indisponível. Dados
- *   ilegíveis nunca são sobrescritos silenciosamente na leitura; o
- *   descarte definitivo exige ação explícita do usuário.
- *
- * Dependências do próximo checkpoint (P2 — novo fluxo de gravação):
- * confirmação de substituição vinculada ao conteúdo observado, bloqueio
- * de escritas em coleções corrompidas, confirmação de gravação por
- * releitura, Web Locks e recuperação explícita da quarentena.
+ *   (JSON ilegível, formato desconhecido, registros inválidos ou IDs
+ *   duplicados — inclusive coleções parcialmente válidas) e
+ *   indisponível. Escritas normais são bloqueadas em coleção corrompida.
+ *   A recuperação é explícita: preserva o conteúdo bruto na quarentena
+ *   (sem sobrescrever cópias diferentes, com confirmação da gravação do
+ *   backup), recupera os registros válidos e nunca remove a chave
+ *   principal antes de substituí-la.
  */
 
 export const STORAGE_KEY = 'travel-planner:saved-itineraries:v1'
 
 /**
- * Chave de quarentena: recebe o payload ilegível antes de qualquer
- * sobrescrita, para que dados corrompidos nunca sejam perdidos sem
- * autorização do usuário.
+ * Chave de quarentena: guarda o conteúdo bruto original preservado na
+ * recuperação explícita, para que dados corrompidos nunca sejam perdidos
+ * sem autorização do usuário.
  */
 export const CORRUPTED_BACKUP_KEY = `${STORAGE_KEY}:quarentena`
+
+/** Lock exclusivo (Web Locks) que coordena as mutações entre abas. */
+export const STORAGE_LOCK_NAME = 'travel-planner:storage:v1'
 
 /** Limite de tentativas para gerar um identificador único (TP-03). */
 export const MAX_ID_GENERATION_ATTEMPTS = 10
@@ -72,6 +80,33 @@ const AMBIGUOUS_EQUIVALENTS_MESSAGE =
   'Encontramos mais de um roteiro salvo equivalente a este planejamento, então a substituição automática foi bloqueada para não apagar o registro errado. Nenhuma alteração foi feita.'
 const INVALID_ITINERARY_MESSAGE =
   'O roteiro não passou na validação interna de consistência e não foi salvo. Nenhuma alteração foi feita nos roteiros salvos.'
+const REPLACE_NEEDS_CONFIRMATION_MESSAGE =
+  'Já existe um roteiro salvo com este mesmo planejamento. Confirme a substituição para continuar.'
+/** Mensagem própria do resultado incerto (texto definido pelo plano). */
+const UNCERTAIN_RESULT_MESSAGE =
+  'Não foi possível confirmar a operação. Recarregue os roteiros antes de tentar novamente.'
+const STALE_ACTION_MESSAGE =
+  'Os roteiros salvos mudaram desde a última leitura (outra aba ou janela pode ter alterado os dados). A operação foi cancelada por segurança. Recarregue os roteiros e tente novamente.'
+const CORRUPTED_STORAGE_MESSAGE =
+  'Os roteiros salvos contêm dados que não puderam ser validados. Para proteger esses dados, as alterações estão bloqueadas até a recuperação explícita na página inicial. Nenhuma alteração foi feita.'
+const RECORD_NOT_FOUND_MESSAGE =
+  'O roteiro selecionado não foi encontrado. A lista pode ter mudado — recarregue os roteiros e tente novamente. Nenhuma alteração foi feita.'
+const LOCK_UNAVAILABLE_MESSAGE =
+  'Este navegador não oferece a coordenação segura entre abas (Web Locks), então as alterações foram bloqueadas para proteger seus roteiros. A leitura e a exportação continuam disponíveis.'
+const LOCK_ACQUISITION_FAILED_MESSAGE =
+  'Não foi possível coordenar o acesso seguro ao armazenamento entre as abas do navegador. Nenhuma alteração foi feita. Tente novamente.'
+const QUARANTINE_OCCUPIED_MESSAGE =
+  'Já existe uma cópia de segurança diferente na quarentena. A operação foi interrompida para não sobrescrevê-la: baixe ou descarte a cópia existente e tente novamente. Nenhuma alteração foi feita nos roteiros.'
+const QUARANTINE_UNAVAILABLE_MESSAGE =
+  'Não foi possível acessar a cópia de segurança (quarentena). A operação foi interrompida e os dados originais não foram alterados.'
+const QUARANTINE_PRESERVE_FAILED_MESSAGE =
+  'Não foi possível preservar a cópia de segurança na quarentena, então a operação foi interrompida. Os dados originais não foram alterados.'
+const QUARANTINE_EMPTY_MESSAGE =
+  'Não há cópia de segurança na quarentena. O conteúdo pode ter mudado — recarregue a página e tente novamente. Nenhuma alteração foi feita.'
+const RESTORE_BLOCKED_NON_EMPTY_MESSAGE =
+  'A restauração só é permitida quando não há roteiros ativos. Existem roteiros salvos, então a operação foi bloqueada. Baixe a cópia de segurança se quiser conservá-la fora do navegador.'
+const RESTORE_BLOCKED_CORRUPTED_MESSAGE =
+  'A restauração foi bloqueada porque os dados atuais dos roteiros salvos precisam de recuperação primeiro. Recupere os roteiros atuais antes de restaurar a cópia de segurança.'
 
 const KNOWN_DESTINATION_IDS: ReadonlySet<string> = new Set(
   destinations.map((destination) => destination.id),
@@ -537,6 +572,10 @@ export function isSavedItinerary(value: unknown): value is SavedItinerary {
   return validateSavedItinerary(value).ok
 }
 
+/* ------------------------------------------------------------------ */
+/* Leitura                                                             */
+/* ------------------------------------------------------------------ */
+
 /** Situação do armazenamento na leitura (TP-05). */
 export type StorageLoadStatus = 'ok' | 'empty' | 'corrupted' | 'unavailable'
 
@@ -552,9 +591,21 @@ export interface RecordRejection {
 
 export interface StorageLoadResult {
   status: StorageLoadStatus
-  /** Apenas registros válidos — registros inválidos nunca são expostos. */
+  /**
+   * Conteúdo bruto observado da chave principal nesta leitura (null
+   * quando a chave está ausente ou o acesso falhou). É o vínculo das
+   * confirmações e da proteção contra ações desatualizadas: mutações
+   * que dependem desta leitura devem recebê-lo de volta.
+   */
+  raw: string | null
+  /**
+   * Registros válidos para consulta. Em coleções corrompidas por IDs
+   * duplicados, nenhum registro é exposto (não há ações individuais
+   * seguras para o grupo); em coleções parcialmente válidas, apenas os
+   * registros íntegros são expostos.
+   */
   records: SavedItinerary[]
-  /** Quantidade de registros descartados por falha de validação. */
+  /** Quantidade de registros rejeitados pela validação. */
   discardedCount: number
   /** Motivos de rejeição de cada registro descartado. */
   rejections: RecordRejection[]
@@ -571,17 +622,22 @@ type RawPayload =
   | { status: 'empty' }
   | { status: 'found'; raw: string }
 
+/**
+ * Lê o conteúdo bruto da chave principal UMA vez. Uma string vazia
+ * armazenada é conteúdo presente (será classificado como corrompido na
+ * interpretação), não ausência de dados.
+ */
 function readRawPayload(): RawPayload {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? { status: 'found', raw } : { status: 'empty' }
+    return raw === null ? { status: 'empty' } : { status: 'found', raw }
   } catch {
     return { status: 'unavailable' }
   }
 }
 
-function emptyLoadResult(status: StorageLoadStatus): StorageLoadResult {
-  return { status, records: [], discardedCount: 0, rejections: [], duplicateIds: [] }
+function emptyLoadResult(status: StorageLoadStatus, raw: string | null): StorageLoadResult {
+  return { status, raw, records: [], discardedCount: 0, rejections: [], duplicateIds: [] }
 }
 
 function extractRecordId(value: unknown): string | null {
@@ -592,31 +648,24 @@ function extractRecordId(value: unknown): string | null {
 }
 
 /**
- * Lê os roteiros salvos, distinguindo armazenamento vazio, válido,
- * corrompido (JSON ilegível, formato inesperado ou IDs duplicados) e
- * indisponível. Dados corrompidos nunca são sobrescritos nem apagados
- * na leitura, e registros incompatíveis são preservados no armazenamento
- * (não são descartados automaticamente).
+ * Interpreta o conteúdo bruto da chave principal (função pura). Uma
+ * coleção parcialmente válida é classificada como `corrupted`, mesmo
+ * que alguns registros possam ser exibidos para consulta.
  */
-export function loadSavedItineraries(): StorageLoadResult {
-  const payload = readRawPayload()
-  if (payload.status === 'unavailable') {
-    return emptyLoadResult('unavailable')
-  }
-  if (payload.status === 'empty') {
-    return emptyLoadResult('empty')
-  }
-
+function interpretStoredPayload(raw: string): StorageLoadResult {
   let parsed: unknown
   try {
-    parsed = JSON.parse(payload.raw)
+    parsed = JSON.parse(raw)
   } catch {
-    return emptyLoadResult('corrupted')
+    return emptyLoadResult('corrupted', raw)
   }
   if (!Array.isArray(parsed)) {
-    // Conteúdo legível, mas não é uma lista de roteiros: tratar como
-    // corrompido para não sobrescrever dados desconhecidos.
-    return emptyLoadResult('corrupted')
+    // Conteúdo legível, mas não é uma lista de roteiros: formato
+    // desconhecido é corrompido — nunca interpretado por tentativa.
+    return emptyLoadResult('corrupted', raw)
+  }
+  if (parsed.length === 0) {
+    return emptyLoadResult('empty', raw)
   }
 
   const records: SavedItinerary[] = []
@@ -645,6 +694,7 @@ export function loadSavedItineraries(): StorageLoadResult {
   if (duplicateIds.length > 0) {
     return {
       status: 'corrupted',
+      raw,
       records: [],
       discardedCount: 0,
       rejections,
@@ -652,13 +702,90 @@ export function loadSavedItineraries(): StorageLoadResult {
     }
   }
 
+  if (rejections.length > 0) {
+    // Coleção parcialmente válida: corrompida, com os registros
+    // íntegros disponíveis apenas para consulta.
+    return {
+      status: 'corrupted',
+      raw,
+      records,
+      discardedCount: rejections.length,
+      rejections,
+      duplicateIds: [],
+    }
+  }
+
   return {
     status: 'ok',
+    raw,
     records,
-    discardedCount: rejections.length,
-    rejections,
+    discardedCount: 0,
+    rejections: [],
     duplicateIds: [],
   }
+}
+
+/**
+ * Lê os roteiros salvos, distinguindo armazenamento vazio, válido,
+ * corrompido e indisponível. A leitura nunca migra, regrava, remove nem
+ * corrige automaticamente os dados armazenados, e nenhuma falha de
+ * leitura é convertida em lista vazia utilizável para gravação.
+ */
+export function loadSavedItineraries(): StorageLoadResult {
+  const payload = readRawPayload()
+  if (payload.status === 'unavailable') {
+    return emptyLoadResult('unavailable', null)
+  }
+  if (payload.status === 'empty') {
+    return emptyLoadResult('empty', null)
+  }
+  return interpretStoredPayload(payload.raw)
+}
+
+/* ------------------------------------------------------------------ */
+/* Quarentena (leitura)                                                */
+/* ------------------------------------------------------------------ */
+
+export type QuarantineLoadResult =
+  | { status: 'empty' }
+  | { status: 'occupied'; raw: string }
+  | { status: 'unavailable' }
+
+/**
+ * Lê a chave de quarentena sem alterá-la. Uma string vazia armazenada
+ * conta como cópia ocupada (bloqueia novas preservações de conteúdo
+ * diferente).
+ */
+export function loadQuarantine(): QuarantineLoadResult {
+  try {
+    const raw = localStorage.getItem(CORRUPTED_BACKUP_KEY)
+    return raw === null ? { status: 'empty' } : { status: 'occupied', raw }
+  } catch {
+    return { status: 'unavailable' }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Primitivas das mutações seguras                                     */
+/* ------------------------------------------------------------------ */
+
+/** Resultado comum das mutações: sucesso confirmado, falha ou incerto. */
+export type MutationOutcome =
+  | { ok: true }
+  | { ok: false; outcome: 'failure'; message: string }
+  | { ok: false; outcome: 'uncertain'; message: string }
+
+function failure(message: string): { ok: false; outcome: 'failure'; message: string } {
+  return { ok: false, outcome: 'failure', message }
+}
+
+/**
+ * Resultado incerto: a escrita retornou, mas a leitura de confirmação
+ * falhou ou encontrou outro conteúdo. Nunca repetir a escrita nem
+ * restaurar um snapshot antigo automaticamente.
+ */
+function uncertain(): { ok: false; outcome: 'uncertain'; message: string } {
+  return { ok: false, outcome: 'uncertain', message: UNCERTAIN_RESULT_MESSAGE }
 }
 
 function isQuotaExceeded(error: unknown): boolean {
@@ -673,147 +800,595 @@ function storageErrorMessage(error: unknown): string {
   return isQuotaExceeded(error) ? QUOTA_EXCEEDED_MESSAGE : STORAGE_UNAVAILABLE_MESSAGE
 }
 
+type LockRequest = <T>(name: string, callback: () => T | Promise<T>) => Promise<T>
+
 /**
- * Move o payload ilegível para a chave de quarentena e libera a chave
- * principal (melhor esforço: se a quarentena falhar, o conteúdo original
- * permanece intacto). Nada é apagado de forma destrutiva.
+ * Acesso à API nativa Web Locks, com detecção de disponibilidade. Sem
+ * fallback de escrita sem coordenação: a ausência da API bloqueia as
+ * mutações.
  */
-function quarantineCorruptedPayload(raw: string): void {
-  try {
-    if (!localStorage.getItem(CORRUPTED_BACKUP_KEY)) {
-      localStorage.setItem(CORRUPTED_BACKUP_KEY, raw)
-    }
-    localStorage.removeItem(STORAGE_KEY)
-  } catch {
-    // Quarentena indisponível: os dados originais não foram tocados.
+function getLockRequest(): LockRequest | null {
+  if (typeof navigator === 'undefined') return null
+  const locks = (navigator as { locks?: { request?: unknown } }).locks
+  if (!locks || typeof locks.request !== 'function') return null
+  const request = locks.request as (
+    this: unknown,
+    name: string,
+    callback: () => unknown,
+  ) => Promise<unknown>
+  return <T,>(name: string, callback: () => T | Promise<T>) =>
+    request.call(locks, name, callback) as Promise<T>
+}
+
+/**
+ * Executa uma mutação sob o lock exclusivo `travel-planner:storage:v1`.
+ * Na ausência da API ou se a aquisição falhar, a mutação é bloqueada
+ * com mensagem explicativa (leitura e exportação permanecem utilizáveis).
+ */
+async function withStorageLock<R>(
+  operation: () => R,
+): Promise<R | { ok: false; outcome: 'failure'; message: string }> {
+  const request = getLockRequest()
+  if (!request) {
+    return failure(LOCK_UNAVAILABLE_MESSAGE)
   }
+  try {
+    return await request(STORAGE_LOCK_NAME, operation)
+  } catch {
+    return failure(LOCK_ACQUISITION_FAILED_MESSAGE)
+  }
+}
+
+type DecisionRead =
+  | { ok: true; raw: string | null; load: StorageLoadResult }
+  | { ok: false; outcome: 'failure'; message: string }
+
+/**
+ * A ÚNICA leitura de decisão de cada mutação: lê o conteúdo bruto uma
+ * vez e interpreta exatamente esse conteúdo. Indisponibilidade bloqueia
+ * a mutação — nunca é convertida em lista vazia.
+ */
+function readForDecision(): DecisionRead {
+  const payload = readRawPayload()
+  if (payload.status === 'unavailable') {
+    return failure(STORAGE_UNAVAILABLE_MESSAGE)
+  }
+  if (payload.status === 'empty') {
+    return { ok: true, raw: null, load: emptyLoadResult('empty', null) }
+  }
+  return { ok: true, raw: payload.raw, load: interpretStoredPayload(payload.raw) }
+}
+
+/**
+ * Executa UM único setItem na chave principal e confirma a gravação por
+ * releitura, exigindo igualdade exata com o texto gravado. É proibido
+ * removeItem na chave principal: excluir o último roteiro grava `[]`.
+ */
+function writePrimaryWithConfirmation(serialized: string): MutationOutcome {
+  try {
+    localStorage.setItem(STORAGE_KEY, serialized)
+  } catch (error) {
+    // Falha sem alteração da chave principal.
+    return failure(storageErrorMessage(error))
+  }
+  let confirmed: string | null
+  try {
+    confirmed = localStorage.getItem(STORAGE_KEY)
+  } catch {
+    return uncertain()
+  }
+  return confirmed === serialized ? { ok: true } : uncertain()
+}
+
+/** Validação do estado completo antes de gravar: registros válidos e IDs únicos. */
+function isValidCollection(records: readonly SavedItinerary[]): boolean {
+  const ids = new Set<string>()
+  for (const record of records) {
+    if (!isSavedItinerary(record) || ids.has(record.id)) return false
+    ids.add(record.id)
+  }
+  return true
+}
+
+type QuarantinePreserveResult =
+  | { ok: true; outcome: 'created' | 'reused' }
+  | { ok: false; message: string }
+
+/**
+ * Preservação não destrutiva na quarentena: guarda o conteúdo bruto
+ * original, sem filtrar nem reserializar. Reutiliza a cópia existente
+ * quando é exatamente igual; bloqueia quando há cópia diferente
+ * (inclusive string vazia); qualquer falha de leitura, escrita ou
+ * confirmação interrompe a operação ANTES de tocar a chave principal.
+ */
+function preserveInQuarantine(raw: string): QuarantinePreserveResult {
+  let existing: string | null
+  try {
+    existing = localStorage.getItem(CORRUPTED_BACKUP_KEY)
+  } catch {
+    return { ok: false, message: QUARANTINE_UNAVAILABLE_MESSAGE }
+  }
+  if (existing !== null) {
+    if (existing === raw) return { ok: true, outcome: 'reused' }
+    return { ok: false, message: QUARANTINE_OCCUPIED_MESSAGE }
+  }
+  try {
+    localStorage.setItem(CORRUPTED_BACKUP_KEY, raw)
+  } catch (error) {
+    return {
+      ok: false,
+      message: isQuotaExceeded(error)
+        ? QUOTA_EXCEEDED_MESSAGE
+        : QUARANTINE_PRESERVE_FAILED_MESSAGE,
+    }
+  }
+  // Confirmação da gravação do backup por releitura com igualdade exata.
+  // Se a confirmação falhar, a cópia pode permanecer na quarentena: ela
+  // não é limpa automaticamente e a chave principal não é alterada.
+  let confirmed: string | null
+  try {
+    confirmed = localStorage.getItem(CORRUPTED_BACKUP_KEY)
+  } catch {
+    return { ok: false, message: QUARANTINE_PRESERVE_FAILED_MESSAGE }
+  }
+  if (confirmed !== raw) {
+    return { ok: false, message: QUARANTINE_PRESERVE_FAILED_MESSAGE }
+  }
+  return { ok: true, outcome: 'created' }
+}
+
+/* ------------------------------------------------------------------ */
+/* Salvamento (com confirmação de substituição)                        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Vínculo de uma confirmação de substituição: o alvo (com o resumo
+ * exibido ao usuário) e o conteúdo bruto observado quando a confirmação
+ * foi solicitada. Se o armazenamento mudar desde então, a operação é
+ * cancelada e exige nova análise.
+ */
+export interface ReplaceConfirmation {
+  /** ID do registro que será substituído (o ID é preservado). */
+  targetId: string
+  /** Conteúdo bruto da chave principal observado na solicitação. */
+  expectedRaw: string
+  /** Resumo do alvo exibido na confirmação (destino, dias e data). */
+  target: { destinationId: string; days: number; savedAt: string }
 }
 
 export type SaveItineraryResult =
   | { ok: true; record: SavedItinerary }
-  | { ok: false; message: string }
+  | {
+      ok: false
+      outcome: 'needs-confirmation'
+      message: string
+      confirmation: ReplaceConfirmation
+    }
+  | { ok: false; outcome: 'failure'; message: string }
+  | { ok: false; outcome: 'uncertain'; message: string }
 
 /**
- * Salva um roteiro e retorna o resultado da operação.
+ * Salva um roteiro sob o lock exclusivo, com uma leitura de decisão,
+ * construção e validação integral do novo estado em memória, um único
+ * setItem e confirmação por releitura.
  *
- * Um planejamento equivalente (mesmos destino, dias, estilo, orçamento e
- * conjunto de interesses — ver `arePlanningsEquivalent`) substitui o
- * registro anterior preservando o identificador original, inclusive de
- * registros legados cujo id é o hash do formato v1. Planejamentos
- * diferentes geram registros novos com UUID único confrontado com os IDs
- * existentes: colisões de hash nunca substituem roteiros diferentes
- * (TP-03). Mais de um equivalente bloqueia a substituição automática.
- *
- * O novo estado é validado integralmente antes da escrita (TP-02). Se o
- * armazenamento estiver corrompido, o payload ilegível é movido para
- * quarentena antes da escrita (TP-05). Falhas são devolvidas como erro,
- * sem alterar os registros anteriores (TP-04).
+ * - Sem planejamento equivalente: acrescenta registro com UUID único.
+ * - Exatamente um equivalente: NÃO substitui automaticamente — retorna
+ *   `needs-confirmation` com o vínculo (id do alvo + conteúdo bruto
+ *   observado). A substituição confirmada preserva o id do alvo e
+ *   substitui somente esse registro.
+ * - Mais de um equivalente: bloqueado (ambiguidade), sem escolha
+ *   automática.
+ * - Coleção corrompida: escrita bloqueada (sem limpeza automática nem
+ *   quarentena como efeito colateral) — a recuperação é explícita.
  */
-export function saveItinerary(itinerary: Itinerary): SaveItineraryResult {
-  const payload = readRawPayload()
-  if (payload.status === 'unavailable') {
-    return { ok: false, message: STORAGE_UNAVAILABLE_MESSAGE }
-  }
+export async function saveItinerary(
+  itinerary: Itinerary,
+  confirmation?: ReplaceConfirmation,
+): Promise<SaveItineraryResult> {
+  return withStorageLock((): SaveItineraryResult => {
+    const decision = readForDecision()
+    if (!decision.ok) return decision
+    const { raw, load } = decision
 
-  let records: SavedItinerary[] = []
-  if (payload.status === 'found') {
-    const load = loadSavedItineraries()
-    if (load.status === 'corrupted' || load.discardedCount > 0) {
-      // Nunca sobrescrever silenciosamente dados ilegíveis ou registros
-      // que serão descartados pela validação: o payload original vai para
-      // a quarentena antes da escrita.
-      quarantineCorruptedPayload(payload.raw)
+    if (load.status === 'corrupted') {
+      return failure(CORRUPTED_STORAGE_MESSAGE)
     }
-    records = load.records
-  }
+    const records = load.records
 
-  const equivalents = records.filter((item) =>
-    arePlanningsEquivalent(item.itinerary.input, itinerary.input),
-  )
-
-  let id: string
-  if (equivalents.length > 1) {
-    // Ambiguidade: nenhuma escolha automática entre equivalentes.
-    return { ok: false, message: AMBIGUOUS_EQUIVALENTS_MESSAGE }
-  }
-  if (equivalents.length === 1) {
-    // Substituição preservando o identificador original (inclusive o id
-    // legado derivado de hash). A confirmação prévia do usuário,
-    // vinculada ao conteúdo observado, chega no próximo checkpoint (P2).
-    id = equivalents[0].id
-  } else {
-    const newId = createUniqueRecordId(new Set(records.map((item) => item.id)))
-    if (newId === null) {
-      return { ok: false, message: ID_GENERATION_FAILED_MESSAGE }
+    let id: string
+    if (confirmation) {
+      // Substituição confirmada: revalidar o vínculo com o conteúdo
+      // observado. Conteúdo mudou desde a confirmação → cancelar.
+      if (raw === null || raw !== confirmation.expectedRaw) {
+        return failure(STALE_ACTION_MESSAGE)
+      }
+      const target = records.find((item) => item.id === confirmation.targetId)
+      if (!target) return failure(STALE_ACTION_MESSAGE)
+      id = target.id
+    } else {
+      const equivalents = records.filter((item) =>
+        arePlanningsEquivalent(item.itinerary.input, itinerary.input),
+      )
+      if (equivalents.length > 1) {
+        // Ambiguidade: nenhuma escolha automática entre equivalentes.
+        return failure(AMBIGUOUS_EQUIVALENTS_MESSAGE)
+      }
+      if (equivalents.length === 1) {
+        const target = equivalents[0]
+        return {
+          ok: false,
+          outcome: 'needs-confirmation',
+          message: REPLACE_NEEDS_CONFIRMATION_MESSAGE,
+          confirmation: {
+            targetId: target.id,
+            // equivalents não vazio ⇒ a chave principal tem conteúdo.
+            expectedRaw: raw ?? '[]',
+            target: {
+              destinationId: target.itinerary.input.destinationId,
+              days: target.itinerary.input.days,
+              savedAt: target.savedAt,
+            },
+          },
+        }
+      }
+      const newId = createUniqueRecordId(new Set(records.map((item) => item.id)))
+      if (newId === null) {
+        return failure(ID_GENERATION_FAILED_MESSAGE)
+      }
+      id = newId
     }
-    id = newId
-  }
 
-  const record: SavedItinerary = {
-    id,
-    savedAt: new Date().toISOString(),
-    itinerary,
-  }
+    const record: SavedItinerary = {
+      id,
+      savedAt: new Date().toISOString(),
+      itinerary,
+    }
 
-  // A mesma validação da leitura é aplicada antes de gravar o novo
-  // estado: um roteiro inconsistente nunca é persistido.
-  if (!isSavedItinerary(record)) {
-    return { ok: false, message: INVALID_ITINERARY_MESSAGE }
-  }
-
-  try {
+    // A mesma validação da leitura é aplicada ao novo registro e ao
+    // estado completo antes de gravar (TP-02).
+    if (!isSavedItinerary(record)) {
+      return failure(INVALID_ITINERARY_MESSAGE)
+    }
     const others = records.filter((item) => item.id !== record.id)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([record, ...others]))
-  } catch (error) {
-    return { ok: false, message: storageErrorMessage(error) }
-  }
-  return { ok: true, record }
-}
-
-export type RemoveItineraryResult = { ok: true } | { ok: false; message: string }
-
-/**
- * Remove um roteiro salvo pelo identificador. Em caso de falha de
- * escrita, o armazenamento permanece como estava (TP-04).
- */
-export function removeSavedItinerary(id: string): RemoveItineraryResult {
-  const payload = readRawPayload()
-  if (payload.status === 'unavailable') {
-    return { ok: false, message: STORAGE_UNAVAILABLE_MESSAGE }
-  }
-
-  let records: SavedItinerary[] = []
-  if (payload.status === 'found') {
-    const load = loadSavedItineraries()
-    if (load.status === 'corrupted' || load.discardedCount > 0) {
-      quarantineCorruptedPayload(payload.raw)
+    const nextState = [record, ...others]
+    if (!isValidCollection(nextState)) {
+      return failure(INVALID_ITINERARY_MESSAGE)
     }
-    records = load.records
-  }
 
-  try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(records.filter((item) => item.id !== id)),
-    )
-  } catch (error) {
-    return { ok: false, message: storageErrorMessage(error) }
-  }
-  return { ok: true }
+    const write = writePrimaryWithConfirmation(JSON.stringify(nextState))
+    if (!write.ok) return write
+    return { ok: true, record }
+  })
+}
+
+/* ------------------------------------------------------------------ */
+/* Exclusão                                                            */
+/* ------------------------------------------------------------------ */
+
+/** Conteúdo observado na leitura que exibiu o alvo da ação. */
+export interface ObservedContent {
+  /** Conteúdo bruto da chave principal (null = chave ausente). */
+  expectedRaw: string | null
+}
+
+export type RemoveItineraryResult = MutationOutcome
+
+/**
+ * Remove um roteiro salvo pelo identificador, vinculado ao conteúdo
+ * bruto observado. A coleção precisa estar válida e com IDs únicos
+ * (grupos com IDs duplicados não recebem ações individuais). Excluir o
+ * último roteiro grava um array vazio — a chave principal nunca é
+ * removida. A exclusão não aciona limpeza automática de corrupção.
+ */
+export async function removeSavedItinerary(
+  id: string,
+  observed: ObservedContent,
+): Promise<RemoveItineraryResult> {
+  return withStorageLock((): RemoveItineraryResult => {
+    const decision = readForDecision()
+    if (!decision.ok) return decision
+    const { raw, load } = decision
+
+    if (raw !== observed.expectedRaw) {
+      return failure(STALE_ACTION_MESSAGE)
+    }
+    if (load.status === 'corrupted') {
+      return failure(CORRUPTED_STORAGE_MESSAGE)
+    }
+    const target = load.records.find((item) => item.id === id)
+    if (!target) {
+      return failure(RECORD_NOT_FOUND_MESSAGE)
+    }
+
+    const nextState = load.records.filter((item) => item.id !== id)
+    return writePrimaryWithConfirmation(JSON.stringify(nextState))
+  })
+}
+
+/* ------------------------------------------------------------------ */
+/* Recuperação explícita da chave principal                            */
+/* ------------------------------------------------------------------ */
+
+interface CorruptedAnalysis {
+  /** Registros individualmente válidos (ignora a unicidade na coleção). */
+  valid: SavedItinerary[]
+  /** Registros que falharam na validação individual. */
+  invalidCount: number
+  /** IDs que aparecem mais de uma vez entre os registros válidos. */
+  duplicatedIds: ReadonlySet<string>
 }
 
 /**
- * Descarte explícito, autorizado pelo usuário, de dados ilegíveis
- * (TP-05). O conteúdo é movido para a chave de quarentena antes de
- * liberar a chave principal — não é uma migração destrutiva automática.
+ * Análise individual dos registros de um payload corrompido, usada na
+ * recuperação: separa os registros recuperáveis dos que permanecerão
+ * apenas na cópia de segurança e identifica os grupos de IDs duplicados.
  */
-export function discardCorruptedData(): RemoveItineraryResult {
+function analyzeCorruptedPayload(raw: string): CorruptedAnalysis {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    return { valid: [], invalidCount: 0, duplicatedIds: new Set() }
+  }
+  if (!Array.isArray(parsed)) {
+    return { valid: [], invalidCount: 0, duplicatedIds: new Set() }
+  }
+  const valid: SavedItinerary[] = []
+  let invalidCount = 0
+  for (const item of parsed) {
+    if (isSavedItinerary(item)) {
+      valid.push(item)
+    } else {
+      invalidCount += 1
+    }
+  }
+  const idCounts = new Map<string, number>()
+  for (const record of valid) {
+    idCounts.set(record.id, (idCounts.get(record.id) ?? 0) + 1)
+  }
+  const duplicatedIds = new Set(
+    [...idCounts.entries()].filter(([, count]) => count > 1).map(([id]) => id),
+  )
+  return { valid, invalidCount, duplicatedIds }
+}
+
+/**
+ * Monta a coleção recuperada em memória: registros individualmente
+ * válidos são preservados (id, savedAt e campos desconhecidos intactos)
+ * e TODOS os integrantes de grupos com IDs duplicados recebem IDs novos
+ * e distintos. Retorna null se a geração de IDs falhar (sem escrita).
+ */
+function buildRecoveredCollection(
+  valid: readonly SavedItinerary[],
+  duplicatedIds: ReadonlySet<string>,
+): { records: SavedItinerary[]; idsFixedCount: number } | null {
+  const usedIds = new Set(valid.map((record) => record.id))
+  const records: SavedItinerary[] = []
+  let idsFixedCount = 0
+  for (const record of valid) {
+    if (duplicatedIds.has(record.id)) {
+      const newId = createUniqueRecordId(usedIds)
+      if (newId === null) return null
+      usedIds.add(newId)
+      records.push({ ...record, id: newId })
+      idsFixedCount += 1
+    } else {
+      records.push(record)
+    }
+  }
+  return { records, idsFixedCount }
+}
+
+export type RecoveryPreview =
+  | {
+      status: 'corrupted'
+      /** Conteúdo bruto observado — vínculo da confirmação. */
+      raw: string
+      /** Registros válidos que serão recuperados. */
+      recoverableCount: number
+      /** Registros ilegíveis que permanecerão apenas na cópia de segurança. */
+      backupOnlyCount: number
+      /** Registros que receberão novos IDs (grupos com IDs duplicados). */
+      idsToFixCount: number
+    }
+  | { status: 'not-corrupted' }
+  | { status: 'unavailable' }
+
+/**
+ * Pré-visualização somente de leitura da recuperação: informa quantos
+ * registros serão recuperados, quantos permanecerão apenas no backup e
+ * quantos IDs precisarão ser corrigidos. Não altera nenhuma chave.
+ */
+export function previewRecovery(): RecoveryPreview {
   const payload = readRawPayload()
-  if (payload.status === 'unavailable') {
-    return { ok: false, message: STORAGE_UNAVAILABLE_MESSAGE }
+  if (payload.status === 'unavailable') return { status: 'unavailable' }
+  if (payload.status === 'empty') return { status: 'not-corrupted' }
+  const load = interpretStoredPayload(payload.raw)
+  if (load.status !== 'corrupted') return { status: 'not-corrupted' }
+  const analysis = analyzeCorruptedPayload(payload.raw)
+  return {
+    status: 'corrupted',
+    raw: payload.raw,
+    recoverableCount: analysis.valid.length,
+    backupOnlyCount: analysis.invalidCount,
+    idsToFixCount: analysis.valid.filter((record) =>
+      analysis.duplicatedIds.has(record.id),
+    ).length,
   }
-  if (payload.status === 'found') {
-    quarantineCorruptedPayload(payload.raw)
-  }
-  return { ok: true }
+}
+
+export type RecoverStorageResult =
+  | {
+      ok: true
+      recoveredCount: number
+      backupOnlyCount: number
+      idsFixedCount: number
+      /** Preservação comprovada: cópia criada agora ou reutilizada por ser idêntica. */
+      backup: 'created' | 'reused'
+    }
+  | { ok: false; outcome: 'failure'; message: string }
+  | { ok: false; outcome: 'uncertain'; message: string }
+
+/**
+ * Recuperação explícita "preservar cópia e recuperar registros válidos":
+ *
+ * 1. Revalida o conteúdo bruto observado e o estado corrompido (ações
+ *    desatualizadas são canceladas sem alterar nenhuma chave).
+ * 2. Constrói a coleção recuperada em memória (registros válidos
+ *    preservados; IDs duplicados corrigidos com UUIDs novos).
+ * 3. Cria ou confirma o backup na quarentena — se falhar, interrompe e
+ *    preserva a chave principal.
+ * 4. Grava a coleção recuperada diretamente sobre a chave principal com
+ *    um único setItem (nunca removeItem antes de substituir).
+ * 5. Confirma a gravação por releitura.
+ *
+ * Sem registros recuperáveis, a lista ativa fica vazia (`[]`) e o
+ * conteúdo original permanece na quarentena.
+ */
+export async function recoverCorruptedStorage(
+  expectedRaw: string,
+): Promise<RecoverStorageResult> {
+  return withStorageLock((): RecoverStorageResult => {
+    const decision = readForDecision()
+    if (!decision.ok) return decision
+    const { raw, load } = decision
+
+    // Proteção contra ações desatualizadas: o conteúdo precisa ser
+    // exatamente o exibido na confirmação e ainda estar corrompido.
+    if (raw === null || raw !== expectedRaw) {
+      return failure(STALE_ACTION_MESSAGE)
+    }
+    if (load.status !== 'corrupted') {
+      return failure(STALE_ACTION_MESSAGE)
+    }
+
+    const analysis = analyzeCorruptedPayload(raw)
+    const recovered = buildRecoveredCollection(analysis.valid, analysis.duplicatedIds)
+    if (!recovered) {
+      return failure(ID_GENERATION_FAILED_MESSAGE)
+    }
+    if (!isValidCollection(recovered.records)) {
+      return failure(INVALID_ITINERARY_MESSAGE)
+    }
+
+    // Preservação não destrutiva ANTES de tocar a chave principal.
+    const backup = preserveInQuarantine(raw)
+    if (!backup.ok) {
+      return failure(backup.message)
+    }
+
+    const write = writePrimaryWithConfirmation(JSON.stringify(recovered.records))
+    if (!write.ok) return write
+    return {
+      ok: true,
+      recoveredCount: recovered.records.length,
+      backupOnlyCount: analysis.invalidCount,
+      idsFixedCount: recovered.idsFixedCount,
+      backup: backup.outcome,
+    }
+  })
+}
+
+/* ------------------------------------------------------------------ */
+/* Quarentena: restauração e descarte definitivo                       */
+/* ------------------------------------------------------------------ */
+
+export type RestoreQuarantineResult =
+  | { ok: true; restoredCount: number; idsFixedCount: number }
+  | { ok: false; outcome: 'failure'; message: string }
+  | { ok: false; outcome: 'uncertain'; message: string }
+
+/**
+ * Restaura os registros individualmente válidos da quarentena para a
+ * chave principal, mediante confirmação vinculada ao conteúdo da
+ * quarentena. Permitida SOMENTE quando a chave principal está vazia;
+ * com roteiros ativos ou corrupção pendente, é bloqueada (a cópia pode
+ * ser exportada). A quarentena é mantida após a restauração.
+ */
+export async function restoreQuarantineCopy(
+  expectedRaw: string,
+): Promise<RestoreQuarantineResult> {
+  return withStorageLock((): RestoreQuarantineResult => {
+    const decision = readForDecision()
+    if (!decision.ok) return decision
+    const { load } = decision
+
+    if (load.status === 'corrupted') {
+      return failure(RESTORE_BLOCKED_CORRUPTED_MESSAGE)
+    }
+    if (load.status !== 'empty') {
+      return failure(RESTORE_BLOCKED_NON_EMPTY_MESSAGE)
+    }
+
+    let quarantineRaw: string | null
+    try {
+      quarantineRaw = localStorage.getItem(CORRUPTED_BACKUP_KEY)
+    } catch {
+      return failure(QUARANTINE_UNAVAILABLE_MESSAGE)
+    }
+    if (quarantineRaw === null) {
+      return failure(QUARANTINE_EMPTY_MESSAGE)
+    }
+    if (quarantineRaw !== expectedRaw) {
+      return failure(STALE_ACTION_MESSAGE)
+    }
+
+    const analysis = analyzeCorruptedPayload(quarantineRaw)
+    const restored = buildRecoveredCollection(analysis.valid, analysis.duplicatedIds)
+    if (!restored) {
+      return failure(ID_GENERATION_FAILED_MESSAGE)
+    }
+    if (!isValidCollection(restored.records)) {
+      return failure(INVALID_ITINERARY_MESSAGE)
+    }
+
+    const write = writePrimaryWithConfirmation(JSON.stringify(restored.records))
+    if (!write.ok) return write
+    return {
+      ok: true,
+      restoredCount: restored.records.length,
+      idsFixedCount: restored.idsFixedCount,
+    }
+  })
+}
+
+export type DiscardQuarantineResult = MutationOutcome
+
+/**
+ * Descarte definitivo da cópia em quarentena, mediante confirmação
+ * explícita vinculada ao conteúdo da própria quarentena. NÃO altera a
+ * chave principal. Falha na remoção ou na confirmação retorna erro ou
+ * resultado incerto — nunca falso sucesso.
+ */
+export async function discardQuarantineCopy(
+  expectedRaw: string,
+): Promise<DiscardQuarantineResult> {
+  return withStorageLock((): DiscardQuarantineResult => {
+    let current: string | null
+    try {
+      current = localStorage.getItem(CORRUPTED_BACKUP_KEY)
+    } catch {
+      return failure(QUARANTINE_UNAVAILABLE_MESSAGE)
+    }
+    if (current === null) {
+      return failure(QUARANTINE_EMPTY_MESSAGE)
+    }
+    if (current !== expectedRaw) {
+      return failure(STALE_ACTION_MESSAGE)
+    }
+    try {
+      localStorage.removeItem(CORRUPTED_BACKUP_KEY)
+    } catch (error) {
+      return failure(storageErrorMessage(error))
+    }
+    // Confirmação por releitura: sucesso somente com evidência.
+    let after: string | null
+    try {
+      after = localStorage.getItem(CORRUPTED_BACKUP_KEY)
+    } catch {
+      return uncertain()
+    }
+    return after === null ? { ok: true } : uncertain()
+  })
 }

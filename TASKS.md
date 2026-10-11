@@ -138,15 +138,16 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
 | #     | Problema                                                        | Status | Critério de aceite                              |
 | ----- | --------------------------------------------------------------- | ------ | ----------------------------------------------- |
 | TP-01 | Sobreposição entre passeio de dia inteiro e atividade da tarde  | ✅     | Sem sobreposição em nenhum dia; teste de regressão do cenário auditado |
-| TP-02 | Persistência aceitava registros inválidos (data, dias, totais)  | 🚧     | Validação estrutural e semântica completa (P1 ✅); integração ao novo fluxo de gravação pendente (P2) |
-| TP-03 | Colisão de hash substituía roteiros diferentes silenciosamente  | 🚧     | Identidade UUID + equivalência por campos (P1 ✅); confirmação de substituição vinculada ao conteúdo pendente (P2) |
-| TP-04 | Falhas de escrita lançavam exceções não tratadas na interface   | 🚧     | Resultados sem exceções (✅ anterior); resultado incerto, confirmação por releitura e Web Locks pendentes (P2) |
-| TP-05 | JSON corrompido era tratado como vazio e podia ser sobrescrito  | 🚧     | Leitura com estados e quarentena (✅ anterior); recuperação explícita e bloqueio de escrita em coleção corrompida pendentes (P2) |
+| TP-02 | Persistência aceitava registros inválidos (data, dias, totais)  | 🚧     | Validação completa (P1 ✅) aplicada na leitura e antes de gravar (P2 ✅); auditoria final pendente |
+| TP-03 | Colisão de hash substituía roteiros diferentes silenciosamente  | 🚧     | Identidade UUID + equivalência por campos (P1 ✅); substituição com confirmação vinculada ao conteúdo (P2 ✅); auditoria final pendente |
+| TP-04 | Falhas de escrita lançavam exceções não tratadas na interface   | 🚧     | Fluxo com uma leitura de decisão, escrita única, confirmação por releitura, resultado incerto e Web Locks (P2 ✅); auditoria final pendente |
+| TP-05 | JSON corrompido era tratado como vazio e podia ser sobrescrito  | 🚧     | Escrita bloqueada em coleção corrompida, quarentena com confirmação e recuperação explícita (P2 ✅); auditoria final pendente |
 
 > TP-02 a TP-05 estão em remediação conforme
-> `docs/PERSISTENCE_REMEDIATION_PLAN.md`. O checkpoint P1 (identidade e
-> validação) foi concluído e validado; a declaração de correção total só
-> ocorrerá após a integração final (P2). Ver relatório abaixo.
+> `docs/PERSISTENCE_REMEDIATION_PLAN.md`. Os checkpoints P1 (identidade e
+> validação) e P2 (operações seguras, concorrência e recuperação) foram
+> implementados e validados; a declaração de correção total só ocorrerá
+> após a auditoria independente final. Ver relatórios abaixo.
 
 ## Relatório da correção TP-01 (2026-10-10)
 
@@ -321,3 +322,115 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
   confirmação do usuário.
 - **TP-02 e TP-03 NÃO estão declarados totalmente corrigidos**: a
   conclusão depende da integração final (P2) e de nova auditoria.
+
+## Relatório do CHECKPOINT P2 — Remediação de persistência: operações seguras e recuperação (2026-10-10)
+
+- **Escopo entregue** (conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`,
+  seções 3, 6 e 8; ver DECISIONS.md, D23):
+  - **Operações seguras**: uma leitura de decisão por operação (o
+    conteúdo bruto lido é interpretado uma única vez — falha de leitura
+    bloqueia a mutação e nunca vira lista vazia); novo estado construído
+    e validado integralmente em memória (`isValidCollection`); um único
+    `setItem` na chave principal; confirmação por releitura com
+    igualdade exata; resultados distintos de sucesso confirmado, falha
+    sem alteração e resultado incerto (mensagem fixa do plano, sem
+    repetição nem rollback). `removeItem` na chave principal abolido:
+    excluir o último roteiro grava `[]`.
+  - **Concorrência**: mutações assíncronas sob o lock exclusivo Web
+    Locks `travel-planner:storage:v1`; sem a API ou com falha de
+    aquisição, mutações bloqueadas com mensagem explicativa (sem
+    fallback inseguro); leitura/exportação seguem disponíveis. A
+    confirmação do usuário ocorre fora do lock e é revalidada dentro
+    dele.
+  - **Quarentena**: preservação do conteúdo bruto original (sem filtrar
+    nem reserializar); cópia idêntica é reutilizada; cópia diferente
+    (inclusive string vazia) bloqueia a operação; gravação do backup
+    confirmada por releitura; falha de leitura/escrita/confirmação do
+    backup impede a escrita principal; a chave principal nunca é
+    removida antes de ser substituída.
+  - **Recuperação explícita**: `previewRecovery` (somente leitura, com
+    contagens e vínculo ao conteúdo bruto), `recoverCorruptedStorage`
+    (revalida conteúdo e estado corrompido, preserva backup, grava e
+    confirma; IDs duplicados corrigidos com UUIDs novos para TODOS os
+    integrantes do grupo; registros válidos preservados com id, savedAt
+    e campos desconhecidos), `restoreQuarantineCopy` (somente com a
+    chave principal vazia; mantém a quarentena) e
+    `discardQuarantineCopy` (vinculado ao conteúdo da quarentena, sem
+    tocar a chave principal, com confirmação por releitura — falha nunca
+    é falso sucesso). A antiga `discardCorruptedData` foi removida.
+  - **Confirmação de substituição (TP-03)**: um planejamento equivalente
+    não é mais substituído automaticamente — `saveItinerary` retorna
+    `needs-confirmation` com o vínculo (id do alvo + conteúdo bruto
+    observado + resumo destino/dias/data); a substituição confirmada
+    preserva o id do alvo e só é executada se o conteúdo não mudou.
+  - **Reclassificação (TP-05)**: coleção parcialmente válida passa a ser
+    `corrupted` (registros íntegros expostos só para consulta) e string
+    vazia armazenada é corrompida; escritas normais são bloqueadas em
+    coleção corrompida, sem quarentena automática.
+  - **Interface (adaptação inseparável dos consumidores)**: HomePage com
+    exclusão assíncrona vinculada ao conteúdo observado, painel de
+    recuperação com contagens e confirmação explícita (incluindo aviso
+    de lista vazia quando não há recuperáveis), painel de quarentena
+    (baixar cópia, restaurar com confirmação quando não há roteiros
+    ativos, descartar definitivamente com confirmação); ItineraryPage
+    com salvamento assíncrono, estado "Salvando…", painel de confirmação
+    de substituição e mensagens de falha/incerto; SavedItineraries com
+    exclusão bloqueada quando o armazenamento não está íntegro ou há
+    operação em andamento; exportação de recuperação
+    (`travel-planner:recuperacao-armazenamento`, versão 1) separada da
+    exportação normal.
+- **Arquivos modificados**: `src/services/itineraryStorage.ts`,
+  `src/services/itineraryExport.ts`, `src/pages/HomePage.tsx`,
+  `src/pages/ItineraryPage.tsx`, `src/components/SavedItineraries.tsx`,
+  `src/tests/itineraryStorage.test.ts`,
+  `src/tests/itineraryStorageIdentity.test.ts`,
+  `src/tests/itineraryExport.test.ts`, `TASKS.md`, `DECISIONS.md`.
+- **Arquivos criados**: `src/tests/helpers/webLocksMock.ts` (mock de Web
+  Locks com serialização FIFO e detecção de concorrência),
+  `src/tests/itineraryStorageSafeWrites.test.ts` (12 testes),
+  `src/tests/itineraryStorageRecovery.test.ts` (20 testes).
+- **Regressões adicionadas** (todas comparando o conteúdo bruto das
+  chaves antes e depois): falha na primeira leitura (zero escritas);
+  falha na confirmação de escrita (resultado incerto, um único setItem,
+  sem rollback); confirmação com conteúdo divergente (incerto); quota
+  excedida (chave principal idêntica); escritas consecutivas (cada
+  estado conferido pelo raw); falhas consecutivas de leitura/escrita
+  (nenhuma conversão em lista vazia); duas operações concorrentes
+  serializadas pelo lock sem atualização perdida; Web Locks ausente ou
+  com falha de aquisição (mutações bloqueadas, leitura/exportação
+  utilizáveis); ações desatualizadas na exclusão, na substituição, na
+  recuperação e no descarte (nenhuma chave alterada); exclusão de ID
+  ausente (falha sem escrita); exclusão do último registro (grava `[]`,
+  não remove a chave); quarentena ocupada por conteúdo diferente
+  (bloqueio, ambas as chaves intactas) e idêntica (reuso); falha na
+  criação e na confirmação do backup (escrita principal impedida);
+  quota real no backup (operação bloqueada, original intacto); backup
+  confirmado com falha na escrita principal (original preservado, cópia
+  mantida); preservação integral do conteúdo bruto original (JSON
+  inválido, string vazia, formato desconhecido, campos desconhecidos);
+  recuperação com confirmação (contagens, IDs duplicados corrigidos,
+  lista vazia quando não há recuperáveis); restauração (permitida só sem
+  roteiros ativos, bloqueada com conteúdo ativo ou corrompido,
+  quarentena mantida); descarte da quarentena (sucesso confirmado, falha
+  na remoção e falha na confirmação nunca são falso sucesso).
+- **Validações executadas (resultados reais)**: `npm run typecheck` (sem
+  erros), `npm run test:run` (168 testes, 10 arquivos, todos passando),
+  `npm run lint` (0 erros, 0 avisos), `npm run build` (sucesso).
+- **Dependências de P3 (etapa de interface do plano, não iniciada)**:
+  1. Testes de interação de HomePage e ItineraryPage (alertas
+     acessíveis, painéis de confirmação, nova tentativa segura).
+  2. Revisão fina de mensagens/estados visuais contra a tabela de
+     resultados (o essencial funcional já está na interface).
+  3. Validação final de compatibilidade e auditoria independente antes
+     de declarar TP-02 a TP-05 corrigidos.
+- **Riscos remanescentes**: abas executando versões antigas ignoram o
+  lock (limitação explícita do plano, seção 12); o resultado incerto
+  depende de releitura antes da próxima ação (a interface recarrega a
+  lista após cada mutação, mas a decisão é do usuário); a quarentena
+  guarda uma única cópia — com ela ocupada por conteúdo diferente, novas
+  recuperações ficam bloqueadas até download ou descarte explícito (por
+  design); extensões desconhecidas de um registro substituído não são
+  mantidas na substituição confirmada (ambiguidade nº 7 do plano).
+- **TP-02 a TP-05 NÃO estão declarados totalmente corrigidos**: a
+  conclusão depende da auditoria independente final (critério 12 do
+  plano). P3 não foi iniciado.

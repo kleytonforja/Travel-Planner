@@ -9,6 +9,12 @@ interface SavedItinerariesProps {
   saved: SavedItinerary[]
   onOpen: (saved: SavedItinerary) => void
   onRemove: (id: string) => void
+  /**
+   * Desativa a exclusão quando o armazenamento não está íntegro
+   * (corrompido/indisponível) ou há uma operação em andamento — ações
+   * incompatíveis com o estado do armazenamento ficam bloqueadas.
+   */
+  actionsDisabled?: boolean
 }
 
 /**
@@ -19,6 +25,7 @@ export function SavedItineraries({
   saved,
   onOpen,
   onRemove,
+  actionsDisabled = false,
 }: SavedItinerariesProps) {
   return (
     <section
@@ -90,8 +97,9 @@ export function SavedItineraries({
                     <button
                       type="button"
                       onClick={() => onRemove(record.id)}
+                      disabled={actionsDisabled}
                       aria-label={`Excluir roteiro de ${destination?.name ?? 'destino'}`}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-slate-300 disabled:hover:bg-white disabled:hover:text-slate-700"
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                       Excluir

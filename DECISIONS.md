@@ -249,6 +249,87 @@ classificada como `ok` + `discardedCount` (a reclassificação para
 sem caminho seguro); a substituição de equivalente único ainda não pede
 confirmação; mutações seguem síncronas e sem coordenação entre abas.
 
+**Revisão (remediação P2)**: ver D23. TP-02 a TP-05 permanecem em
+remediação até a auditoria independente final.
+
+## D23 — Remediação da persistência, checkpoint P2: operações seguras, concorrência e recuperação
+
+**Decisão**: segunda etapa de `docs/PERSISTENCE_REMEDIATION_PLAN.md`,
+integrando o novo fluxo de gravação e adaptando os consumidores (a
+mudança de contrato era inseparável da adaptação mínima da interface):
+
+1. **Fluxo de gravação (TP-04)**: cada mutação executa UMA leitura de
+   decisão (`readForDecision`, que interpreta exatamente o conteúdo bruto
+   lido — nunca uma segunda leitura), constrói e valida o novo estado
+   integralmente em memória (`isValidCollection`: registros válidos e
+   IDs únicos), executa UM único `setItem` na chave principal e confirma
+   por releitura com igualdade exata. Resultados tri-estado: sucesso
+   confirmado, `failure` (sem alteração da chave principal) e
+   `uncertain` (escrita retornou, confirmação falhou ou divergiu — sem
+   repetição nem rollback, com a mensagem fixa do plano). `removeItem`
+   na chave principal é proibido: excluir o último roteiro grava `[]`.
+2. **Concorrência (TP-04)**: todas as mutações são assíncronas e rodam
+   sob o lock exclusivo Web Locks `travel-planner:storage:v1`. Sem a API
+   (ou se a aquisição falhar), as mutações são bloqueadas com mensagem
+   explicativa — não há fallback de escrita sem coordenação; leitura e
+   exportação permanecem utilizáveis. A confirmação do usuário acontece
+   fora do lock; ao confirmar, o conteúdo é revalidado dentro dele.
+3. **Estados e classificação (TP-05)**: string vazia armazenada é
+   corrompida (não ausência de dados); coleção parcialmente válida é
+   `corrupted` (registros íntegros expostos só para consulta); escrita
+   normal em coleção corrompida é bloqueada, sem quarentena automática
+   como efeito colateral — a função antiga `discardCorruptedData` foi
+   removida e substituída pela recuperação explícita.
+4. **Quarentena (TP-05)**: `preserveInQuarantine` guarda o conteúdo
+   bruto original sem filtrar nem reserializar; reutiliza cópia
+   idêntica; bloqueia diante de cópia diferente (inclusive string
+   vazia); falha de leitura, escrita ou confirmação do backup interrompe
+   a operação ANTES de tocar a chave principal. Cópia adicional remanescente
+   após falha não é limpa automaticamente.
+5. **Recuperação explícita (TP-05)**: `previewRecovery` (somente
+   leitura) informa recuperáveis, ilegíveis e IDs a corrigir;
+   `recoverCorruptedStorage(expectedRaw)` revalida o conteúdo e o estado
+   corrompido, preserva o backup, grava a coleção recuperada e confirma.
+   Registros individualmente válidos são preservados (id, savedAt e
+   campos desconhecidos intactos); TODOS os integrantes de grupos com
+   IDs duplicados recebem UUIDs novos e distintos. `restoreQuarantineCopy`
+   só restaura com a chave principal vazia e mantém a quarentena;
+   `discardQuarantineCopy` descarta a cópia com confirmação vinculada ao
+   conteúdo dela, sem tocar a chave principal, e confirma a remoção por
+   releitura (falha → erro ou incerto, nunca falso sucesso).
+6. **Vínculo de confirmações (TP-03/TP-05)**: substituição, exclusão,
+   recuperação, restauração e descarte carregam o conteúdo bruto
+   observado (`expectedRaw`); se o armazenamento mudou, a operação é
+   cancelada e exige nova análise — nenhuma autorização anterior é
+   reutilizada. A confirmação de substituição informa destino, dias e
+   data do alvo e preserva o ID dele.
+7. **Exportação de recuperação**: envelope JSON com `formato`
+   (`travel-planner:recuperacao-armazenamento`), `versao` (1),
+   `chaveOrigem` e `raw` — valores literais definidos aqui, pois o plano
+   os deixou abertos (ambiguidade nº 2). Distinto da exportação normal.
+   A interface não afirma que o download foi guardado.
+
+**Ambiguidades do plano resolvidas nesta etapa** (registradas conforme a
+seção 15): nº 2 — valores do envelope de recuperação (acima); nº 5 —
+exclusão de ID ausente em snapshot válido retorna falha sem escrita
+("roteiro não encontrado"); nº 10 — confirmações como painéis inline
+acessíveis (`role="alert"` onde há decisão destrutiva), sem diálogo
+nativo.
+
+**Justificativa**: o plano exige que nenhuma falha de leitura vire lista
+vazia, que a gravação seja confirmada por evidência, que o backup seja
+pré-condição comprovada da alteração principal e que a coordenação entre
+abas não tenha fallback inseguro.
+
+**Limitações desta etapa**: abas executando versões antigas ignoram o
+lock (limitação explícita do plano); o resultado incerto exige releitura
+manual (a interface recarrega a lista após cada mutação, mas a decisão
+seguinte é do usuário); testes de interação da interface (alertas,
+painéis de confirmação) ficam para o checkpoint de interface (P3); a
+substituição confirmada gera um registro novo preservando apenas o ID —
+extensões desconhecidas do registro substituído não são mantidas
+(ambiguidade nº 7, não exigida pelo plano).
+
 ## D15 — Formulário conectado ao gerador (substitui D11)
 
 **Decisão**: o botão do formulário passou a se chamar "Gerar roteiro" e,

@@ -17,8 +17,10 @@ import { downloadItineraryJson } from '../services/itineraryExport'
 import {
   buildPlanningFingerprint,
   saveItinerary,
+  type ReplaceConfirmation,
 } from '../services/itineraryStorage'
 import type { Itinerary, SavedItinerary } from '../types'
+import { formatDateTime } from '../utils/format'
 
 interface ItineraryPageProps {
   itinerary: Itinerary
@@ -40,6 +42,9 @@ export function ItineraryPage({
 }: ItineraryPageProps) {
   const [savedRecord, setSavedRecord] = useState<SavedItinerary | null>(saved)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [pendingReplace, setPendingReplace] =
+    useState<ReplaceConfirmation | null>(null)
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -49,15 +54,35 @@ export function ItineraryPage({
     (item) => item.id === itinerary.input.destinationId,
   )
 
-  function handleSave() {
-    const result = saveItinerary(itinerary)
-    if (!result.ok) {
-      // TP-04: nunca informar sucesso quando a operação falhou.
+  /**
+   * Salvamento assíncrono (P2): coordenado por Web Locks, com sucesso
+   * somente após confirmação por releitura. Um planejamento equivalente
+   * já salvo exige confirmação explícita de substituição, vinculada ao
+   * id do alvo e ao conteúdo bruto observado.
+   */
+  async function handleSave(confirmation?: ReplaceConfirmation) {
+    setIsSaving(true)
+    try {
+      const result = await saveItinerary(itinerary, confirmation)
+      if (result.ok) {
+        setSaveError(null)
+        setPendingReplace(null)
+        setSavedRecord(result.record)
+        return
+      }
+      if (result.outcome === 'needs-confirmation') {
+        setSaveError(null)
+        setPendingReplace(result.confirmation)
+        return
+      }
+      // Falha ou resultado incerto: nunca informar sucesso sem
+      // confirmação. A confirmação pendente é descartada — uma nova
+      // análise é necessária após nova leitura.
+      setPendingReplace(null)
       setSaveError(result.message)
-      return
+    } finally {
+      setIsSaving(false)
     }
-    setSaveError(null)
-    setSavedRecord(result.record)
   }
 
   function handleExport() {
@@ -132,11 +157,12 @@ export function ItineraryPage({
             ) : (
               <button
                 type="button"
-                onClick={handleSave}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                onClick={() => handleSave()}
+                disabled={isSaving}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Save className="h-4 w-4" aria-hidden="true" />
-                Salvar roteiro
+                {isSaving ? 'Salvando…' : 'Salvar roteiro'}
               </button>
             )}
 
@@ -150,6 +176,48 @@ export function ItineraryPage({
             </button>
           </div>
         </div>
+
+        {/* Confirmação de substituição (TP-03): vinculada ao alvo e ao
+            conteúdo bruto observado; informa destino, dias e data do
+            registro que será substituído. */}
+        {pendingReplace && !savedRecord && (
+          <div
+            role="alert"
+            className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4"
+          >
+            <p className="text-sm font-semibold text-amber-900">
+              Substituir roteiro salvo?
+            </p>
+            <p className="mt-1 text-sm text-amber-800">
+              Já existe um roteiro salvo com este mesmo planejamento:{' '}
+              {destinations.find(
+                (item) => item.id === pendingReplace.target.destinationId,
+              )?.name ?? pendingReplace.target.destinationId}
+              , {pendingReplace.target.days}{' '}
+              {pendingReplace.target.days === 1 ? 'dia' : 'dias'}, salvo em{' '}
+              {formatDateTime(pendingReplace.target.savedAt)}. Ao confirmar,
+              somente esse registro será substituído.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => handleSave(pendingReplace)}
+                disabled={isSaving}
+                className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSaving ? 'Salvando…' : 'Confirmar substituição'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingReplace(null)}
+                disabled={isSaving}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Falha ao salvar (TP-04: erro recuperável, sem falso sucesso) */}
         {saveError && (

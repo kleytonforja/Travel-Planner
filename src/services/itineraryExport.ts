@@ -82,11 +82,57 @@ export function downloadItineraryJson(
   destination: Destination,
 ): void {
   const json = serializeItineraryExport(saved, destination)
+  downloadJsonFile(json, `roteiro-${slugify(destination.name)}-${saved.id}.json`)
+}
+
+/* ------------------------------------------------------------------ */
+/* Exportação de recuperação (cópia bruta do armazenamento)            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Identificador do formato do envelope de recuperação. NÃO é o JSON de
+ * exportação normal do roteiro: contém o conteúdo bruto da chave de
+ * origem, para preservação externa dos dados antes do descarte.
+ */
+export const RECOVERY_EXPORT_FORMAT = 'travel-planner:recuperacao-armazenamento'
+export const RECOVERY_EXPORT_VERSION = 1
+
+/**
+ * Monta o envelope de recuperação: identificador do formato, versão,
+ * chave de origem e a string raw preservada integralmente.
+ */
+export function buildRecoveryExport(raw: string, sourceKey: string) {
+  return {
+    formato: RECOVERY_EXPORT_FORMAT,
+    versao: RECOVERY_EXPORT_VERSION,
+    chaveOrigem: sourceKey,
+    raw,
+  }
+}
+
+/** Serializa o envelope de recuperação em JSON formatado. */
+export function serializeRecoveryExport(raw: string, sourceKey: string): string {
+  return JSON.stringify(buildRecoveryExport(raw, sourceKey), null, 2)
+}
+
+/**
+ * Dispara o download da cópia bruta para recuperação. Disparar o
+ * download não prova que o usuário guardou o arquivo — a interface não
+ * pode afirmar isso.
+ */
+export function downloadRecoveryJson(raw: string, sourceKey: string): void {
+  downloadJsonFile(
+    serializeRecoveryExport(raw, sourceKey),
+    'travel-planner-copia-de-seguranca.json',
+  )
+}
+
+function downloadJsonFile(json: string, filename: string): void {
   const blob = new Blob([json], { type: 'application/json;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `roteiro-${slugify(destination.name)}-${saved.id}.json`
+  link.download = filename
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
