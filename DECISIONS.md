@@ -363,6 +363,96 @@ falhas do LocalStorage), conforme a dependência registrada no P2.
 do P3. TP-02 a TP-05 NÃO são declarados corrigidos sem a auditoria
 independente final (critério 12 do plano).
 
+**Revisão (correção C2-A)**: ver D25. A afirmação "nenhuma mensagem
+promete preservação sem evidência" estava incorreta no alerta genérico
+de indisponibilidade (AUD-02) e a confirmação de restauração não
+informava a correção de IDs (AUD-06).
+
+## D25 — Mensagens condicionadas à evidência e restauração com análise prévia (C2-A)
+
+**Decisão**: correção dos achados AUD-02 e AUD-06 da auditoria
+independente final, com duas regras novas:
+
+1. **Afirmação de preservação condicionada à evidência (AUD-02)**: o
+   alerta genérico de indisponibilidade da HomePage só inclui "Nenhum
+   dado foi alterado." quando NENHUMA mutação foi tentada na sessão da
+   página (estado `mutationAttempted`). Após qualquer tentativa — mesmo
+   uma falha, que pode deixar cópia adicional na quarentena (plano,
+   3.2) — o alerta informa a indisponibilidade e orienta recarregar e
+   verificar o estado real, sem afirmação absoluta.
+2. **Restauração com análise prévia e vínculo (AUD-06)**: nova função
+   somente de leitura no serviço, `previewQuarantineRestore`, informa
+   registros restauráveis e IDs a corrigir com o conteúdo bruto exato
+   observado. O painel de restauração apresenta essa análise ANTES da
+   confirmação e a autorização guarda o conteúdo bruto capturado na
+   abertura (mesmo padrão da correção AUD-01): a confirmação envia ao
+   serviço somente esse conteúdo, releituras que observam conteúdo
+   diferente invalidam a autorização e cancelar/concluir/falhar a limpa.
+
+**Justificativa**: a auditoria comprovou afirmação de preservação falsa
+após escrita efetiva com resultado incerto (AUD-02) e confirmação de
+restauração sem o aviso prévio da alteração de identificadores
+(AUD-06). A solução reutiliza o padrão de vínculo já aprovado na
+correção AUD-01, sem alterar o fluxo de gravação do serviço (a única
+adição é uma leitura) e sem mudar a identidade visual.
+
+**Limitações**: AUD-02 e AUD-06 NÃO são declarados corrigidos sem nova
+auditoria independente. Ver TASKS.md, relatório do C2-A.
+
+## D26 — Validação financeira estrita e exportação da principal corrompida (C2-B)
+
+**Decisão**: correção dos achados AUD-03, AUD-04, AUD-05 e AUD-07 da
+auditoria independente final:
+
+1. **Custo ≤ orçamento sem tolerância (AUD-03)**: a verificação de
+   custo superior ao orçamento em `validateSavedItinerary` passou de
+   `custo − orçamento > EPSILON` para a comparação ESTRITA
+   `custo > orçamento`. A tolerância absoluta de 1e-6 permanece apenas
+   nas três relações de igualdade (custo = soma das atividades, saldo =
+   orçamento − custo, média = custo ÷ dias), conforme o plano (seção
+   5): "Rejeitar custo superior ao orçamento. A tolerância não autoriza
+   saldo negativo nem transforma valores não finitos em válidos."
+2. **Saldo comparado diretamente com orçamento − custo (AUD-04)**: a
+   verificação `custo + saldo ≈ orçamento` foi substituída por
+   `saldo ≈ orçamento − custo` (tolerância absoluta de 1e-6). A forma
+   anterior absorvia discrepâncias pela precisão numérica com valores
+   grandes (1e16 + 1 === 1e16), aceitando saldo incorreto. As
+   verificações de finitude e não negatividade preexistentes foram
+   mantidas; a subtração de orçamento e custo finitos e não negativos
+   é sempre finita, e nenhum valor armazenado é arredondado ou
+   convertido (o plano proíbe centavos/arredondamento nesta correção).
+3. **Exportação do conteúdo bruto da principal corrompida (AUD-05)**:
+   o painel de corrupção da HomePage ganhou a ação "Baixar cópia do
+   conteúdo bruto", que reutiliza o exportador de recuperação
+   existente (`downloadRecoveryJson`) com o raw observado da chave
+   principal e a chave de origem correta (`STORAGE_KEY`). A exportação
+   não grava nada — funciona inclusive sem espaço para a quarentena —,
+   não altera a chave principal e nunca sobrescreve a quarentena. O
+   aviso pós-clique (`role="status"`) registra somente o download
+   INICIADO e declara que iniciar o download não confirma que o
+   arquivo foi guardado.
+4. **Regressões e documentação fiel (AUD-07)**: a colisão verdadeira
+   reconstruída pela auditoria (dois planejamentos sintéticos cujos
+   fingerprints CALCULADOS são exatamente `roteiro-2cd27b6e`) foi
+   incorporada como regressão, com a origem sintética identificada no
+   teste — o par original permanece indisponível (ambiguidade nº 9). A
+   declaração de cobertura dos critérios 1–11 no relatório do P3
+   (TASKS.md) recebeu revisão explícita: ela excedia as evidências.
+
+**Justificativa**: AUD-03 e AUD-04 estavam no mesmo validador
+compartilhado entre leitura e gravação e foram corrigidos juntos, sem
+alterar o formato persistido nem o gerador (não havia necessidade
+comprovada de mexer nele). A compatibilidade histórica é preservada:
+registros produzidos pelo gerador e históricos íntegros satisfazem
+exatamente as comparações corrigidas (mesma aritmética). AUD-05 usou o
+exportador já aprovado, sem novas dependências nem mudança visual além
+do botão no padrão existente.
+
+**Limitações**: AUD-03, AUD-04, AUD-05 e AUD-07 NÃO são declarados
+corrigidos sem nova auditoria independente. A amostra histórica
+original (64.851/837) segue indisponível — não se afirma ausência de
+rejeições adicionais nessa população. Ver TASKS.md, relatório do C2-B.
+
 ## D15 — Formulário conectado ao gerador (substitui D11)
 
 **Decisão**: o botão do formulário passou a se chamar "Gerar roteiro" e,

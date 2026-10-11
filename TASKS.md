@@ -389,6 +389,20 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
   interface não promete preservação, backup ou sucesso sem evidência) e
   11 (typecheck, testes, lint e build verdes). Os critérios 1–11 estão
   cobertos pela suíte; o critério 12 depende da auditoria independente.
+
+  **Revisão (AUD-07, 2026-10-11)**: a afirmação "os critérios 1–11
+  estão cobertos pela suíte" excedia as evidências. A auditoria
+  independente final reproduziu violações em cenários ausentes da
+  suíte (AUD-01 a AUD-06) e constatou que o teste denominado "colisão
+  real" não calculava dois hashes iguais (a fixture atribuía a um
+  registro o fingerprint de outro planejamento) e que o par original e
+  a amostra histórica original permanecem indisponíveis. O registro
+  correto é: a suíte existente passava nos cenários que cobria, sem
+  cobertura integral dos casos obrigatórios. As lacunas foram tratadas
+  nos checkpoints C1, C2-A e C2-B (regressões incorporadas, incluindo
+  a colisão verdadeira reconstruída com origem sintética identificada);
+  a reavaliação dos 12 critérios é pendência da nova auditoria
+  independente.
 - **Riscos remanescentes** (inalterados em relação ao P2): abas
   executando versões antigas ignoram o lock (limitação explícita do
   plano, seção 12); o resultado incerto depende de releitura antes da
@@ -527,16 +541,17 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
 | #      | Problema                                                                 | Status | Critério de aceite                                              |
 | ------ | ------------------------------------------------------------------------ | ------ | --------------------------------------------------------------- |
 | AUD-01 | Confirmação antiga de descarte apagava uma nova quarentena               | 🚧     | Correção implementada e validada na suíte local; reauditoria pendente |
-| AUD-02 | Mensagem falsa de preservação após resultado incerto                     | ⬜     | Não iniciado                                                    |
-| AUD-03 | Custo superior ao orçamento aceito dentro da tolerância                  | ⬜     | Não iniciado                                                    |
-| AUD-04 | Saldo incorreto aceito pela perda de precisão na soma                    | ⬜     | Não iniciado                                                    |
-| AUD-05 | Falta exportação bruta da principal corrompida                           | ⬜     | Não iniciado                                                    |
-| AUD-06 | Restauração corrige IDs sem aviso prévio                                 | ⬜     | Não iniciado                                                    |
-| AUD-07 | Declaração de aceite excede as evidências                                | ⬜     | Não iniciado                                                    |
+| AUD-02 | Mensagem falsa de preservação após resultado incerto                     | 🚧     | Correção implementada e validada na suíte local (C2-A); reauditoria pendente |
+| AUD-03 | Custo superior ao orçamento aceito dentro da tolerância                  | 🚧     | Correção implementada e validada na suíte local (C2-B); reauditoria pendente |
+| AUD-04 | Saldo incorreto aceito pela perda de precisão na soma                    | 🚧     | Correção implementada e validada na suíte local (C2-B); reauditoria pendente |
+| AUD-05 | Falta exportação bruta da principal corrompida                           | 🚧     | Correção implementada e validada na suíte local (C2-B); reauditoria pendente |
+| AUD-06 | Restauração corrige IDs sem aviso prévio                                 | 🚧     | Correção implementada e validada na suíte local (C2-A); reauditoria pendente |
+| AUD-07 | Declaração de aceite excede as evidências                                | 🚧     | Regressões incorporadas e documentação reconciliada com as evidências (C2-B); reauditoria pendente |
 
-> A correção de AUD-01 foi implementada e validada localmente, mas o
-> achado só poderá ser declarado corrigido após nova auditoria
-> independente. A auditoria final NÃO está aprovada.
+> As correções de AUD-01 a AUD-07 foram implementadas e validadas
+> localmente (checkpoints C1, C2-A e C2-B), mas os achados só poderão
+> ser declarados corrigidos após nova auditoria independente. A
+> auditoria final NÃO está aprovada.
 
 ## Relatório da correção AUD-01 (2026-10-11)
 
@@ -608,3 +623,318 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
 - **AUD-01 NÃO está declarado totalmente corrigido**: a declaração
   depende de nova auditoria independente (critério 12 do plano e seção
   10 dos achados).
+
+## Relatório da correção C2-A — AUD-02, AUD-06 e lacuna de restauração (2026-10-11)
+
+- **Escopo**: somente os achados AUD-02 e AUD-06 e a lacuna de
+  autorização da restauração da quarentena (risco remanescente
+  registrado no relatório do AUD-01). AUD-03, AUD-04 e AUD-05 NÃO foram
+  implementados, conforme as restrições. Nenhuma dependência instalada,
+  nenhuma mudança de identidade visual, nenhum commit/push/publicação.
+
+### AUD-02 — Mensagens de segurança
+
+- **Problema**: o alerta genérico de indisponibilidade da HomePage
+  afirmava "Nenhum dado foi alterado" com base apenas no estado da
+  leitura seguinte, sem evidência sobre a mutação anterior. No cenário
+  auditado (exclusão com escrita efetiva de `[]` + falha na leitura de
+  confirmação + falha na releitura da interface), a mensagem de
+  resultado incerto e a falsa afirmação de preservação eram exibidas
+  simultaneamente.
+- **Causa raiz**: a afirmação absoluta não estava condicionada à
+  evidência de que nenhuma escrita foi tentada.
+- **Reprodução antes da correção**: os testes "reproduz o cenário exato
+  do AUD-02" e "falha de escrita (quota) seguida de leitura
+  indisponível" FALHARAM no estado anterior — a afirmação "Nenhum dado
+  foi alterado." estava presente nos dois cenários (a escrita efetiva
+  de `[]` foi confirmada por inspeção direta do armazenamento).
+- **Correção implementada** (`src/pages/HomePage.tsx`, somente
+  interface): a página registra se alguma mutação foi tentada na sessão
+  (`mutationAttempted`). A afirmação "Nenhum dado foi alterado." só é
+  exibida quando NENHUMA mutação foi tentada (evidência: a página não
+  escreveu nada); após qualquer tentativa — inclusive falhas, que podem
+  deixar cópia adicional na quarentena (plano, 3.2) — o alerta informa
+  a indisponibilidade e orienta recarregar e verificar o estado real,
+  sem prometer preservação. A mensagem fixa de resultado incerto do
+  plano foi preservada. As demais mensagens foram revisadas: o serviço
+  só afirma preservação em falhas anteriores à escrita (evidência real)
+  e os sucessos só aparecem após confirmação por releitura — nenhum
+  outro caminho prometia preservação, backup ou conclusão sem
+  evidência.
+
+### AUD-06 — Restauração com aviso prévio de IDs
+
+- **Problema**: o painel de confirmação da restauração era genérico e
+  não informava que o serviço atribui NOVOS identificadores a TODOS os
+  integrantes de grupos com IDs duplicados.
+- **Causa raiz**: a interface não analisava o conteúdo da cópia na
+  abertura do painel (a análise existia apenas no serviço, no momento
+  da execução).
+- **Reprodução antes da correção**: o teste "reproduz o cenário exato
+  do AUD-06" (principal `[]`, quarentena com dois registros
+  individualmente válidos com o mesmo ID) FALHOU no estado anterior —
+  o painel não mencionava identificadores.
+- **Correção implementada**:
+  1. Nova função somente de leitura no serviço
+     (`previewQuarantineRestore` em `src/services/itineraryStorage.ts`):
+     informa quantos registros serão restaurados e quantos receberão
+     novos identificadores, com o conteúdo bruto exato observado para
+     vincular a confirmação. Não altera nenhuma chave.
+  2. O painel de restauração apresenta a análise ANTES da confirmação
+     ("2 registros válidos serão restaurados", "2 registros com
+     identificadores duplicados receberão novos identificadores"),
+     incluindo aviso quando nenhum registro é restaurável.
+  3. A mensagem de sucesso confirmado passa a refletir a correção de
+     IDs efetivamente realizada (ex.: "2 registros restaurados (2
+     identificadores duplicados foram corrigidos)").
+
+### Lacuna de autorização da restauração
+
+- **Lacuna**: a confirmação de restauração era um booleano que lia
+  `quarantine.raw` do estado no momento da confirmação — o mesmo padrão
+  do AUD-01.
+- **Nota de reprodução**: diferente do descarte, não foi encontrado
+  caminho na interface que recarregue o estado da quarentena mantendo o
+  painel de restauração aberto — com a chave principal vazia
+  (pré-condição da restauração), nenhuma mutação local disponível
+  provoca recarga sem fechar o painel. A lacuna é estrutural; a
+  correção elimina a classe de defeito e os testes comprovam o
+  cancelamento quando o conteúdo muda entre a abertura e a confirmação.
+- **Correção implementada** (`src/pages/HomePage.tsx`, mesmo padrão do
+  AUD-01): a confirmação passou a guardar o conteúdo bruto exato
+  observado na abertura do painel (`restoreAuthorization`), capturado
+  pelo `previewQuarantineRestore` no clique de "Restaurar registros da
+  cópia"; a confirmação envia ao serviço SOMENTE esse conteúdo
+  capturado; toda releitura que observa conteúdo diferente (ou ausente)
+  invalida a autorização em aberto (`reloadSaved`); cancelar, concluir
+  ou falhar limpa a autorização — nenhuma é reutilizável. O serviço
+  (`restoreQuarantineCopy`) já revalidava o conteúdo dentro do lock e
+  não foi alterado.
+
+### Testes adicionados (11), todos comparando o conteúdo bruto das chaves
+
+- `src/tests/quarantineRestoreAud06.test.tsx` (7): reprodução do
+  cenário exato do AUD-06 (aviso prévio de IDs); confirmação válida
+  (IDs novos e distintos, `savedAt` e demais campos preservados,
+  quarentena intacta byte a byte, mensagem refletindo a correção);
+  conteúdo alterado entre abertura e confirmação (operação cancelada,
+  nenhuma chave modificada, cópia nova intacta); confirmação cancelada
+  (nenhuma alteração); confirmação reutilizada (nenhuma autorização
+  herdada após restauração confirmada); quarentena indisponível na
+  confirmação (erro explícito, sem falso sucesso, chaves intactas);
+  resultado incerto na restauração — falha de confirmação (mensagem
+  fixa do plano, uma única escrita principal, sem repetição nem
+  rollback, quarentena intacta).
+- `src/tests/securityMessagesAud02.test.tsx` (4): reprodução do cenário
+  exato do AUD-02 (escrita efetiva + falhas persistentes de leitura →
+  incerteza sem a falsa afirmação, uma única escrita, sem rollback nem
+  repetição); carga inicial indisponível sem mutação (afirmação de
+  preservação mantida — evidenciada); falha de escrita por quota
+  seguida de leitura indisponível (alerta genérico sem afirmação
+  absoluta); falha no backup durante a recuperação (mensagem de falha
+  de preservação, principal intacta byte a byte, sem falso sucesso).
+- Cobertura existente mantida e passando sem modificação: falha na
+  criação e na confirmação do backup no serviço
+  (`itineraryStorageRecovery.test.ts`), restauração bloqueada com
+  principal ativa ou corrompida, restauração com conteúdo divergente e
+  quarentena vazia no serviço, restauração com confirmação na interface
+  (`homePageInteraction.test.tsx`) e todos os cenários do AUD-01.
+- Total da suíte: 209 testes em 15 arquivos (198 anteriores + 11 novos).
+
+### Validações executadas (resultados reais)
+
+- `npm run typecheck` — sem erros.
+- `npm run test:run` — 209 testes, 15 arquivos, todos passando.
+- `npm run lint` — 0 erros, 0 avisos.
+- `npm run build` — sucesso.
+
+### Garantias preservadas
+
+- Nenhuma linha do fluxo de gravação, da validação ou das operações de
+  quarentena do serviço foi alterada — a única adição ao serviço é a
+  leitura `previewQuarantineRestore` (sem escrita).
+- Web Locks, confirmação por releitura com igualdade exata, resultado
+  incerto sem repetição nem rollback, proibição de `removeItem` na
+  chave principal e o vínculo do descarte (AUD-01) intactos — os 198
+  testes anteriores seguem passando sem modificação.
+- Identidade visual inalterada: o painel de restauração reutiliza o
+  padrão dos painéis existentes (mesmas classes); os textos originais
+  foram preservados e apenas ampliados com a análise.
+
+### Riscos remanescentes
+
+- Inalterados em relação aos relatórios anteriores (abas antigas
+  ignoram o lock; resultado incerto exige releitura manual; quarentena
+  de cópia única; extensões desconhecidas de registro substituído não
+  mantidas; durabilidade física fora de escopo).
+- A afirmação "Nenhum dado foi alterado." na carga inicial cobre
+  apenas as ações desta página (que não tentou mutação); alterações
+  feitas por outras abas enquanto o armazenamento está indisponível
+  não são observáveis por esta sessão — limitação inerente.
+- AUD-03, AUD-04, AUD-05 e AUD-07 permanecem abertos.
+- **AUD-02 e AUD-06 NÃO estão declarados totalmente corrigidos**: a
+  declaração depende de nova auditoria independente (critério 12 do
+  plano e seção 10 dos achados). O parecer segue NO-GO até a
+  reavaliação.
+
+## Relatório da correção C2-B — AUD-03, AUD-04, AUD-05 e AUD-07 (2026-10-11)
+
+- **Escopo**: somente os achados AUD-03, AUD-04 (validação financeira),
+  AUD-05 (exportação do conteúdo bruto da principal corrompida) e
+  AUD-07 (regressões e reconciliação documental). Nenhuma dependência
+  instalada, nenhuma mudança de arquitetura ou de identidade visual,
+  nenhum commit/push/publicação. O gerador de roteiros NÃO foi
+  alterado (não havia necessidade comprovada: os defeitos estavam no
+  validador compartilhado e na interface).
+
+### AUD-03 — Custo superior ao orçamento aceito dentro da tolerância
+
+- **Causa raiz**: `src/services/itineraryStorage.ts` exigia que
+  `custo − orçamento` ultrapassasse EPSILON (1e-6) para rejeitar. O
+  plano (seção 5) exige rejeitar custo superior ao orçamento; a
+  tolerância das relações financeiras não autoriza ultrapassá-lo.
+- **Reprodução antes da correção**: os três testes do cenário exato
+  (orçamento 9.9999995, uma atividade de custo 10, custo estimado 10,
+  saldo 0, média 10) FALHARAM no estado anterior —
+  `validateSavedItinerary` retornou `{ ok: true }`,
+  `loadSavedItineraries` retornou `ok` e `saveItinerary` confirmou o
+  salvamento.
+- **Correção implementada**: comparação ESTRITA `custo > orçamento`
+  (sem tolerância). A tolerância absoluta de 1e-6 permanece apenas nas
+  relações de igualdade que a admitem (custo = soma das atividades,
+  saldo = orçamento − custo, média = custo ÷ dias).
+
+### AUD-04 — Saldo incorreto aceito pela perda de precisão na soma
+
+- **Causa raiz**: o saldo era validado por `custo + saldo ≈ orçamento`.
+  Com valores grandes, a soma absorve a discrepância pela precisão
+  numérica (no cenário auditado, 1e16 + 1 === 1e16), aceitando um saldo
+  que difere de orçamento − custo por 1 — acima da tolerância.
+- **Reprodução antes da correção**: os três testes do cenário exato
+  (orçamento = custo = 10000000000000000, saldo declarado 1, média
+  10000000000000000) FALHARAM no estado anterior nos três caminhos
+  (validação, leitura e salvamento confirmado).
+- **Correção implementada**: o saldo declarado é comparado
+  DIRETAMENTE com `orçamento − custo`, mantendo tolerância absoluta de
+  1e-6 e as verificações preexistentes de finitude e não negatividade
+  (a subtração de orçamento e custo finitos e não negativos é sempre
+  finita). Controle com saldo 0 nos mesmos valores permanece válido.
+
+### AUD-05 — Exportação do conteúdo bruto da principal corrompida
+
+- **Causa raiz**: o exportador de recuperação existia
+  (`downloadRecoveryJson`), mas a interface o conectava somente à
+  quarentena — não havia ação para exportar o conteúdo bruto observado
+  da principal corrompida, saída necessária inclusive quando não há
+  espaço para criar o backup (quota insuficiente bloqueia a
+  recuperação por design).
+- **Reprodução antes da correção**: os quatro testes do novo arquivo
+  FALHARAM no estado anterior — o botão "Baixar cópia do conteúdo
+  bruto" não existia no painel de corrupção.
+- **Correção implementada** (`src/pages/HomePage.tsx`, somente
+  interface; o exportador existente foi reutilizado sem alteração):
+  novo botão no painel de corrupção exporta `storage.raw` da chave
+  principal com o envelope de recuperação
+  (`travel-planner:recuperacao-armazenamento`, versão 1) e a chave de
+  origem correta. A exportação não lê para mutação nem grava nada:
+  nenhuma das duas chaves é alterada e a quarentena existente nunca é
+  sobrescrita. O aviso exibido após o clique (`role="status"`)
+  registra apenas o download INICIADO e informa explicitamente que
+  iniciar o download não confirma que o arquivo foi guardado — a
+  interface não afirma que o usuário salvou o arquivo sem evidência.
+
+### AUD-07 — Regressões e reconciliação documental
+
+- **Regressão da colisão verdadeira reconstruída**: novo teste calcula
+  os fingerprints dos dois planejamentos SINTÉTICOS reconstruídos pela
+  auditoria (florianopolis, 1 dia, econômico; orçamentos 95263682 e
+  97062267; conjuntos de interesses distintos), comprova que ambos são
+  exatamente `roteiro-2cd27b6e` e que salvar o segundo preserva
+  integralmente o registro legado do primeiro (dois registros na
+  coleção, conteúdo legado intacto). A origem sintética está
+  identificada no próprio teste: o par original da auditoria anterior
+  permanece indisponível (ambiguidade nº 9 do plano) e esta regressão
+  não substitui sua rastreabilidade.
+- **Documentação reconciliada**: a declaração do relatório do P3 que
+  afirmava cobertura dos critérios 1–11 recebeu revisão explícita do
+  AUD-07 (acima, neste arquivo); DECISIONS.md registra a D26; ROADMAP
+  reflete o estado real. Nenhum documento declara aprovação definitiva.
+
+### Arquivos modificados
+
+- `src/services/itineraryStorage.ts` (duas comparações financeiras e
+  comentários; nenhuma outra linha do serviço alterada — fluxo de
+  gravação, Web Locks, quarentena e recuperação intactos).
+- `src/pages/HomePage.tsx` (botão de exportação do conteúdo bruto da
+  principal corrompida, aviso de download iniciado, texto do painel de
+  corrupção ampliado).
+- `TASKS.md`, `DECISIONS.md` (nova D26), `ROADMAP.md`.
+
+### Arquivos criados
+
+- `src/tests/financialValidationAud0304.test.ts` (15 testes): cenários
+  exatos do AUD-03 e do AUD-04 na validação, na leitura e no
+  salvamento (com zero escritas e preservação das duas chaves); limite
+  custo = orçamento e custo abaixo por menos que a tolerância
+  (compatibilidade); controle AUD-04 com saldo 0; média diária
+  incorreta; valores não finitos (orçamento NaN, custo Infinity);
+  custo divergente da soma; saldo negativo dentro da tolerância;
+  registro histórico válido preservado byte a byte.
+- `src/tests/corruptedRawExportAud05.test.tsx` (4 testes): cenário
+  exato do AUD-05 (envelope, origem, raw exato, chaves intactas, aviso
+  sem afirmação de arquivo guardado); exportação sob quota insuficiente
+  (zero escritas); quarentena ocupada por conteúdo diferente preservada;
+  distinção entre a exportação da principal e a da quarentena.
+- `src/tests/trueCollisionAud07.test.ts` (2 testes): fingerprints
+  calculados e comprovadamente iguais; preservação dos dois registros.
+
+### Validações executadas (resultados reais)
+
+- Pré-correção: os 10 testes de reprodução FALHARAM no estado anterior
+  (3 do AUD-03, 3 do AUD-04 e 4 do AUD-05), confirmando os defeitos.
+- `npm run typecheck` — sem erros.
+- `npm run test:run` — 230 testes, 18 arquivos, todos passando
+  (209 anteriores + 21 novos de C2-B; os 209 anteriores seguem passando
+  sem modificação).
+- `npm run lint` — 0 erros, 0 avisos.
+- `npm run build` — sucesso.
+
+### Compatibilidade histórica
+
+- O registro histórico válido da fixture (id legado de hash, data
+  bissexta com fração, campos desconhecidos) continua aceito e
+  preservado byte a byte após o endurecimento financeiro — a
+  comparação estrita custo ≤ orçamento e o saldo comparado com
+  orçamento − custo são satisfeitos exatamente pelos registros
+  produzidos pelo gerador e pelos históricos íntegros (mesma
+  aritmética). Nenhum formato foi migrado ou regravado.
+- A amostra histórica ORIGINAL da auditoria (64.851 aceitos / 837
+  sobrepostos) permanece indisponível: não é possível afirmar ausência
+  de rejeições adicionais nessa população (limitação registrada na
+  auditoria, não preenchida com dados inventados).
+
+### Riscos remanescentes
+
+- Inalterados em relação aos relatórios anteriores (abas antigas
+  ignoram o lock; resultado incerto exige releitura manual; quarentena
+  de cópia única; extensões desconhecidas de registro substituído não
+  mantidas; durabilidade física e downloads fora de escopo).
+- A exportação do conteúdo bruto é uma ação da sessão atual: se o
+  armazenamento estiver indisponível (`unavailable`), não há conteúdo
+  observado para exportar — limitação inerente, não um caminho de
+  perda novo.
+
+### Pendências para a auditoria final
+
+- Reexecutar os cenários exatos do AUD-03 e do AUD-04 contra os três
+  caminhos (validação, leitura, salvamento) e verificar zero escritas.
+- Verificar a exportação da principal corrompida (envelope, origem,
+  raw exato, chaves intactas) inclusive sob quota insuficiente.
+- Validar o par original da colisão e o corpus histórico original
+  quando os artefatos forem disponibilizados, sem substituí-los por
+  dados inventados.
+- Reavaliar os 12 critérios do plano e os 7 achados com evidência
+  suficiente. O parecer segue NO-GO até a reavaliação independente.
+- **AUD-03, AUD-04, AUD-05 e AUD-07 NÃO estão declarados totalmente
+  corrigidos**: a declaração depende de nova auditoria independente
+  (critério 12 do plano e seção 10 dos achados).

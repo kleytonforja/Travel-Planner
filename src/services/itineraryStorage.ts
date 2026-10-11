@@ -25,9 +25,12 @@ import {
  *   identificadores não vazios, destinos/dias/atividades coerentes,
  *   horários dentro das janelas do gerador e sem sobreposição
  *   (invariante TP-01), compatibilidade de estilo/interesses, atividades
- *   sem repetição e integridade financeira com tolerância absoluta de
- *   1e-6, incluindo rejeição de custo superior ao orçamento. A mesma
- *   validação é aplicada na leitura e antes de gravar um novo estado.
+ *   sem repetição e integridade financeira: igualdades (custo = soma
+ *   das atividades, saldo = orçamento − custo, média = custo ÷ dias)
+ *   com tolerância absoluta de 1e-6 e desigualdade custo ≤ orçamento
+ *   ESTRITA, sem tolerância (correções AUD-03 e AUD-04 da auditoria
+ *   independente final). A mesma validação é aplicada na leitura e
+ *   antes de gravar um novo estado.
  * - TP-03: identidade separada de equivalência. Registros novos usam
  *   `crypto.randomUUID()`, confrontados com os IDs já existentes (limite
  *   de 10 tentativas; esgotamento ou indisponibilidade retorna erro, sem
@@ -538,9 +541,11 @@ export function validateSavedItinerary(value: unknown): ItineraryValidationResul
     return { ok: false, reasons }
   }
 
-  // Consistência financeira (tolerância absoluta de 1e-6): os totais
-  // devem fechar com as atividades agendadas e com o orçamento, e o
-  // custo estimado nunca pode superar o orçamento informado.
+  // Consistência financeira: os totais devem fechar com as atividades
+  // agendadas e com o orçamento. As relações de igualdade (custo = soma
+  // das atividades, saldo = orçamento − custo, média = custo ÷ dias)
+  // usam tolerância ABSOLUTA de 1e-6; a desigualdade custo ≤ orçamento
+  // é ESTRITA, sem tolerância (correções AUD-03 e AUD-04).
   const scheduledCost = days.reduce(
     (total, day) =>
       total +
@@ -554,10 +559,23 @@ export function validateSavedItinerary(value: unknown): ItineraryValidationResul
   if (!approxEqual(estimated, scheduledCost)) {
     reasons.push('custo estimado não corresponde às atividades agendadas')
   }
-  if (estimated - input.budget > EPSILON) {
+  // Correção AUD-03: comparação ESTRITA de custo contra orçamento. A
+  // tolerância absoluta de 1e-6 aplica-se somente às relações que a
+  // admitem; ela não autoriza custo acima do orçamento, por menor que
+  // seja a diferença (plano, seção 5: "Rejeitar custo superior ao
+  // orçamento").
+  if (estimated > input.budget) {
     reasons.push('custo estimado superior ao orçamento informado')
   }
-  if (!approxEqual(estimated + unallocated, input.budget)) {
+  // Correção AUD-04: o saldo é comparado DIRETAMENTE com
+  // orçamento − custo (tolerância absoluta de 1e-6). A verificação
+  // anterior (custo + saldo ≈ orçamento) absorvia discrepâncias pela
+  // precisão numérica com valores grandes — ex.: com orçamento = custo
+  // = 1e16, um saldo declarado de 1 era aceito, embora o calculado
+  // fosse 0. A subtração de dois valores finitos não negativos do
+  // orçamento/custo é sempre finita, e a não negatividade do saldo já
+  // foi verificada acima.
+  if (!approxEqual(unallocated, input.budget - estimated)) {
     reasons.push('saldo não alocado inconsistente com orçamento e custo')
   }
   if (!approxEqual(average, estimated / input.days)) {
@@ -1298,6 +1316,47 @@ export type RestoreQuarantineResult =
   | { ok: true; restoredCount: number; idsFixedCount: number }
   | { ok: false; outcome: 'failure'; message: string }
   | { ok: false; outcome: 'uncertain'; message: string }
+
+export type QuarantineRestorePreview =
+  | {
+      status: 'ready'
+      /** Conteúdo bruto exato da cópia observada — vínculo da confirmação. */
+      raw: string
+      /** Registros individualmente válidos que serão restaurados. */
+      restoreCount: number
+      /** Registros que receberão novos IDs (grupos com IDs duplicados). */
+      idsToFixCount: number
+    }
+  | { status: 'empty' }
+  | { status: 'unavailable' }
+
+/**
+ * Pré-visualização somente de leitura da restauração da quarentena
+ * (AUD-06): informa quantos registros serão restaurados e quantos
+ * receberão novos identificadores (integrantes de grupos com IDs
+ * duplicados), com o conteúdo bruto exato observado para vincular a
+ * confirmação. Não altera nenhuma chave. A restauração em si continua
+ * condicionada à chave principal vazia, revalidada no momento da
+ * confirmação por `restoreQuarantineCopy`.
+ */
+export function previewQuarantineRestore(): QuarantineRestorePreview {
+  let raw: string | null
+  try {
+    raw = localStorage.getItem(CORRUPTED_BACKUP_KEY)
+  } catch {
+    return { status: 'unavailable' }
+  }
+  if (raw === null) return { status: 'empty' }
+  const analysis = analyzeCorruptedPayload(raw)
+  return {
+    status: 'ready',
+    raw,
+    restoreCount: analysis.valid.length,
+    idsToFixCount: analysis.valid.filter((record) =>
+      analysis.duplicatedIds.has(record.id),
+    ).length,
+  }
+}
 
 /**
  * Restaura os registros individualmente válidos da quarentena para a

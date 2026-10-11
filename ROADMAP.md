@@ -60,9 +60,19 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       resultados reais do serviço, feedback de sucesso confirmado,
       correção da falsa lista vazia em estados corrompido/indisponível e
       22 testes de interação (HomePage e ItineraryPage).
-- [ ] **Auditoria independente final**: TP-02 a TP-05 só serão declarados
-      corrigidos após nova verificação independente (critério 12 do
-      plano). Detalhes e riscos remanescentes em TASKS.md.
+- [x] **Correções da auditoria independente final (C1, C2-A, C2-B)**:
+      AUD-01 (confirmação desatualizada de descarte), AUD-02 (mensagem
+      de preservação sem evidência), AUD-06 (restauração com análise
+      prévia de IDs), AUD-03/AUD-04 (validação financeira: custo ≤
+      orçamento estrito e saldo comparado com orçamento − custo),
+      AUD-05 (exportação do conteúdo bruto da principal corrompida) e
+      AUD-07 (regressões, incluindo a colisão verdadeira reconstruída,
+      e documentação reconciliada com as evidências). Implementadas e
+      validadas localmente; NÃO declaradas corrigidas sem reauditoria.
+- [ ] **Auditoria independente final**: TP-02 a TP-05 e AUD-01 a AUD-07
+      só serão declarados corrigidos após nova verificação independente
+      (critério 12 do plano; parecer atual NO-GO). Detalhes e riscos
+      remanescentes em TASKS.md.
 
 ## Evolução futura (pós-MVP, fora do escopo atual — NÃO implementar agora)
 

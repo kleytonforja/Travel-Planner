@@ -13,10 +13,12 @@ import {
   discardQuarantineCopy,
   loadQuarantine,
   loadSavedItineraries,
+  previewQuarantineRestore,
   previewRecovery,
   recoverCorruptedStorage,
   removeSavedItinerary,
   restoreQuarantineCopy,
+  STORAGE_KEY,
   type QuarantineLoadResult,
   type RecoveryPreview,
   type StorageLoadResult,
@@ -66,7 +68,31 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
   const [busy, setBusy] = useState(false)
   const [recoveryPreview, setRecoveryPreview] =
     useState<RecoveryPreviewReady | null>(null)
-  const [confirmingRestore, setConfirmingRestore] = useState(false)
+  /**
+   * Autorização da restauração da quarentena (correção AUD-06 + lacuna
+   * de autorização, mesmo padrão do AUD-01): guarda o CONTEÚDO BRUTO
+   * exato da cópia e a análise apresentada ao usuário na abertura do
+   * painel (quantos registros serão restaurados e quantos receberão
+   * novos identificadores) — nunca um simples booleano. O conteúdo
+   * capturado é o único enviado ao serviço na confirmação, e a
+   * autorização é invalidada quando uma releitura observa conteúdo
+   * diferente: se os dados mudarem antes da confirmação, a operação é
+   * cancelada sem modificar nenhuma chave.
+   */
+  const [restoreAuthorization, setRestoreAuthorization] = useState<{
+    raw: string
+    restoreCount: number
+    idsToFixCount: number
+  } | null>(null)
+  /**
+   * Correção AUD-02: registra se alguma mutação foi tentada nesta
+   * sessão da página. O alerta genérico de indisponibilidade só afirma
+   * "Nenhum dado foi alterado" quando NENHUMA mutação foi tentada —
+   * evidência de que esta página não escreveu nada. Após qualquer
+   * tentativa (inclusive falhas, que podem deixar cópia adicional na
+   * quarentena — plano, 3.2), a afirmação absoluta não é mais exibida.
+   */
+  const [mutationAttempted, setMutationAttempted] = useState(false)
   /**
    * Autorização do descarte da quarentena (correção AUD-01): guarda o
    * CONTEÚDO BRUTO exato da cópia apresentada ao usuário quando o painel
@@ -78,6 +104,12 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
   const [discardAuthorization, setDiscardAuthorization] = useState<
     string | null
   >(null)
+  /**
+   * Aviso de exportação de recuperação (correção AUD-05): informa que
+   * o download foi INICIADO. Disparar o download não prova que o
+   * usuário guardou o arquivo — a interface nunca afirma isso.
+   */
+  const [exportNotice, setExportNotice] = useState<string | null>(null)
 
   function reloadSaved() {
     const nextStorage = loadSavedItineraries()
@@ -93,6 +125,14 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
         nextQuarantine.status === 'occupied' ? nextQuarantine.raw : null
       return currentRaw === authorized ? authorized : null
     })
+    // Mesma proteção para a restauração (AUD-06): conteúdo diferente do
+    // analisado invalida a confirmação em aberto e fecha o painel.
+    setRestoreAuthorization((authorized) => {
+      if (authorized === null) return null
+      const currentRaw =
+        nextQuarantine.status === 'occupied' ? nextQuarantine.raw : null
+      return currentRaw === authorized.raw ? authorized : null
+    })
   }
 
   function handleSelectDestination(id: string) {
@@ -102,6 +142,7 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
 
   async function handleRemoveSaved(id: string) {
     setBusy(true)
+    setMutationAttempted(true)
     setSuccessMessage(null)
     try {
       // A exclusão é vinculada ao conteúdo bruto observado nesta leitura.
@@ -146,6 +187,7 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
   async function handleConfirmRecovery() {
     if (!recoveryPreview) return
     setBusy(true)
+    setMutationAttempted(true)
     setSuccessMessage(null)
     try {
       const result = await recoverCorruptedStorage(recoveryPreview.raw)
@@ -194,26 +236,71 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
     }
   }
 
+  /**
+   * Abre o painel de restauração VINCULADO ao conteúdo bruto exato da
+   * cópia observada neste momento (AUD-06), já com a análise que será
+   * apresentada ao usuário (registros restauráveis e IDs a corrigir).
+   */
+  function handleOpenRestorePanel() {
+    setDiscardAuthorization(null)
+    setSuccessMessage(null)
+    const preview = previewQuarantineRestore()
+    if (preview.status === 'ready') {
+      setStorageMessage(null)
+      setRestoreAuthorization({
+        raw: preview.raw,
+        restoreCount: preview.restoreCount,
+        idsToFixCount: preview.idsToFixCount,
+      })
+      return
+    }
+    setRestoreAuthorization(null)
+    if (preview.status === 'unavailable') {
+      setStorageMessage(
+        'Não foi possível acessar a cópia de segurança para analisar a restauração. Nenhuma alteração foi feita.',
+      )
+      return
+    }
+    // A cópia mudou desde a exibição: recarregar antes de decidir.
+    setStorageMessage(
+      'Os dados dos roteiros mudaram desde a última leitura. A lista foi recarregada — analise novamente antes de confirmar.',
+    )
+    reloadSaved()
+  }
+
   async function handleConfirmRestore() {
-    if (quarantine.status !== 'occupied') return
-    const expectedRaw = quarantine.raw
+    // Correção AUD-06 (mesmo padrão do AUD-01): o serviço recebe o
+    // conteúdo bruto EXATO autorizado na abertura do painel — nunca uma
+    // releitura posterior do estado. Se o armazenamento mudou desde
+    // então, o serviço cancela a operação sem modificar nenhuma chave.
+    if (restoreAuthorization === null) return
+    const expectedRaw = restoreAuthorization.raw
     setBusy(true)
+    setMutationAttempted(true)
     setSuccessMessage(null)
     try {
       const result = await restoreQuarantineCopy(expectedRaw)
       if (result.ok) {
         setStorageMessage(null)
+        const details =
+          result.idsFixedCount > 0
+            ? ` (${result.idsFixedCount} ${
+                result.idsFixedCount === 1
+                  ? 'identificador duplicado foi corrigido'
+                  : 'identificadores duplicados foram corrigidos'
+              })`
+            : ''
         setSuccessMessage(
           `Restauração concluída e confirmada: ${result.restoredCount} ${
             result.restoredCount === 1
               ? 'registro restaurado'
               : 'registros restaurados'
-          } para a lista de roteiros salvos. A cópia de segurança permanece na quarentena.`,
+          }${details} para a lista de roteiros salvos. A cópia de segurança permanece na quarentena.`,
         )
       } else {
         setStorageMessage(result.message)
       }
-      setConfirmingRestore(false)
+      setRestoreAuthorization(null)
       reloadSaved()
     } finally {
       setBusy(false)
@@ -227,6 +314,7 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
     if (discardAuthorization === null) return
     const expectedRaw = discardAuthorization
     setBusy(true)
+    setMutationAttempted(true)
     setSuccessMessage(null)
     try {
       const result = await discardQuarantineCopy(expectedRaw)
@@ -249,6 +337,23 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
     if (quarantine.status !== 'occupied') return
     // Disparar o download não prova que o arquivo foi guardado.
     downloadRecoveryJson(quarantine.raw, CORRUPTED_BACKUP_KEY)
+  }
+
+  /**
+   * Exportação do conteúdo bruto da principal corrompida (correção
+   * AUD-05): permite preservar fora do navegador exatamente o conteúdo
+   * observado ANTES da recuperação — inclusive quando não há espaço
+   * para criar a quarentena, pois a exportação não grava nada: nenhuma
+   * das duas chaves é lida para mutação ou alterada, e a quarentena
+   * existente nunca é sobrescrita. O aviso registra apenas o download
+   * INICIADO; não há evidência de que o usuário guardou o arquivo.
+   */
+  function handleDownloadCorruptedRaw() {
+    if (storage.status !== 'corrupted' || storage.raw === null) return
+    downloadRecoveryJson(storage.raw, STORAGE_KEY)
+    setExportNotice(
+      'Download do arquivo com o conteúdo bruto iniciado. Verifique a pasta de downloads do navegador: iniciar o download não confirma que o arquivo foi guardado.',
+    )
   }
 
   const actionsDisabled = busy || storage.status !== 'ok'
@@ -281,7 +386,14 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
                 Não foi possível acessar o armazenamento do navegador, então
                 seus roteiros salvos não puderam ser exibidos. Verifique as
                 configurações de privacidade do navegador e recarregue a
-                página. Nenhum dado foi alterado.
+                página.
+                {/* Correção AUD-02: a afirmação de preservação só aparece
+                    com evidência (nenhuma mutação tentada nesta sessão).
+                    Após qualquer tentativa, o alerta não afirma ausência
+                    de alterações — orienta a verificação do estado real. */}
+                {mutationAttempted
+                  ? ' Uma operação de alteração foi tentada antes desta falha de leitura; recarregue os roteiros e verifique o estado real dos dados antes de tentar novamente.'
+                  : ' Nenhum dado foi alterado.'}
               </p>
             )}
 
@@ -294,20 +406,47 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
                   Encontramos dados de roteiros salvos que não puderam ser
                   validados. Eles não foram alterados nem apagados, e as
                   alterações estão bloqueadas até a recuperação. Você pode
+                  baixar o conteúdo bruto para guardá-lo fora do navegador,
                   preservar uma cópia de segurança neste navegador e recuperar
                   os registros válidos.
                 </p>
 
-                {!recoveryPreview ? (
-                  <button
-                    type="button"
-                    onClick={handlePreviewRecovery}
-                    disabled={busy}
-                    className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Preservar cópia e recuperar registros válidos
-                  </button>
-                ) : (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {/* Correção AUD-05: exportação do conteúdo bruto da
+                      principal corrompida, disponível inclusive quando
+                      não há espaço para criar a quarentena (a exportação
+                      não grava nada no armazenamento). */}
+                  {storage.raw !== null && (
+                    <button
+                      type="button"
+                      onClick={handleDownloadCorruptedRaw}
+                      disabled={busy}
+                      className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Baixar cópia do conteúdo bruto
+                    </button>
+                  )}
+                  {!recoveryPreview && (
+                    <button
+                      type="button"
+                      onClick={handlePreviewRecovery}
+                      disabled={busy}
+                      className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Preservar cópia e recuperar registros válidos
+                    </button>
+                  )}
+                </div>
+
+                {/* O aviso registra o download INICIADO — nunca afirma
+                    que o usuário guardou o arquivo. */}
+                {exportNotice && (
+                  <p role="status" className="mt-2 text-sm text-amber-800">
+                    {exportNotice}
+                  </p>
+                )}
+
+                {recoveryPreview && (
                   <div className="mt-3 rounded-lg border border-amber-300 bg-white p-4">
                     <p className="text-sm font-semibold text-amber-900">
                       Confirmar recuperação
@@ -386,13 +525,10 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
                   >
                     Baixar cópia de segurança
                   </button>
-                  {storage.status === 'empty' && !confirmingRestore && (
+                  {storage.status === 'empty' && restoreAuthorization === null && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setDiscardAuthorization(null)
-                        setConfirmingRestore(true)
-                      }}
+                      onClick={handleOpenRestorePanel}
                       disabled={busy}
                       className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
                     >
@@ -403,7 +539,7 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
                     <button
                       type="button"
                       onClick={() => {
-                        setConfirmingRestore(false)
+                        setRestoreAuthorization(null)
                         // Correção AUD-01: a confirmação é aberta VINCULADA
                         // ao conteúdo bruto exato exibido neste momento.
                         if (quarantine.status === 'occupied') {
@@ -418,12 +554,41 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
                   )}
                 </div>
 
-                {confirmingRestore && (
+                {restoreAuthorization !== null && (
                   <div className="mt-3 rounded-lg border border-slate-300 bg-white p-4">
                     <p className="text-sm text-slate-700">
                       Restaurar os registros válidos da cópia de segurança
-                      para a lista de roteiros salvos? A cópia será mantida na
-                      quarentena.
+                      para a lista de roteiros salvos?
+                    </p>
+                    {/* AUD-06: análise do conteúdo observado apresentada
+                        ANTES da confirmação — inclusive a correção de
+                        identificadores duplicados que o serviço fará. */}
+                    <ul className="mt-2 list-disc space-y-1 pl-6 text-sm text-slate-700">
+                      <li>
+                        {restoreAuthorization.restoreCount}{' '}
+                        {restoreAuthorization.restoreCount === 1
+                          ? 'registro válido será restaurado'
+                          : 'registros válidos serão restaurados'}
+                        .
+                      </li>
+                      {restoreAuthorization.idsToFixCount > 0 && (
+                        <li>
+                          {restoreAuthorization.idsToFixCount}{' '}
+                          {restoreAuthorization.idsToFixCount === 1
+                            ? 'registro com identificador duplicado receberá'
+                            : 'registros com identificadores duplicados receberão'}{' '}
+                          novos identificadores.
+                        </li>
+                      )}
+                    </ul>
+                    {restoreAuthorization.restoreCount === 0 && (
+                      <p className="mt-2 text-sm font-semibold text-slate-900">
+                        Nenhum registro válido será restaurado: a lista de
+                        roteiros permanecerá vazia.
+                      </p>
+                    )}
+                    <p className="mt-2 text-sm text-slate-700">
+                      A cópia será mantida na quarentena.
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <button
@@ -436,7 +601,7 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setConfirmingRestore(false)}
+                        onClick={() => setRestoreAuthorization(null)}
                         disabled={busy}
                         className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
                       >
