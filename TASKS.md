@@ -519,3 +519,92 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
 - **TP-02 a TP-05 NÃO estão declarados totalmente corrigidos**: a
   conclusão depende da auditoria independente final (critério 12 do
   plano). P3 não foi iniciado.
+
+---
+
+## CORREÇÕES DA AUDITORIA INDEPENDENTE FINAL (docs/FINAL_AUDIT_FINDINGS.md)
+
+| #      | Problema                                                                 | Status | Critério de aceite                                              |
+| ------ | ------------------------------------------------------------------------ | ------ | --------------------------------------------------------------- |
+| AUD-01 | Confirmação antiga de descarte apagava uma nova quarentena               | 🚧     | Correção implementada e validada na suíte local; reauditoria pendente |
+| AUD-02 | Mensagem falsa de preservação após resultado incerto                     | ⬜     | Não iniciado                                                    |
+| AUD-03 | Custo superior ao orçamento aceito dentro da tolerância                  | ⬜     | Não iniciado                                                    |
+| AUD-04 | Saldo incorreto aceito pela perda de precisão na soma                    | ⬜     | Não iniciado                                                    |
+| AUD-05 | Falta exportação bruta da principal corrompida                           | ⬜     | Não iniciado                                                    |
+| AUD-06 | Restauração corrige IDs sem aviso prévio                                 | ⬜     | Não iniciado                                                    |
+| AUD-07 | Declaração de aceite excede as evidências                                | ⬜     | Não iniciado                                                    |
+
+> A correção de AUD-01 foi implementada e validada localmente, mas o
+> achado só poderá ser declarado corrigido após nova auditoria
+> independente. A auditoria final NÃO está aprovada.
+
+## Relatório da correção AUD-01 (2026-10-11)
+
+- **Problema**: uma confirmação de descarte da quarentena, aberta para o
+  conteúdo A, conseguia descartar um conteúdo diferente B. Cenário exato
+  da auditoria: painel de descarte aberto para A; outra sessão descarta
+  A e uma recuperação cria a cópia B na quarentena; uma exclusão local
+  recarrega a quarentena para B mantendo o painel antigo aberto; ao
+  confirmar, B era removida e a interface informava sucesso.
+- **Causa raiz (integração interface × serviço)**: a confirmação de
+  descarte era representada por um booleano (`confirmingDiscard`) e não
+  guardava o conteúdo autorizado na abertura do painel. Ao confirmar, o
+  handler lia `quarantine.raw` do estado ATUAL — já atualizado para B
+  pela recarga intermediária — e o enviava ao serviço, substituindo
+  implicitamente o alvo da autorização. O serviço validava corretamente
+  o conteúdo recebido; a interface trocava esse conteúdo antes de enviar.
+- **Reprodução antes da correção**: o teste "reproduz o cenário exato do
+  AUD-01" em `src/tests/quarantineDiscardAud01.test.tsx` FALHOU no estado
+  anterior com perda real de dados — a quarentena B foi removida
+  (`null`) pela confirmação autorizada para A.
+- **Correção implementada** (`src/pages/HomePage.tsx`, somente interface;
+  serviço e persistência inalterados):
+  1. A confirmação passou a guardar o conteúdo bruto exato da quarentena
+     apresentado ao usuário na abertura do painel
+     (`discardAuthorization: string | null`), capturado no clique de
+     "Descartar cópia definitivamente".
+  2. A confirmação envia ao serviço SOMENTE esse conteúdo capturado,
+     nunca uma releitura posterior; se o armazenamento mudou, o serviço
+     cancela a operação (ação desatualizada, sem escrita).
+  3. Toda releitura que observa conteúdo de quarentena diferente do
+     autorizado (ou ausente) invalida a confirmação em aberto
+     (`reloadSaved`), fechando o painel — o conteúdo novo nunca
+     substitui o alvo da autorização.
+  4. Cancelar, concluir ou falhar limpa a autorização: nenhuma
+     autorização é reutilizável.
+- **Proteções preservadas**: Web Locks, validação de estado, confirmação
+  de leitura (releitura com igualdade exata), tratamento de resultado
+  incerto e a proibição de `removeItem` na chave principal permanecem
+  intactos — nenhuma linha do serviço de persistência foi alterada; os
+  190 testes anteriores seguem passando sem modificação.
+- **Testes adicionados**: 8, no novo arquivo
+  `src/tests/quarantineDiscardAud01.test.tsx`, todos comparando o
+  conteúdo bruto das duas chaves antes e depois: reprodução do cenário
+  exato do AUD-01 (com recarga intermediária); descarte autorizado e
+  válido (remove só a cópia autorizada, principal intacta); descarte
+  cancelado (nenhuma chave alterada); quarentena indisponível na
+  confirmação (erro explícito, sem falso sucesso, chaves intactas);
+  erro durante a remoção da cópia (falha explícita, cópia preservada);
+  confirmação reutilizada (após descarte confirmado, cópia nova exige
+  nova autorização explícita — interface e serviço); mudança entre duas
+  abas sem recarga local (a confirmação envia o conteúdo autorizado A e
+  o serviço cancela, B intacta). Total da suíte: 198 testes em 13
+  arquivos.
+- **Validações executadas (resultados reais)**: `npm run typecheck` (sem
+  erros), `npm run test:run` (198 testes, 13 arquivos, todos passando),
+  `npm run lint` (0 erros, 0 avisos), `npm run build` (sucesso).
+- **Evidência de preservação**: no cenário auditado corrigido, a
+  quarentena B permanece byte a byte idêntica após a tentativa de
+  descarte com confirmação antiga, a principal permanece com `[]`
+  (resultado da exclusão legítima) e nenhuma mensagem de sucesso é
+  exibida para a ação desatualizada.
+- **Riscos remanescentes**: o painel de RESTAURAÇÃO da quarentena segue
+  com confirmação representada por booleano (lê `quarantine.raw` no
+  momento da confirmação); a auditoria não comprovou perda nesse fluxo
+  (a restauração preserva a quarentena e exige a principal vazia), mas o
+  mesmo padrão de vínculo pode ser avaliado em correção futura. AUD-02 a
+  AUD-07 permanecem abertos. O parecer da auditoria segue NO-GO até a
+  reavaliação independente.
+- **AUD-01 NÃO está declarado totalmente corrigido**: a declaração
+  depende de nova auditoria independente (critério 12 do plano e seção
+  10 dos achados).

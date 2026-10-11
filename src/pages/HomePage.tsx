@@ -67,11 +67,32 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
   const [recoveryPreview, setRecoveryPreview] =
     useState<RecoveryPreviewReady | null>(null)
   const [confirmingRestore, setConfirmingRestore] = useState(false)
-  const [confirmingDiscard, setConfirmingDiscard] = useState(false)
+  /**
+   * Autorização do descarte da quarentena (correção AUD-01): guarda o
+   * CONTEÚDO BRUTO exato da cópia apresentada ao usuário quando o painel
+   * de confirmação foi aberto — nunca um simples booleano. O conteúdo
+   * capturado é o único enviado ao serviço na confirmação, e a
+   * autorização é invalidada quando uma releitura observa conteúdo
+   * diferente: nenhuma confirmação antiga pode descartar uma cópia nova.
+   */
+  const [discardAuthorization, setDiscardAuthorization] = useState<
+    string | null
+  >(null)
 
   function reloadSaved() {
-    setStorage(loadSavedItineraries())
-    setQuarantine(loadQuarantine())
+    const nextStorage = loadSavedItineraries()
+    const nextQuarantine = loadQuarantine()
+    setStorage(nextStorage)
+    setQuarantine(nextQuarantine)
+    // Correção AUD-01: se a releitura observa um conteúdo de quarentena
+    // diferente do autorizado (ou nenhum), a confirmação em aberto é
+    // invalidada — o conteúdo novo nunca substitui o alvo da autorização.
+    setDiscardAuthorization((authorized) => {
+      if (authorized === null) return null
+      const currentRaw =
+        nextQuarantine.status === 'occupied' ? nextQuarantine.raw : null
+      return currentRaw === authorized ? authorized : null
+    })
   }
 
   function handleSelectDestination(id: string) {
@@ -200,8 +221,11 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
   }
 
   async function handleConfirmDiscardQuarantine() {
-    if (quarantine.status !== 'occupied') return
-    const expectedRaw = quarantine.raw
+    // Correção AUD-01: o serviço recebe o conteúdo bruto EXATO autorizado
+    // na abertura do painel — nunca uma releitura posterior do estado.
+    // Se o armazenamento mudou desde então, o serviço cancela a operação.
+    if (discardAuthorization === null) return
+    const expectedRaw = discardAuthorization
     setBusy(true)
     setSuccessMessage(null)
     try {
@@ -214,7 +238,7 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
       } else {
         setStorageMessage(result.message)
       }
-      setConfirmingDiscard(false)
+      setDiscardAuthorization(null)
       reloadSaved()
     } finally {
       setBusy(false)
@@ -366,7 +390,7 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
                     <button
                       type="button"
                       onClick={() => {
-                        setConfirmingDiscard(false)
+                        setDiscardAuthorization(null)
                         setConfirmingRestore(true)
                       }}
                       disabled={busy}
@@ -375,12 +399,16 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
                       Restaurar registros da cópia
                     </button>
                   )}
-                  {!confirmingDiscard && (
+                  {discardAuthorization === null && (
                     <button
                       type="button"
                       onClick={() => {
                         setConfirmingRestore(false)
-                        setConfirmingDiscard(true)
+                        // Correção AUD-01: a confirmação é aberta VINCULADA
+                        // ao conteúdo bruto exato exibido neste momento.
+                        if (quarantine.status === 'occupied') {
+                          setDiscardAuthorization(quarantine.raw)
+                        }
                       }}
                       disabled={busy}
                       className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
@@ -418,7 +446,7 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
                   </div>
                 )}
 
-                {confirmingDiscard && (
+                {discardAuthorization !== null && (
                   <div
                     role="alert"
                     className="mt-3 rounded-lg border border-red-300 bg-red-50 p-4"
@@ -439,7 +467,7 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setConfirmingDiscard(false)}
+                        onClick={() => setDiscardAuthorization(null)}
                         disabled={busy}
                         className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
                       >
