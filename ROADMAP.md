@@ -45,6 +45,25 @@ considerado concluído após validação (typecheck, testes e/ou build).
 
 > Publicação efetiva no GitHub Pages aguarda autorização explícita.
 
+## Remediação de persistência (pós-auditoria, TP-02 a TP-05)
+
+Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
+
+- [x] **P1 — Identidade e validação**: UUID com confronto de existentes,
+      equivalência por comparação direta de campos (sem hash), validação
+      estrutural e semântica integral na leitura e antes de gravar.
+- [x] **P2 — Operações seguras, concorrência e recuperação**: uma leitura
+      de decisão, um único setItem com confirmação por releitura,
+      resultado incerto distinto, Web Locks, quarentena não destrutiva e
+      recuperação explícita com confirmações vinculadas ao conteúdo.
+- [x] **P3 — Integração e validação final**: interface revisada contra os
+      resultados reais do serviço, feedback de sucesso confirmado,
+      correção da falsa lista vazia em estados corrompido/indisponível e
+      22 testes de interação (HomePage e ItineraryPage).
+- [ ] **Auditoria independente final**: TP-02 a TP-05 só serão declarados
+      corrigidos após nova verificação independente (critério 12 do
+      plano). Detalhes e riscos remanescentes em TASKS.md.
+
 ## Evolução futura (pós-MVP, fora do escopo atual — NÃO implementar agora)
 
 - Planejamento passo a passo (wizard)

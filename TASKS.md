@@ -145,9 +145,10 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
 
 > TP-02 a TP-05 estão em remediação conforme
 > `docs/PERSISTENCE_REMEDIATION_PLAN.md`. Os checkpoints P1 (identidade e
-> validação) e P2 (operações seguras, concorrência e recuperação) foram
-> implementados e validados; a declaração de correção total só ocorrerá
-> após a auditoria independente final. Ver relatórios abaixo.
+> validação), P2 (operações seguras, concorrência e recuperação) e P3
+> (integração com a interface e validação final) foram implementados e
+> validados; a declaração de correção total só ocorrerá após a auditoria
+> independente final. Ver relatórios abaixo.
 
 ## Relatório da correção TP-01 (2026-10-10)
 
@@ -322,6 +323,90 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
   confirmação do usuário.
 - **TP-02 e TP-03 NÃO estão declarados totalmente corrigidos**: a
   conclusão depende da integração final (P2) e de nova auditoria.
+
+## Relatório do CHECKPOINT P3 — Remediação de persistência: integração e validação final (2026-10-10)
+
+- **Escopo entregue** (conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`,
+  seção 8.5 e dependências registradas no relatório do P2; ver
+  DECISIONS.md, D24):
+  - **Revisão da integração interface × serviço**: HomePage,
+    ItineraryPage e SavedItineraries conferidos contra os resultados
+    reais do serviço — nenhum caminho informa sucesso antes da
+    confirmação por releitura; ações ficam desabilitadas durante
+    operações em andamento; exclusão, substituição, recuperação,
+    restauração e descarte carregam o vínculo do conteúdo observado e
+    são revalidadas no serviço; nenhuma gravação com resultado incerto
+    é repetida automaticamente.
+  - **Sucesso confirmado explícito (novo)**: feedback `role="status"`
+    na HomePage após confirmação de exclusão, recuperação (com
+    contagens de recuperados/ilegíveis/IDs corrigidos), restauração e
+    descarte — nunca antes da evidência; a exportação da cópia bruta
+    não afirma que o download foi guardado.
+  - **Lista vazia sem falsa afirmação (correção)**: "Nenhum roteiro
+    salvo ainda" só é exibida em `empty`/`ok`; em `corrupted` ou
+    `unavailable` a seção de salvos não afirma inexistência de
+    registros (plano, 8.1). Nova prop `storageStatus` em
+    `SavedItineraries`.
+- **Arquivos modificados**: `src/pages/HomePage.tsx`,
+  `src/components/SavedItineraries.tsx`, `TASKS.md`, `DECISIONS.md`,
+  `ROADMAP.md`.
+- **Arquivos criados**: `src/tests/itineraryPageInteraction.test.tsx`
+  (10 testes), `src/tests/homePageInteraction.test.tsx` (12 testes).
+- **Testes de interação adicionados (22)** — salvar com sucesso (selo só
+  após confirmação); falha ao salvar por quota (sem falso sucesso, chave
+  intacta); salvamento com armazenamento indisponível (zero escritas);
+  resultado incerto no salvamento (mensagem fixa do plano, um único
+  setItem); confirmação de substituição (alvo informado, id preservado,
+  somente ele substituído); cancelamento da substituição (armazenamento
+  intacto); salvamento bloqueado em coleção corrompida (sem escrita, sem
+  quarentena como efeito colateral); roteiro aberto dos salvos sem novo
+  salvamento; exportação JSON (download disparado, nada gravado);
+  navegação "Novo planejamento" e "Abrir"; exclusão com sucesso
+  confirmado (grava `[]`, sem remover a chave); falha ao excluir por
+  quota com nova tentativa segura após restabelecimento; armazenamento
+  indisponível (alerta, sem falsa lista vazia, sem ações); recuperação
+  de coleção parcialmente válida (contagens antes da confirmação, cópia
+  bruta preservada, id preservado, exclusão habilitada após recuperar);
+  recuperação bloqueada por quarentena ocupada (ambas as chaves
+  intactas); restauração com confirmação (cópia mantida); descarte da
+  quarentena com confirmação e com cancelamento; ação desatualizada na
+  exclusão (nenhuma chave alterada, lista recarregada); resultado
+  incerto na exclusão; IDs duplicados sem ações individuais nem falsa
+  lista vazia. Total da suíte: 190 testes em 12 arquivos.
+- **Regressões verificadas** (suíte completa): geração determinística e
+  ausência de sobreposição (`itineraryGenerator.test.ts`, incluindo a
+  varredura e o cenário auditado TP-01); resumo financeiro
+  (`budgetSummary.test.tsx`); exportação JSON (`itineraryExport.test.ts`
+  + interação); navegação entre páginas (interação). Responsividade
+  básica preservada: nenhuma alteração de layout ou identidade visual —
+  o único elemento novo (feedback de sucesso) reutiliza o padrão visual
+  dos alertas existentes.
+- **Validações executadas (resultados reais)**: `npm run typecheck` (sem
+  erros), `npm run test:run` (190 testes, 12 arquivos, todos passando),
+  `npm run lint` (0 erros, 0 avisos), `npm run build` (sucesso).
+- **Critérios de aceite do plano (seção 11) atendidos nesta etapa**:
+  1 (casos obrigatórios passando, incluindo os de interface), 10 (a
+  interface não promete preservação, backup ou sucesso sem evidência) e
+  11 (typecheck, testes, lint e build verdes). Os critérios 1–11 estão
+  cobertos pela suíte; o critério 12 depende da auditoria independente.
+- **Riscos remanescentes** (inalterados em relação ao P2): abas
+  executando versões antigas ignoram o lock (limitação explícita do
+  plano, seção 12); o resultado incerto depende de releitura antes da
+  próxima ação (a interface recarrega a lista após cada mutação, mas a
+  decisão é do usuário); a quarentena guarda uma única cópia — ocupada
+  por conteúdo diferente, novas recuperações ficam bloqueadas até
+  download ou descarte explícito (por design); extensões desconhecidas
+  de um registro substituído não são mantidas na substituição confirmada
+  (ambiguidade nº 7 do plano); a durabilidade física e a limpeza do
+  armazenamento pelo navegador/usuário estão fora de escopo.
+- **Pendências para a auditoria independente**: reproduzir os caminhos
+  de perda da auditoria original (TP-02 a TP-05) contra o estado atual;
+  validar a amostra histórica citada no plano (64.851 aceitos / 837
+  sobrepostos — ambiguidade nº 9, valores não transcritos no plano);
+  revisar as ambiguidades resolvidas (nº 2, 5 e 10, registradas na D23).
+- **TP-02 a TP-05 NÃO estão declarados totalmente corrigidos**: a
+  declaração depende da auditoria independente final (critério 12 do
+  plano). O projeto está pronto para essa auditoria.
 
 ## Relatório do CHECKPOINT P2 — Remediação de persistência: operações seguras e recuperação (2026-10-10)
 

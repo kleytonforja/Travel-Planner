@@ -330,6 +330,39 @@ substituição confirmada gera um registro novo preservando apenas o ID —
 extensões desconhecidas do registro substituído não são mantidas
 (ambiguidade nº 7, não exigida pelo plano).
 
+## D24 — Integração final da interface com a persistência (P3)
+
+**Decisão**: terceira etapa de `docs/PERSISTENCE_REMEDIATION_PLAN.md`
+(seção 8.5), revisando a integração da interface com o serviço e
+fechando dois pontos de conformidade:
+
+1. **Sucesso confirmado explícito**: a HomePage passou a exibir feedback
+   de sucesso (`role="status"`, tom esmeralda, distinto dos alertas de
+   erro) SOMENTE após o serviço confirmar a operação por releitura —
+   exclusão, recuperação (com contagens de recuperados, ilegíveis e IDs
+   corrigidos), restauração e descarte da quarentena. Nenhuma mensagem
+   promete preservação sem evidência: a recuperação só afirma a cópia de
+   segurança porque ela é pré-condição comprovada da escrita principal.
+2. **Lista vazia nunca confundida com falha de leitura**: a mensagem
+   "Nenhum roteiro salvo ainda" só aparece quando a leitura comprovou
+   ausência de registros (`empty`) ou coleção íntegra (`ok`). Em
+   `corrupted` ou `unavailable`, a seção de salvos não afirma
+   inexistência — os alertas da página explicam a situação (plano, 8.1:
+   "não informa que os registros inexistem quando eles apenas não
+   puderam ser lidos").
+
+**Justificativa**: o P2 já havia integrado os fluxos (exclusão vinculada
+ao conteúdo, confirmação de substituição, painéis de recuperação e
+quarentena, bloqueio de ações durante operações e em estados
+incompatíveis); o P3 revisou essa integração, corrigiu as lacunas de
+mensagem acima e cobriu os comportamentos com testes de interação
+(Testing Library + user-event, dados sintéticos, mocks de Web Locks e de
+falhas do LocalStorage), conforme a dependência registrada no P2.
+
+**Limitações**: inalteradas em relação à D23 — ver TASKS.md, relatório
+do P3. TP-02 a TP-05 NÃO são declarados corrigidos sem a auditoria
+independente final (critério 12 do plano).
+
 ## D15 — Formulário conectado ao gerador (substitui D11)
 
 **Decisão**: o botão do formulário passou a se chamar "Gerar roteiro" e,

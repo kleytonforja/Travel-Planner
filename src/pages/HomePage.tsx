@@ -58,6 +58,11 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
     loadQuarantine(),
   )
   const [storageMessage, setStorageMessage] = useState<string | null>(null)
+  /**
+   * Feedback de sucesso CONFIRMADO: só é exibido depois que o serviço
+   * confirmou a operação por releitura (nunca antes da evidência).
+   */
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [recoveryPreview, setRecoveryPreview] =
     useState<RecoveryPreviewReady | null>(null)
@@ -76,10 +81,18 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
 
   async function handleRemoveSaved(id: string) {
     setBusy(true)
+    setSuccessMessage(null)
     try {
       // A exclusão é vinculada ao conteúdo bruto observado nesta leitura.
       const result = await removeSavedItinerary(id, { expectedRaw: storage.raw })
-      setStorageMessage(result.ok ? null : result.message)
+      if (result.ok) {
+        setStorageMessage(null)
+        setSuccessMessage(
+          'Roteiro excluído com sucesso. A remoção foi confirmada neste navegador.',
+        )
+      } else {
+        setStorageMessage(result.message)
+      }
       // Nova leitura sempre que uma mutação termina: só ela permite
       // decidir o próximo passo com segurança (inclusive no incerto).
       reloadSaved()
@@ -92,6 +105,7 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
     const preview = previewRecovery()
     if (preview.status === 'corrupted') {
       setStorageMessage(null)
+      setSuccessMessage(null)
       setRecoveryPreview(preview)
       return
     }
@@ -111,9 +125,47 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
   async function handleConfirmRecovery() {
     if (!recoveryPreview) return
     setBusy(true)
+    setSuccessMessage(null)
     try {
       const result = await recoverCorruptedStorage(recoveryPreview.raw)
-      setStorageMessage(result.ok ? null : result.message)
+      if (result.ok) {
+        setStorageMessage(null)
+        // Sucesso confirmado por releitura; a preservação da cópia foi
+        // comprovada ANTES da escrita principal (criada ou reutilizada
+        // por ser idêntica).
+        const details: string[] = []
+        if (result.backupOnlyCount > 0) {
+          details.push(
+            `${result.backupOnlyCount} ${
+              result.backupOnlyCount === 1
+                ? 'registro ilegível permanece'
+                : 'registros ilegíveis permanecem'
+            } apenas na cópia de segurança`,
+          )
+        }
+        if (result.idsFixedCount > 0) {
+          details.push(
+            `${result.idsFixedCount} ${
+              result.idsFixedCount === 1
+                ? 'identificador duplicado foi corrigido'
+                : 'identificadores duplicados foram corrigidos'
+            }`,
+          )
+        }
+        setSuccessMessage(
+          result.recoveredCount === 0
+            ? `Recuperação concluída e confirmada: nenhum registro era recuperável, então a lista de roteiros ficou vazia. O conteúdo original foi preservado na cópia de segurança (quarentena) deste navegador.`
+            : `Recuperação concluída e confirmada: ${result.recoveredCount} ${
+                result.recoveredCount === 1
+                  ? 'registro recuperado'
+                  : 'registros recuperados'
+              }${
+                details.length > 0 ? ` (${details.join('; ')})` : ''
+              }. O conteúdo original foi preservado na cópia de segurança (quarentena) deste navegador.`,
+        )
+      } else {
+        setStorageMessage(result.message)
+      }
       setRecoveryPreview(null)
       reloadSaved()
     } finally {
@@ -125,9 +177,21 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
     if (quarantine.status !== 'occupied') return
     const expectedRaw = quarantine.raw
     setBusy(true)
+    setSuccessMessage(null)
     try {
       const result = await restoreQuarantineCopy(expectedRaw)
-      setStorageMessage(result.ok ? null : result.message)
+      if (result.ok) {
+        setStorageMessage(null)
+        setSuccessMessage(
+          `Restauração concluída e confirmada: ${result.restoredCount} ${
+            result.restoredCount === 1
+              ? 'registro restaurado'
+              : 'registros restaurados'
+          } para a lista de roteiros salvos. A cópia de segurança permanece na quarentena.`,
+        )
+      } else {
+        setStorageMessage(result.message)
+      }
       setConfirmingRestore(false)
       reloadSaved()
     } finally {
@@ -139,9 +203,17 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
     if (quarantine.status !== 'occupied') return
     const expectedRaw = quarantine.raw
     setBusy(true)
+    setSuccessMessage(null)
     try {
       const result = await discardQuarantineCopy(expectedRaw)
-      setStorageMessage(result.ok ? null : result.message)
+      if (result.ok) {
+        setStorageMessage(null)
+        setSuccessMessage(
+          'Cópia de segurança descartada definitivamente deste navegador. A remoção foi confirmada.',
+        )
+      } else {
+        setStorageMessage(result.message)
+      }
       setConfirmingDiscard(false)
       reloadSaved()
     } finally {
@@ -174,7 +246,8 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
         {(storage.status === 'unavailable' ||
           storage.status === 'corrupted' ||
           quarantine.status === 'occupied' ||
-          storageMessage) && (
+          storageMessage ||
+          successMessage) && (
           <div className="mx-auto max-w-6xl space-y-3 px-4 pt-8 sm:px-6">
             {storage.status === 'unavailable' && (
               <p
@@ -386,6 +459,17 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
                 {storageMessage}
               </p>
             )}
+
+            {/* Sucesso confirmado (role="status": não interrompe como
+                alerta, mas é anunciado por leitores de tela). */}
+            {successMessage && (
+              <p
+                role="status"
+                className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-800"
+              >
+                {successMessage}
+              </p>
+            )}
           </div>
         )}
 
@@ -399,6 +483,7 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
           onOpen={onOpenSaved}
           onRemove={handleRemoveSaved}
           actionsDisabled={actionsDisabled}
+          storageStatus={storage.status}
         />
         <DestinationsSection
           selectedDestinationId={destinationId}

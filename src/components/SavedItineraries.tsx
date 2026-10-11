@@ -3,6 +3,7 @@ import { FolderOpen, Trash2 } from 'lucide-react'
 import { destinations } from '../data/destinations'
 import { STYLE_LABELS } from '../data/labels'
 import type { SavedItinerary } from '../types'
+import type { StorageLoadStatus } from '../services/itineraryStorage'
 import { formatCurrency, formatDateTime } from '../utils/format'
 
 interface SavedItinerariesProps {
@@ -15,6 +16,13 @@ interface SavedItinerariesProps {
    * incompatíveis com o estado do armazenamento ficam bloqueadas.
    */
   actionsDisabled?: boolean
+  /**
+   * Estado da leitura do armazenamento. Fora de 'ok'/'empty', a lista
+   * vazia NÃO é apresentada como "nenhum roteiro salvo": os registros
+   * podem existir e apenas não puderam ser lidos ou validados — os
+   * alertas da página explicam a situação (plano de remediação, 8.1).
+   */
+  storageStatus?: StorageLoadStatus
 }
 
 /**
@@ -26,7 +34,15 @@ export function SavedItineraries({
   onOpen,
   onRemove,
   actionsDisabled = false,
+  storageStatus = 'ok',
 }: SavedItinerariesProps) {
+  // A mensagem de lista vazia só é exibida quando a leitura comprovou
+  // que não há roteiros ('empty') ou que a coleção íntegra está vazia
+  // de itens exibíveis por leitura válida ('ok'). Em 'corrupted' ou
+  // 'unavailable', afirmar que não há roteiros seria falso.
+  const showEmptyMessage =
+    saved.length === 0 &&
+    (storageStatus === 'ok' || storageStatus === 'empty')
   return (
     <section
       id="roteiros-salvos"
@@ -46,10 +62,12 @@ export function SavedItineraries({
         </p>
 
         {saved.length === 0 ? (
-          <p className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white px-5 py-6 text-sm text-slate-500">
-            Nenhum roteiro salvo ainda. Gere um roteiro no formulário acima e
-            use o botão "Salvar roteiro" na página de resultado.
-          </p>
+          showEmptyMessage ? (
+            <p className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white px-5 py-6 text-sm text-slate-500">
+              Nenhum roteiro salvo ainda. Gere um roteiro no formulário acima e
+              use o botão "Salvar roteiro" na página de resultado.
+            </p>
+          ) : null
         ) : (
           <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {saved.map((record) => {
