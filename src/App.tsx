@@ -81,6 +81,7 @@ function App() {
         onDraftChange={updateDraft}
         onBackHome={handleNewPlanning}
         onUseLegacyForm={handleUseLegacyForm}
+        onItineraryGenerated={handleItineraryGenerated}
       />
     )
   }

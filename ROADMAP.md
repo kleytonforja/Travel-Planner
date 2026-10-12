@@ -139,7 +139,14 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
-- [~] **V1-T3.6 — etapa 6, orçamento (parcial)** (D37): estilo financeiro (mesmos
+- [~] **V1-T3.7 — etapa 7, revisão e geração direta (parcial)** (D38): cards de
+      revisão com "Editar" por seção e geração do roteiro pelo fluxo progressivo
+      (adaptador para o contrato do motor, mesma função de geração, página de
+      resultado atual). Só destino, duração, interesses, estilo e orçamento por
+      pessoa influenciam o roteiro; viajantes, transporte, ritmo, perfil e
+      acessibilidade não, e não são salvos. Sem orçamento a geração é bloqueada.
+      Formulário tradicional **mantido até o V1-T3.8**. Validada localmente; sem commit.
+- [x] V1-T3.6 — etapa 6, orçamento (D37, commit `0d6bcc5`): estilo financeiro (mesmos
       valores do motor, padrão Equilibrado) e orçamento opcional em valor total ou
       por pessoa, em centavos, na moeda do destino, sem câmbio nem descontos
       presumidos; o formulário tradicional abre com estilo e valor por pessoa.

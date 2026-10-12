@@ -992,3 +992,44 @@ as etapas 2 a 6 medem 3–6 s sob carga e 2 de 3 execuções falharam por tempo.
 alterar o `vite.config.ts` (mantido sem `testTimeout`), os cinco arquivos de etapa
 (`datesStep`, `travelersStep`, `transportStep`, `interestsStep`, `budgetStep`) usam
 `vi.setConfig({ testTimeout: 20000 })` localmente.
+
+## D38 — Planejamento progressivo: revisão e geração direta (V1-T3.7)
+
+**Checkpoint A — compatibilidade com o motor** (nenhum bloqueio; motor, persistência
+e importação/exportação **não** foram alterados):
+- **Contrato do motor**: `generateItinerary(PlanningInput, Destination)` com
+  `PlanningInput = { destinationId, days (1–14), interests (≥1), style, budget }`;
+  `budget` é **por pessoa**, > 0, na moeda do destino. O roteiro salvo guarda esse
+  `input` (esquema inalterado).
+- **Suportados diretamente**: destino, interesses, estilo financeiro.
+- **Conversíveis sem perda de significado**: duração (datas ou dias → `days`) e
+  orçamento (valor por pessoa direto; valor total ÷ viajantes em centavos,
+  arredondado para baixo, adultos + crianças + bebês contando 1 cada).
+- **Não suportados (ainda não influenciam o roteiro)**: datas exatas, composição dos
+  viajantes (só entra na conta do orçamento por pessoa), perfil, acessibilidade,
+  transporte (chegada, origem, locais) e ritmo.
+- **Orçamento ausente**: o motor exige valor > 0; a geração pelo fluxo é **bloqueada**
+  com explicação e atalho "Corrigir" para a etapa 6. Nenhum valor é inventado.
+- **Riscos tratados**: arredondamento (centavos, para baixo, explicitado na tela);
+  alteração de viajantes (recalcula a cada geração, a partir do rascunho); destino,
+  duração ou interesses inválidos/incompletos (validação reutilizada
+  `validatePlanningInput`, cada problema aponta a etapa certa); perda de preferências
+  (o rascunho vive no `App` e nunca é descartado, nem em erro de geração).
+
+**Decisão**: a etapa 7 ("Sua viagem está quase pronta!") mostra cards de revisão
+(destino com fotografia, datas/duração, viajantes, transporte de chegada,
+deslocamentos locais, interesses, ritmo, estilo e orçamento), cada um com "Editar"
+(vai à etapa e oferece "Voltar para a revisão"), e o botão "Gerar roteiro", que usa
+`buildPlanningInput` (`planningAdapter.ts`) e a **mesma** função `generateItinerary`
+do formulário tradicional, abrindo a página de resultado atual (salvar, exportar,
+importar inalterados). Um aviso diz o que é usado e o que não é; as preferências
+temporárias **não** são salvas no roteiro nem alteram sua geração. Erro de geração
+mostra a mensagem do motor e mantém tudo.
+
+**Limitações de persistência**: o roteiro salvo contém apenas o contrato do motor.
+Datas exatas, viajantes, transporte, ritmo, perfil e acessibilidade existem só na
+sessão e se perdem ao recarregar. Persistir essas preferências exigiria mudar o
+esquema salvo/exportado: **fora de escopo**, decisão futura.
+
+**Próximos passos**: V1-T3.8 remove o formulário tradicional; usar as preferências
+não utilizadas na geração exige alterar o motor e o esquema (nova decisão).

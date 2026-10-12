@@ -1,6 +1,8 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
+import type { Itinerary } from '../../types'
+
 import { destinations } from '../../data/destinations'
 import { describeBudget } from '../../utils/budget'
 import { describeInterests } from '../../utils/interests'
@@ -23,6 +25,8 @@ interface PlanningFlowProps {
   onDraftChange: (patch: Partial<PlanningDraft>) => void
   /** Abre o formulário tradicional (mantido até todas as etapas existirem). */
   onUseLegacyForm: () => void
+  /** Chamado quando a revisão gera o roteiro. */
+  onItineraryGenerated?: (itinerary: Itinerary) => void
   /** Etapas disponíveis; por padrão, as implementadas em `stepRegistry`. */
   registry?: StepRegistry
 }
@@ -39,11 +43,14 @@ export function PlanningFlow({
   draft,
   onDraftChange,
   onUseLegacyForm,
+  onItineraryGenerated,
   registry = STEP_REGISTRY,
 }: PlanningFlowProps) {
   const [stepIndex, setStepIndex] = useState(0)
   // Maior etapa já visitada: o resumo só mostra o grupo depois que a etapa foi vista.
   const [reached, setReached] = useState(0)
+  // Verdadeiro quando o usuário saiu da revisão para editar uma seção: oferece o retorno direto.
+  const [fromReview, setFromReview] = useState(false)
   if (stepIndex > reached) setReached(stepIndex)
   const stepArea = useRef<HTMLDivElement>(null)
   const mounted = useRef(false)
@@ -62,6 +69,15 @@ export function PlanningFlow({
   }, [stepIndex])
 
   const step = PLANNING_STEPS[stepIndex]
+  const reviewIndex = PLANNING_STEPS.findIndex((item) => item.id === 'revisao')
+  if (fromReview && stepIndex === reviewIndex) setFromReview(false)
+
+  function goToStep(id: (typeof PLANNING_STEPS)[number]['id']) {
+    const target = PLANNING_STEPS.findIndex((item) => item.id === id)
+    if (target < 0 || !isStepImplemented(id, registry)) return
+    if (stepIndex === reviewIndex) setFromReview(true)
+    setStepIndex(target)
+  }
   const StepComponent = registry[step.id]
   const previous = PLANNING_STEPS[stepIndex - 1]
   const next = PLANNING_STEPS[stepIndex + 1]
@@ -94,7 +110,12 @@ export function PlanningFlow({
 
       <div ref={stepArea} className="mt-4">
         {StepComponent ? (
-          <StepComponent draft={draft} onDraftChange={onDraftChange} />
+          <StepComponent
+            draft={draft}
+            onDraftChange={onDraftChange}
+            goToStep={goToStep}
+            onItineraryGenerated={onItineraryGenerated}
+          />
         ) : (
           <p role="alert" className="text-night-ink">
             Esta etapa ainda não está disponível.
@@ -132,6 +153,14 @@ export function PlanningFlow({
           </p>
         )}
       </section>
+
+      {fromReview && stepIndex !== reviewIndex && (
+        <div className="mt-6">
+          <Button variant="primary" onClick={() => setStepIndex(reviewIndex)}>
+            Voltar para a revisão
+          </Button>
+        </div>
+      )}
 
       {(previous || nextAvailable) && (
         <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -171,8 +200,9 @@ export function PlanningFlow({
                 ? `A etapa ${pendingLabels[0]} ainda está em desenvolvimento. `
                 : `As etapas ${pendingLabels.join(', ')} ainda estão em desenvolvimento. `
               : ''}
-            Enquanto isso, você pode continuar pelo formulário tradicional, que já
-            vem com as escolhas feitas até aqui.
+            {pendingLabels.length > 0
+              ? 'Enquanto isso, você pode continuar pelo formulário tradicional, que já vem com as escolhas feitas até aqui.'
+              : 'O formulário tradicional continua disponível por enquanto e já vem com as escolhas feitas até aqui.'}
           </p>
           <div className="mt-4">
             <Button

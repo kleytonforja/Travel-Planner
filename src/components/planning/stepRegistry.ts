@@ -6,6 +6,7 @@ import { BudgetStep } from './BudgetStep'
 import { DatesStep } from './DatesStep'
 import { DestinationStep } from './DestinationStep'
 import { InterestsStep } from './InterestsStep'
+import { ReviewStep } from './ReviewStep'
 import { TransportStep } from './TransportStep'
 import { TravelersStep } from './TravelersStep'
 import {
@@ -16,8 +17,7 @@ import {
 } from './planningSteps'
 
 /**
- * Etapas implementadas: destino, datas, viajantes, transporte, interesses e orçamento. As demais
- * (revisão) entram aqui quando forem entregues.
+ * As sete etapas do planejamento progressivo estão implementadas.
  */
 export const STEP_REGISTRY: StepRegistry = {
   destino: DestinationStep,
@@ -26,6 +26,7 @@ export const STEP_REGISTRY: StepRegistry = {
   transporte: TransportStep,
   interesses: InterestsStep,
   orcamento: BudgetStep,
+  revisao: ReviewStep,
 }
 
 /** Critério de conclusão de cada etapa (etapa sem critério conta como completa). */
@@ -36,6 +37,8 @@ export const STEP_COMPLETION: Partial<Record<PlanningStepId, (draft: PlanningDra
   transporte: (draft) => isTransportComplete(draft.transport),
   interesses: (draft) => hasInterests(draft.interests),
   orcamento: (draft) => isBudgetComplete(draft.budget),
+  // A revisão não bloqueia o formulário tradicional: ele pede os dados que faltarem.
+  revisao: () => true,
 }
 
 /** Orientação exibida enquanto a etapa não está completa. */

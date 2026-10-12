@@ -228,6 +228,7 @@ describe('Etapa 3 — Viajantes', () => {
     await user.click(screen.getByRole('button', { name: 'Continuar para Interesses' }))
     await user.click(screen.getByRole('button', { name: /^Cultura/ }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
+    await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
     await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
     expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
     expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('7')

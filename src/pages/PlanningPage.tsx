@@ -6,12 +6,14 @@ import { Header } from '../components/Header'
 import { PlanningFlow } from '../components/planning/PlanningFlow'
 import type { PlanningDraft } from '../components/planning/planningSteps'
 import { Button } from '../components/ui/Button'
+import type { Itinerary } from '../types'
 
 interface PlanningPageProps {
   draft: PlanningDraft
   onDraftChange: (patch: Partial<PlanningDraft>) => void
   onBackHome: () => void
   onUseLegacyForm: () => void
+  onItineraryGenerated: (itinerary: Itinerary) => void
 }
 
 /** Página do planejamento progressivo (V1-T3): hoje, apenas a etapa de destino. */
@@ -20,6 +22,7 @@ export function PlanningPage({
   onDraftChange,
   onBackHome,
   onUseLegacyForm,
+  onItineraryGenerated,
 }: PlanningPageProps) {
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -47,6 +50,7 @@ export function PlanningPage({
             draft={draft}
             onDraftChange={onDraftChange}
             onUseLegacyForm={onUseLegacyForm}
+            onItineraryGenerated={onItineraryGenerated}
           />
         </div>
       </main>

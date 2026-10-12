@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 
+import type { Itinerary } from '../../types'
 import { DEFAULT_BUDGET, type BudgetDraft } from '../../utils/budget'
 import type { InterestCategory } from '../../types'
 import { DEFAULT_PACE, type TripPace } from '../../utils/interests'
@@ -90,6 +91,10 @@ export function resolveTripDays(draft: PlanningDraft): number | null {
 export interface StepProps {
   draft: PlanningDraft
   onDraftChange: (patch: Partial<PlanningDraft>) => void
+  /** Leva a outra etapa (usado pela revisão para editar cada seção). */
+  goToStep?: (id: PlanningStepId) => void
+  /** Chamado quando o roteiro é gerado pela etapa de revisão. */
+  onItineraryGenerated?: (itinerary: Itinerary) => void
 }
 
 /** Componentes das etapas já implementadas. */

@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **V1-T3.6** — planejamento progressivo, etapa 6 (orçamento). Anteriores: V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **V1-T3.7** — planejamento progressivo, etapa 7 (revisão e geração direta). Anteriores: V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | 🚧 **parcial por desenho**: etapa 6 implementada e validada localmente em 2026-10-12 (ver "Relatório do V1-T3.6"); etapa 7 pendente; **sem commit** (aguarda autorização) |
-| Próximo checkpoint  | Revisão/commit do V1-T3.6 e definição da etapa 7 (revisão), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | ✅ **implementado e validado localmente** em 2026-10-12 (ver "Relatório do V1-T3.7"); as sete etapas existem; formulário tradicional mantido até o V1-T3.8; **sem commit** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do V1-T3.7 e definição do V1-T3.8 (remoção do formulário tradicional), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -1858,3 +1858,36 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
 - **Preservado**: estilo financeiro, orçamento opcional, total/por pessoa em centavos,
   validações, teto provisório de 10.000.000,00 e pré-preenchimento do formulário tradicional.
   Novo teste: alterar viajantes mantém a modalidade (por pessoa) e recalcula o total.
+
+## Relatório do V1-T3.7 — revisão final e integração com o motor (2026-10-12)
+
+- **Status**: implementado e validado localmente; **sem commit, push ou deploy**.
+- **Checkpoint A**: sem bloqueios; compatibilidade, classificação dos dados, orçamento
+  ausente, conversão total/por pessoa e riscos registrados em D38. Motor,
+  persistência e importação/exportação intocados.
+- **Funcionalidade**: etapa 7 "Sua viagem está quase pronta!" com oito cards de revisão
+  (destino com fotografia, datas/duração, viajantes, transporte de chegada,
+  deslocamentos locais, interesses, ritmo, estilo e orçamento), "Editar" por card e
+  "Voltar para a revisão"; "Gerar roteiro" via `buildPlanningInput` (adaptador) +
+  `generateItinerary` existente, abrindo a página de resultado atual; sem orçamento
+  a geração é bloqueada com "Corrigir"; erro do motor mostra a mensagem e preserva
+  as escolhas; aviso do que é e do que não é usado na geração.
+- **Dados usados pelo motor**: destino, duração (dias), interesses, estilo, orçamento
+  por pessoa. **Ainda não usados nem salvos**: datas exatas, composição dos viajantes
+  (só no cálculo do orçamento), perfil, acessibilidade, transporte e ritmo.
+- **Limitações de persistência**: salvo/exportado só o contrato do motor; as demais
+  preferências são só da sessão (mudar isso exige alterar o esquema: decisão futura).
+- **Arquivos**: novos `src/components/planning/planningAdapter.ts`,
+  `src/components/planning/ReviewStep.tsx`, `src/tests/planningAdapter.test.ts`,
+  `src/tests/reviewStep.test.tsx`, `src/tests/reviewGenerationError.test.tsx`; alterados
+  `planningSteps.ts` (`goToStep`, `onItineraryGenerated`), `stepRegistry.ts`,
+  `PlanningFlow.tsx` (edição a partir da revisão), `PlanningPage.tsx`, `App.tsx`, testes
+  `planningFlow`, `datesStep`, `travelersStep`, `transportStep`, `interestsStep`,
+  `budgetStep`, `DECISIONS.md` (D38), `ROADMAP.md`, `PROJECT.md`, `TASKS.md`.
+- **Testes**: 664 em 37 arquivos (adaptador, revisão, edição, geração, orçamento ausente
+  e erro de geração com motor simulado).
+- **Chromium**: 17 de 17 (sete etapas até a revisão, conversão R$ 1.500 ÷ 2 = R$ 750,00,
+  edição e retorno, geração, **salvar**, **exportar** e **importar** reais, sem orçamento,
+  teclado, sem overflow em 375, 768, 1366 e 1920 px).
+- **Riscos**: apenas Chromium; formulário tradicional ainda duplica a entrada de dados
+  (V1-T3.8); preferências sem efeito no roteiro.

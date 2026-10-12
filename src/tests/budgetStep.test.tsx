@@ -31,7 +31,11 @@ const amountMode = () => within(screen.getByRole('group', { name: 'Orçamento (o
 const basis = () => within(screen.getByRole('group', { name: 'Como você quer informar o valor?' }))
 const pressed = (el: HTMLElement) => el.getAttribute('aria-pressed') === 'true'
 const summary = () => screen.getByRole('region', { name: 'Resumo do planejamento' })
-const legacy = () => screen.getByRole('button', { name: 'Continuar com o formulário tradicional' })
+const legacy = () => screen.getByRole('button', { name: 'Continuar para Revisão' })
+const openLegacyForm = async (user: User) => {
+  await user.click(legacy())
+  await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
+}
 const field = () => screen.getByLabelText(/^Valor (total da viagem|por pessoa)/) as HTMLInputElement
 
 describe('Etapa 6 — Orçamento', () => {
@@ -52,9 +56,9 @@ describe('Etapa 6 — Orçamento', () => {
     expect(pressed(amountMode().getByRole('button', { name: /^Ainda não defini/ }))).toBe(true)
     expect(screen.queryByLabelText(/^Valor/)).toBeNull()
     expect(summary()).toHaveTextContent('Orçamento: Equilibrado; valor não definido')
-    // Opcional: segue sem valor. Etapa 7 não existe: só o fallback.
+    // Opcional: segue sem valor para a revisão.
     expect(legacy()).toBeEnabled()
-    expect(screen.queryByRole('button', { name: /^Continuar para/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Continuar com o formulário tradicional' })).toBeNull()
     expect(screen.getByText(/estimativas ilustrativas/)).toBeInTheDocument()
     expect(screen.getByText(/não representa dinheiro disponível/)).toBeInTheDocument()
     expect(screen.getByText(/hospedagem, alimentação e transporte não são calculados/)).toBeInTheDocument()
@@ -206,7 +210,7 @@ describe('Etapa 6 — Orçamento', () => {
     await user.click(styles().getByRole('button', { name: /^Econômico/ }))
     await user.click(amountMode().getByRole('button', { name: /^Informar um valor/ }))
     await user.type(field(), '1000')
-    await user.click(legacy())
+    await openLegacyForm(user)
 
     expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
     expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('7')
@@ -222,7 +226,7 @@ describe('Etapa 6 — Orçamento', () => {
   it('sem orçamento definido, o formulário tradicional pede o valor', async () => {
     const user = userEvent.setup()
     await toBudget(user)
-    await user.click(legacy())
+    await openLegacyForm(user)
     expect((document.getElementById('orcamento') as HTMLInputElement).value).toBe('')
     expect(within(screen.getByRole('group', { name: 'Estilo de viagem' })).getByRole('radio', { name: /Equilibrado/ })).toBeChecked()
   })

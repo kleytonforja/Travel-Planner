@@ -173,6 +173,7 @@ describe('Etapa 5 — Interesses e ritmo', () => {
     await user.click(interests().getByRole('button', { name: /^Cultura/ }))
     await user.click(interests().getByRole('button', { name: /^Gastronomia/ }))
     await user.click(next())
+    await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
     await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
 
     const legacy = within(screen.getByRole('group', { name: 'Interesses' }))
