@@ -365,11 +365,9 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
         Pular para o conteúdo
       </a>
 
-      <Header />
+      <Header tone="dark" />
 
       <main id="conteudo">
-        <Hero />
-
         {(storage.status === 'unavailable' ||
           storage.status === 'corrupted' ||
           quarantine.status === 'occupied' ||
@@ -660,6 +658,12 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
           </div>
         )}
 
+        <Hero />
+        <DestinationsSection
+          selectedDestinationId={destinationId}
+          onSelectDestination={handleSelectDestination}
+        />
+
         <PlanningForm
           destinationId={destinationId}
           onDestinationChange={setDestinationId}
@@ -678,10 +682,6 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
           externalBusy={busy}
           onBusyChange={setBusy}
           onStorageChanged={handleImportSettled}
-        />
-        <DestinationsSection
-          selectedDestinationId={destinationId}
-          onSelectDestination={handleSelectDestination}
         />
         <HowItWorks />
       </main>

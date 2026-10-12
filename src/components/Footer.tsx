@@ -1,5 +1,14 @@
 import { Plane } from 'lucide-react'
 
+import { DESTINATION_PHOTOS, HERO_PHOTO } from '../data/photos'
+
+const PHOTO_CREDITS = [
+  { label: 'capa', credit: HERO_PHOTO.credit },
+  { label: 'Florianópolis', credit: DESTINATION_PHOTOS.florianopolis.credit },
+  { label: 'Rio de Janeiro', credit: DESTINATION_PHOTOS['rio-de-janeiro'].credit },
+  { label: 'Lisboa', credit: DESTINATION_PHOTOS.lisboa.credit },
+] as const
+
 /**
  * Ano exibido no rodapé. Calculado uma única vez no carregamento do módulo
  * (fora da renderização) para manter os componentes puros.
@@ -70,6 +79,32 @@ export function Footer() {
           Custos e durações exibidos são valores ilustrativos para fins de
           demonstração e não representam cotações, horários oficiais ou
           disponibilidade real de serviços.
+        </p>
+        <p className="mt-2 text-sm text-slate-500">
+          Fotografias via{' '}
+          <a
+            href="https://unsplash.com/license"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline focus-ring"
+          >
+            Unsplash
+          </a>
+          : {PHOTO_CREDITS.map(({ label, credit }, index) => (
+            <span key={credit.sourceUrl}>
+              {index > 0 && ', '}
+              <a
+                href={credit.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline focus-ring"
+              >
+                {credit.photographer}
+              </a>{' '}
+              ({label})
+            </span>
+          ))}
+          .
         </p>
         <p className="mt-2 text-sm text-slate-500">
           © {CURRENT_YEAR} Travel Planner. Projeto de código aberto.

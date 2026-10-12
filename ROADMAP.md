@@ -121,8 +121,18 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       ProgressSteps). Aparência atual preservada (capturas idênticas).
       Implementado e validado localmente; commit local feito, sem push.
       Referência visual oficial: `docs/references/travel-planner-design-approved.png`.
-- [ ] V1-T2 e seguintes: telas com fotografias, fundo azul-escuro e
-      navegação progressiva — aguardam autorização.
+- [~] **V1-T2 — nova Home** (D30): cabeçalho escuro integrado, hero, painel
+      "Destinos em destaque" com indicadores de categoria e ações preservadas;
+      validada localmente (447 testes, Chromium); commit local feito, sem push.
+- [x] **V1-T2.1 — fotografias reais** (D31): hero (Rio de Janeiro) e cards de
+      Florianópolis, Rio de Janeiro e Lisboa, do Unsplash (Unsplash License),
+      em WebP local com crédito (`docs/IMAGE_CREDITS.md`); ilustrações mantidas
+      como substitutas. Fidelidade à referência comparada visualmente; hero
+      mais escuro que o modelo por exigência de contraste.
+- [ ] Fotografias das atrações (começando pelas dez do Rio de Janeiro) e de
+      uma Ponte Hercílio Luz identificada — fase posterior.
+- [ ] V1-T3 e seguintes: planejamento progressivo, demais telas — aguardam
+      autorização.
 
 ## Evolução futura (pós-MVP, fora do escopo atual — NÃO implementar agora)
 

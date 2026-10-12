@@ -8,37 +8,43 @@ interface DestinationsSectionProps {
   onSelectDestination: (id: string) => void
 }
 
-/** Seção que lista os destinos disponíveis na base local. */
+/** Painel "Destinos em destaque": sobrepõe a base do hero, com os destinos da base local. */
 export function DestinationsSection({
   selectedDestinationId,
   onSelectDestination,
 }: DestinationsSectionProps) {
   return (
-    <section id="destinos" className="scroll-mt-20 bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-            Destinos disponíveis
-          </h2>
-          <p className="mt-3 text-lg text-slate-600">
-            Escolha um dos destinos cadastrados para começar o planejamento.
-          </p>
-        </div>
+    <section
+      id="destinos"
+      aria-labelledby="destinos-titulo"
+      className="relative z-10 -mt-24 scroll-mt-20 px-4 pb-16 sm:-mt-28 sm:px-6"
+    >
+      <div className="mx-auto max-w-6xl rounded-card-lg bg-surface p-5 shadow-float sm:p-8">
+        <h2
+          id="destinos-titulo"
+          className="text-2xl font-bold tracking-tight text-ink sm:text-3xl"
+        >
+          Destinos em destaque
+        </h2>
+        <p className="mt-2 text-base text-ink-muted">
+          Escolha um destino e comece a planejar sua próxima aventura.
+        </p>
 
-        <div className="mx-auto mt-6 flex max-w-3xl items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-left">
+        <div className="mt-4 flex items-start gap-3 rounded-lg border border-brand-200 bg-brand-50 p-3 text-left">
           <Info
-            className="mt-0.5 h-5 w-5 shrink-0 text-blue-600"
+            className="mt-0.5 h-5 w-5 shrink-0 text-brand-600"
             aria-hidden="true"
           />
-          <p className="text-sm text-blue-900">
+          <p className="text-sm text-slate-800">
             Os custos e as durações das atividades são{' '}
             <strong>valores ilustrativos</strong>, usados apenas para
             demonstração. Eles não representam cotações atuais, horários
-            oficiais ou disponibilidade real.
+            oficiais ou disponibilidade real. As fotografias são do
+            Unsplash; os créditos estão no rodapé.
           </p>
         </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {destinations.map((destination) => (
             <DestinationCard
               key={destination.id}

@@ -119,7 +119,7 @@ multiagente") e `TASKS.md` ("Fila atual").
 | **Planejada** | Avatar e perfil local |
 | **Planejada** | Mapa interativo com atrações |
 | **Planejada** | Rotas reais entre atrações |
-| **Planejada** | Fotografias e ícones coloridos de categorias (tokens e `CategoryBadge` existem; sem fotografias nem aplicação nas telas) |
+| **Parcial** | Fotografias e ícones coloridos: ícones de categoria e fotografias do hero e dos três destinos já aplicados na home (Unsplash, créditos em `docs/IMAGE_CREDITS.md`); fotografias das atrações individuais ainda planejadas, começando pelas dez do Rio de Janeiro |
 | **Planejada** | Planejamento progressivo em etapas (7 etapas na referência: Destino, Datas, Viajantes, Transporte, Interesses, Orçamento e Roteiro; `ProgressSteps` existe, sem o fluxo) |
 
 As funcionalidades planejadas **não estão implementadas** e só entram com

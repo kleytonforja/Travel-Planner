@@ -223,6 +223,14 @@ describe('Card', () => {
     expect(screen.getByRole('article', { name: 'Destino' })).toHaveClass('border-brand-600', 'ring-brand-100')
   })
 
+  it('variante com mídia: imagem rente às bordas (sem padding) e recorte arredondado', () => {
+    const classes = cardClasses({ variant: 'media' })
+    expect(classes).toContain('overflow-hidden')
+    expect(classes).toContain('rounded-card')
+    expect(classes).not.toContain('p-6')
+    expect(cardClasses({ variant: 'media', selected: true })).toContain('border-brand-600')
+  })
+
   it('variante foto: fundo noturno, sombra flutuante e movimento reduzido', () => {
     const classes = cardClasses({ variant: 'photo' })
     expect(classes).toContain('bg-night-900')
@@ -252,6 +260,13 @@ describe('CategoryBadge', () => {
   it('variante em bloco expõe o nome da categoria a leitores de tela', () => {
     render(<CategoryBadge category="cultura" variant="icon" />)
     expect(screen.getByRole('img', { name: 'Cultura' })).toBeInTheDocument()
+  })
+
+  it('variante em círculo pequeno expõe nome e dica de cada categoria', () => {
+    render(<CategoryBadge category="aventura" variant="dot" />)
+    const dot = screen.getByRole('img', { name: 'Aventura' })
+    expect(dot).toHaveAttribute('title', 'Aventura')
+    expect(dot).toHaveClass('h-6', 'w-6', 'rounded-full', 'bg-cat-aventura-soft')
   })
 })
 
@@ -351,11 +366,11 @@ describe('ProgressSteps', () => {
   })
 })
 
-describe('Adoção sem mudança visual', () => {
-  it('Hero usa as variantes de botão (primário e secundário) como links', () => {
+describe('Adoção dos primitivos na home', () => {
+  it('Hero usa as variantes de botão (primário e sobre fundo escuro) como links', () => {
     render(<Hero />)
-    expect(screen.getByRole('link', { name: 'Começar a planejar' })).toHaveClass('bg-brand-600', 'px-6', 'sm:w-auto')
-    expect(screen.getByRole('link', { name: 'Ver destinos' })).toHaveClass('border-line-strong', 'bg-surface')
+    expect(screen.getByRole('link', { name: 'Planejar minha viagem' })).toHaveClass('bg-brand-600', 'px-6', 'sm:w-auto')
+    expect(screen.getByRole('link', { name: 'Explorar destinos' })).toHaveClass('bg-night-900/80', 'ring-white/30', 'focus-ring-on-dark')
   })
 
   it('DestinationCard usa Card e Button e alterna a variante conforme a seleção', async () => {
@@ -365,8 +380,8 @@ describe('Adoção sem mudança visual', () => {
     const { rerender } = render(
       <DestinationCard destination={destination} selected={false} onSelect={onSelect} />,
     )
-    const idle = screen.getByRole('button', { name: 'Planejar para este destino' })
-    expect(idle).toHaveClass('bg-brand-600', 'w-full', 'mt-6')
+    const idle = screen.getByRole('button', { name: 'Selecionar destino' })
+    expect(idle).toHaveClass('bg-brand-600', 'w-full')
     await user.click(idle)
     expect(onSelect).toHaveBeenCalledWith(destination.id)
     expect(screen.getByRole('article')).toHaveClass('border-line')

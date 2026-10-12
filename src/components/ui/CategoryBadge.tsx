@@ -4,14 +4,27 @@ import { CATEGORY_STYLES } from './variants'
 
 interface CategoryBadgeProps {
   category: InterestCategory
-  /** "chip": ícone + rótulo; "icon": ícone colorido em bloco (rótulo acessível). */
-  variant?: 'chip' | 'icon'
+  /** "chip": ícone + rótulo; "icon": ícone em bloco; "dot": ícone em círculo pequeno (rótulo acessível). */
+  variant?: 'chip' | 'icon' | 'dot'
 }
 
 /** Indicador de categoria de atração com ícone colorido. */
 export function CategoryBadge({ category, variant = 'chip' }: CategoryBadgeProps) {
   const { icon: Icon, tone } = CATEGORY_STYLES[category]
   const label = INTEREST_LABELS[category]
+
+  if (variant === 'dot') {
+    return (
+      <span
+        role="img"
+        aria-label={label}
+        title={label}
+        className={`inline-flex h-6 w-6 items-center justify-center rounded-full ${tone}`}
+      >
+        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+      </span>
+    )
+  }
 
   if (variant === 'icon') {
     return (

@@ -31,7 +31,7 @@ const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
     'border border-line-strong bg-surface text-slate-700 hover:bg-surface-muted',
   soft: 'bg-brand-50 text-brand-700 hover:bg-brand-100',
   onDark:
-    'bg-white/10 text-night-ink ring-1 ring-white/30 hover:bg-white/20 focus-ring-on-dark',
+    'bg-night-900/80 text-night-ink ring-1 ring-white/30 backdrop-blur-sm hover:bg-night-800 focus-ring-on-dark',
 }
 
 const BUTTON_SIZES: Record<ButtonSize, string> = {
@@ -67,7 +67,7 @@ export function buttonClasses({
     .join(' ')
 }
 
-export type CardVariant = 'light' | 'photo'
+export type CardVariant = 'light' | 'media' | 'photo'
 
 const CARD_VARIANTS: Record<
   CardVariant,
@@ -76,6 +76,12 @@ const CARD_VARIANTS: Record<
   // Card claro, arredondado, com sombra suave (aparência atual dos destinos).
   light: {
     base: 'flex flex-col rounded-card border bg-surface p-6 shadow-card transition-shadow hover:shadow-card-hover',
+    selected: 'border-brand-600 ring-2 ring-brand-100',
+    idle: 'border-line',
+  },
+  // Card claro com mídia (imagem) rente às bordas; o conteúdo define o próprio espaçamento.
+  media: {
+    base: 'flex flex-col overflow-hidden rounded-card border bg-surface shadow-card transition-shadow hover:shadow-card-hover',
     selected: 'border-brand-600 ring-2 ring-brand-100',
     idle: 'border-line',
   },

@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **V1-T1** — fundamentos do Design System (tokens, estilos globais e primitivos de UI). Anteriores: C5-T4 (finalização da importação e favicon) e C5-T3 (interface da importação) |
+| Tarefa ativa        | **V1-T2 / V1-T2.1 / V1-T2.2** — nova Home, fotografias reais e refinamento final (consolidadas em commit local). Anterior: V1-T1 (Design System, commit `2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
-| Arquivos previstos  | `src/index.css`, `src/components/ui/*` (novos), `src/components/Hero.tsx`, `src/components/DestinationCard.tsx`, `src/tests/designSystem.test.tsx` (novo), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D29), `TASKS.md` |
-| Status              | ✅ implementada e validada localmente em 2026-10-12 (ver "Relatório do V1-T1" no fim do arquivo); commit local feito, sem push |
-| Próximo checkpoint  | Revisão/commit do V1-T1 e definição do V1-T2 (primeira tela com a nova identidade), mediante autorização. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Arquivos previstos  | `src/components/{Header,Hero,DestinationCard,DestinationsSection}.tsx`, `src/components/ui/{scenes.tsx,CategoryBadge.tsx,variants.ts}`, `src/pages/HomePage.tsx`, `src/tests/{homeRedesign,designSystem}.test.tsx`, `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D30), `TASKS.md` |
+| Status              | ✅ Home e fotografias do hero e dos três destinos implementadas e validadas localmente em 2026-10-12 (ver "Relatório do V1-T2.1" no fim do arquivo); refinamentos V1-T2.2 aplicados; fotografias das atrações pendentes (fase posterior); commit local feito, sem push |
+| Próximo checkpoint  | Decisão sobre as fotografias (fornecer arquivos com licença ou autorizar uma fonte), revisão/commit do V1-T2 e definição do V1-T3 (planejamento progressivo), mediante autorização. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -1449,3 +1449,169 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   +1,4 KB comprimido); primitivos sem uso nas telas ainda; fotografias, fundo
   noturno e navegação progressiva ainda não aplicados; Inter sem carregamento
   explícito. Nenhum commit, push ou deploy.
+
+## Relatório do V1-T2 — nova Home (2026-10-12)
+
+- **Status**: **parcial**. A Home foi implementada e validada, mas a
+  fidelidade à referência é **parcial** porque não há fotografias: nenhuma
+  imagem local tinha origem e licença identificáveis e obter imagens de
+  terceiros exigiria operação externa sem autorização (AGENTS.md). Foram usadas
+  ilustrações vetoriais originais, declaradas na interface (D30).
+- **Skills**: `frontend-design` consultada (auxiliar ativada no V1-T1), mais
+  `tdd-testing`, `react-next-best-practices` e `codebase-architecture`.
+- **Implementado**: cabeçalho escuro integrado (`Header tone="dark"`); `Hero`
+  com cena de baía ao pôr do sol, título, descrição, CTAs e quatro destaques
+  verdadeiros; painel "Destinos em destaque" sobreposto ao hero;
+  `DestinationCard` com imagem, moeda, país, descrição, atrações e
+  indicadores de categoria coloridos; `Card` variante `media`; `CategoryBadge`
+  variante `dot`; `scenes.tsx` (ilustrações originais); reordenação da
+  `HomePage` (hero, destinos, formulário atual, salvos, importação, como
+  funciona). Formulário de planejamento mantido até o V1-T3.
+- **Ações preservadas**: selecionar destino (preenche o formulário), gerar e
+  salvar, abrir roteiro salvo, importar JSON e excluir roteiro (a exclusão já
+  era imediata e vinculada ao conteúdo observado, **sem diálogo de
+  confirmação**; não foi alterada por restrição de não mexer na persistência).
+- **Comparação visual com a referência** (capturas em Chromium a 375, 768, 1366
+  e 1920 px, comparadas visualmente com a imagem aprovada): semelhantes na
+  composição (cabeçalho escuro, hero com título em três linhas, selo, dois CTAs,
+  quatro destaques com ícones circulares, painel branco arredondado sobreposto,
+  três cards com moeda, atrações e ícones de categoria coloridos). **Diferenças
+  restantes**: (1) ilustração no lugar de fotografia panorâmica e fotos dos
+  destinos; (2) hero menos vívido que a fotografia; (3) sem avatar, alternância
+  de tema, selo de localização e "Ver todos" (sem função); (4) destaques com
+  textos verdadeiros (a referência cita mapa, fotos e modo offline, inexistentes);
+  (5) botão de destino em largura total, não circular; (6) em 1920 px o
+  conteúdo permanece em coluna de 72 rem, deixando mais área livre que o modelo;
+  (7) em 768 px os cards ficam em duas colunas. Não se declara fidelidade
+  perfeita.
+- **Contraste medido** (pior caso, pixel mais claro atrás do texto, 375/768/
+  1366/1920 px): h1 ≥ 9,6; parágrafo ≥ 5,6; selo ≥ 6,8; destaques ≥ 6,9;
+  botão primário 5,25; botão secundário ≥ 11,8. Antes dos ajustes havia
+  falhas (botão secundário 1,8 a 3,7:1; selo 4,3:1; destaques 3,5:1),
+  corrigidas com fundo escuro translúcido no botão e no selo e gradiente
+  inferior mais forte.
+- **Chromium (11 verificações aprovadas)**: seleção de destino, geração,
+  salvamento, reabertura, importação disponível, exclusão, ordem de tabulação
+  (pular, logo, navegação, CTAs), foco visível de 2 px, ausência de erros,
+  `prefers-reduced-motion` (rolagem automática e transições mínimas) e rolagem
+  suave quando não há preferência. Sem rolagem horizontal em 375, 768, 1366 e
+  1920 px.
+- **Testes**: `src/tests/homeRedesign.test.tsx` (9 casos) e ajustes em
+  `designSystem.test.tsx` (+2 casos: card com mídia e categoria em círculo).
+  Total: 444 testes em 22 arquivos.
+- **Validações executadas (resultados reais)**: `typecheck` sem erros; `lint`
+  código 0; `test:run` com 444 testes passando em duas execuções
+  consecutivas; `build` com sucesso (CSS 41,0 KB, 7,9 KB comprimido);
+  `git diff --check` sem problemas.
+- **Arquivos**: criados `src/components/ui/scenes.tsx` e
+  `src/tests/homeRedesign.test.tsx`; alterados `Header.tsx`, `Hero.tsx`,
+  `DestinationCard.tsx`, `DestinationsSection.tsx`, `ui/CategoryBadge.tsx`,
+  `ui/variants.ts`, `HomePage.tsx`, `designSystem.test.tsx`, `PROJECT.md`,
+  `ROADMAP.md`, `DECISIONS.md` (D30) e `TASKS.md`. Motor de planejamento,
+  persistência, importação/exportação e dependências intactos.
+- **Riscos**: apenas Chromium; sem fotografias; dependência de decisão sobre
+  fonte de imagens; formulário ainda no formato antigo até o V1-T3.
+
+## Relatório do V1-T2.1 — fotografias reais e refinamento da Home (2026-10-12)
+
+- **Escopo (ajustado pelo usuário)**: fotografia do hero, fotografias dos três
+  destinos, refinamento visual e três colunas no desktop. **Sem** fotografias
+  das atrações (fase posterior, começando pelas dez do Rio de Janeiro) e sem
+  alterar motor, catálogo ou persistência.
+- **Skills**: `frontend-design` (ativada seletivamente) e `tdd-testing`,
+  `react-next-best-practices`, `codebase-architecture`.
+- **Fotografias incorporadas (4)**, todas do Unsplash, Unsplash License,
+  verificadas página a página (detalhes em `docs/IMAGE_CREDITS.md`): hero —
+  Mauro Lima, Rio de Janeiro ao pôr do sol (Mirante Dona Marta);
+  Florianópolis — Henrique Pereira; Rio de Janeiro — Lucas Campoi (Baía de
+  Guanabara e Pão de Açúcar); Lisboa — Sarah Markstaller (elétrico em rua
+  histórica). **Pendentes**: fotografias das atrações individuais; fotografia
+  de Florianópolis que nomeie a Ponte Hercílio Luz (a atual é identificada por
+  etiqueta e aparência, com texto alternativo genérico). Pexels não foi
+  utilizado (acesso automatizado recusado, 403).
+- **Como foram verificadas**: o Unsplash bloqueia o acesso automatizado às
+  páginas (resposta "not a bot"; **não houve tentativa de contornar**). A
+  verificação de autor, local, data e licença foi feita pela ferramenta de
+  consulta web; as imagens foram baixadas do CDN público `images.unsplash.com`
+  (sem chave de API), convertidas para WebP pelos parâmetros do próprio CDN e
+  conferidas visualmente antes de serem incorporadas.
+- **Implementado**: `public/images/hero|destinations` (1,2 MB no total);
+  `src/data/photos.ts` (arquivos, dimensões, alt e crédito);
+  `src/components/ui/photos.tsx` (`HeroPhoto` e `DestinationPhotoImage`, com
+  ilustração como substituta em caso de erro); hero com `fetchpriority="high"`,
+  cards com `loading="lazy"`; créditos no rodapé; aviso da seção de destinos
+  atualizado; sobreposições escuras do hero ajustadas.
+- **Medições no Chromium (build de produção, `/Travel-Planner/`)**: todas as
+  imagens respondem 200 sob o caminho base; `srcset` escolhe 960 px no celular
+  e 1920 px no desktop; cards usam as versões de 640 px; **CLS = 0**; sem
+  rolagem horizontal em 375, 768, 1366 e 1920 px; sem erros de página ou
+  console; 11 verificações funcionais aprovadas (seleção de destino, geração,
+  salvamento, abertura, importação, exclusão, teclado, foco, movimento
+  reduzido). Os três cards ficam na mesma linha a partir de 1024 px.
+- **Contraste do texto sobre a fotografia**: a primeira medição **reprovou**
+  (h1 1,7:1 e parágrafo 1,7:1 em 375 px; h1 3,1:1 e parágrafo 4,1:1 em 1366 px).
+  Corrigido com camada escura uniforme (55% abaixo de `lg`, 30% a partir de
+  `lg`). Resultado final (99% dos pixels atrás do texto, 375 a 1920 px):
+  todos ≥ 4,5:1; pior pixel ≥ 4,9:1.
+- **Comparação visual com a referência**: composição próxima (cabeçalho
+  integrado, hero fotográfico do Rio com Pão de Açúcar à direita e texto à
+  esquerda, painel branco sobreposto, três cards fotográficos na mesma linha
+  com moeda, atrações e ícones coloridos). **Diferenças restantes**: hero mais
+  escuro e menos vívido que a referência (preço do contraste); fotografia do
+  hero com composição e hora do dia distintas; sem avatar, alternância de tema,
+  selo de localização e "Ver todos" (sem função); botão de destino em largura
+  total (não circular); em 1920 px o conteúdo permanece em coluna de 72 rem.
+  Comparação visual, não pixel a pixel.
+- **Testes**: `homeRedesign.test.tsx` passou a cobrir fotografia do hero
+  (prioridade, dimensões, srcset, base do Vite), fotografias dos cards,
+  substituição por ilustração quando a imagem falha (hero e card) e créditos
+  no rodapé. Total: 447 testes em 22 arquivos.
+- **Validações executadas (resultados reais)**: `typecheck` sem erros; `lint`
+  código 0; `test:run` com 447 testes passando em duas execuções; `build`
+  com sucesso; `git diff --check` sem problemas.
+- **Arquivos**: criados `docs/IMAGE_CREDITS.md`, `public/images/**` (8 WebP),
+  `src/data/photos.ts`, `src/components/ui/photos.tsx` (além de `scenes.tsx` e
+  `homeRedesign.test.tsx`, do V1-T2); alterados `Hero.tsx`, `DestinationCard.tsx`,
+  `DestinationsSection.tsx`, `Footer.tsx`, `HomePage.tsx`, `Header.tsx`,
+  `ui/CategoryBadge.tsx`, `ui/variants.ts`, `designSystem.test.tsx`, `PROJECT.md`,
+  `ROADMAP.md`, `DECISIONS.md` (D30, D31) e `TASKS.md`. Motor, persistência,
+  importação/exportação e dependências intactos. Biblioteca de skills não tocada.
+- **Riscos**: apenas Chromium; a licença do Unsplash proíbe vender as fotos sem
+  modificação (não é o caso); a foto de Florianópolis não nomeia a Hercílio Luz;
+  hero mais escuro que a referência; imagens hospedadas no repositório (+1,2 MB).
+  Nenhum commit, push ou deploy.
+
+## Relatório do V1-T2.2 — refinamento final e consolidação da Home (2026-10-12)
+
+- **Escopo**: somente dois refinamentos aprovados pelo usuário e a consolidação
+  de V1-T2 e V1-T2.1 em um commit local. Skill `frontend-design` consultada
+  seletivamente.
+- **A. Fotografia do hero mais clara**: a camada escura passou de 55% para 50%
+  abaixo de `md`, 40% de `md` a `lg` e 12% a partir de `lg` (antes 30%), com
+  gradiente lateral e de base um pouco mais suaves, preservando o lado do texto.
+  A região central e direita da foto ficou visivelmente mais clara nas capturas.
+- **B. Espaço vertical do hero reduzido**: preenchimento superior de
+  `pt-14/sm:pt-20/lg:pt-24` para `pt-10/sm:pt-14/lg:pt-16`, inferior de
+  `pb-32/sm:pb-40` para `pb-28/sm:pb-32/lg:pb-36` e margem dos destaques de
+  `mt-12` para `mt-10`. Em 1366 px o painel "Destinos em destaque" subiu cerca de
+  56 px; a sobreposição do painel e a legibilidade foram mantidas.
+- **Contraste medido após os ajustes** (375, 768, 1366 e 1920 px, pixels atrás
+  do texto): texto normal (parágrafo, selo e descrições dos destaques) ≥ 4,75:1
+  mesmo no pior pixel; 99% dos pixels ≥ 4,5:1 em todos os elementos. O título
+  (texto grande, mínimo 3:1) ficou ≥ 3,87:1 no pior pixel e ≥ 4,5:1 em 99%.
+  Durante o ajuste, uma tentativa intermediária (tablet com 30%) deixou o
+  parágrafo em 4,29:1 no pior pixel; foi corrigida para 40%.
+- **Verificação visual no Chromium** (375, 768, 1366 e 1920 px): sem rolagem
+  horizontal, sem erros de página nem de console; 11 verificações funcionais
+  aprovadas (seleção de destino, geração, salvamento, abertura, importação,
+  exclusão, teclado, foco, movimento reduzido). Fotografias reais, cards em
+  três colunas no desktop, indicadores coloridos, navegação, formulário atual,
+  importação e exportação e roteiros salvos preservados.
+- **Validações executadas (resultados reais)**: ver o resumo da entrega;
+  `typecheck`, `lint`, `build` e `git diff --check` sem problemas e 447 testes
+  passando em duas execuções.
+- **Arquivos**: `src/components/Hero.tsx` e esta documentação (`TASKS.md`,
+  `ROADMAP.md`). Nenhuma alteração em motor, persistência, importação/exportação,
+  dependências ou biblioteca de skills.
+- **Riscos**: apenas Chromium; hero ainda mais escuro que a referência (limite
+  imposto pelo contraste); fotos das atrações e da Hercílio Luz pendentes.

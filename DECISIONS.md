@@ -696,3 +696,73 @@ visual oficial do redesign (alta fidelidade; ver `PROJECT.md`). A skill
 interface da fase de redesign (ver `TASKS.md`). Avatar e perfil local, mapa
 interativo, rotas reais, fotografias e planejamento progressivo seguem como
 requisitos planejados, não implementados.
+
+## D30 — Nova home (V1-T2) e imagens por ilustração original
+
+**Decisão**: a página inicial passa a seguir a referência visual oficial
+(`docs/references/travel-planner-design-approved.png`): cabeçalho escuro
+integrado ao hero (`Header tone="dark"`), hero com fundo noturno e cena de
+baía ao pôr do sol, mensagem principal, dois CTAs ("Planejar minha viagem" e
+"Explorar destinos") e quatro destaques, painel "Destinos em destaque" que
+sobrepõe a base do hero e cards com imagem, moeda, país, descrição, número de
+atrações, indicadores coloridos de categoria (`CategoryBadge` "dot") e botão
+"Selecionar destino". A ordem passa a ser: hero, destinos, formulário atual
+(mantido até o V1-T3), roteiros salvos, importação e "Como funciona". Os
+alertas de armazenamento continuam no topo, antes do hero.
+
+**Imagens**: não havia imagem local com origem e licença identificáveis, e
+obter imagens de terceiros exigiria operação externa não autorizada. Em vez de
+usar conteúdo sem procedência, o hero e os cards usam **ilustrações vetoriais
+originais do projeto** (`src/components/ui/scenes.tsx`), declaradas como tais
+na interface ("As imagens dos destinos são ilustrações do projeto"). As
+fotografias reais da referência **não** foram reproduzidas.
+
+**Conteúdo veraz**: os destaques do hero descrevem somente recursos existentes
+(roteiro por dia, estimativa ilustrativa de custos, exportar e importar JSON,
+dados no navegador). Itens da referência sem função hoje (mapa, rotas, fotos
+reais, funcionamento offline, avatar, alternância de tema, "Ver todos") não
+foram incluídos para não criar botões decorativos nem prometer recursos.
+
+**Acessibilidade e contraste**: o fundo do hero é decorativo (`aria-hidden`);
+as ilustrações dos cards têm texto alternativo; o botão secundário sobre fundo
+escuro passou a ter fundo escuro translúcido e o selo, fundo noturno, após
+medição do pior caso de contraste atrás do texto (todas as medições em
+375, 768, 1366 e 1920 px ficaram ≥ 4,5:1).
+
+**Limitações**: sem fotografias; comparação com a referência feita
+visualmente (não pixel a pixel); botão de destino em largura total em vez do
+botão circular da referência; a exclusão de roteiros continua sem diálogo de
+confirmação (comportamento existente, vinculado ao conteúdo observado).
+
+## D31 — Fotografias reais do Unsplash na home (V1-T2.1)
+
+**Decisão**: o hero e os três cards da home passam a usar fotografias reais do
+Unsplash (Unsplash License), no lugar das ilustrações, que permanecem como
+substitutas em caso de falha de carregamento. A procedência (fotógrafo, página,
+licença e verificações) está em `docs/IMAGE_CREDITS.md` e os créditos aparecem
+no rodapé. Foram usadas quatro fotografias: hero (Rio de Janeiro ao pôr do sol,
+Mauro Lima) e destinos (Florianópolis, Henrique Pereira; Rio de Janeiro, Lucas
+Campoi; Lisboa, Sarah Markstaller).
+
+**Implementação**: arquivos WebP locais em `public/images/hero/` (960 e 1920 px)
+e `public/images/destinations/` (640 e 1200 px, 16:9), com `srcset`/`sizes`,
+`width`/`height` declarados (CLS medido em 0), hero com `fetchpriority="high"`,
+cards com `loading="lazy"`, texto alternativo descritivo e caminho derivado de
+`import.meta.env.BASE_URL` (conferido em Chromium sob `/Travel-Planner/`). Dados
+em `src/data/photos.ts`; componentes em `src/components/ui/photos.tsx`.
+
+**Contraste**: sobre a fotografia, o hero recebeu camada escura uniforme
+(`night-950` a 55% abaixo de `lg` e 30% a partir de `lg`) mais gradiente à
+esquerda e na base. A medição (99% dos pixels atrás do texto, 375 a 1920 px)
+reprovou antes do ajuste (h1 a 1,7:1 em 375 px) e ficou ≥ 4,5:1 depois; o pior
+pixel ficou ≥ 4,9:1. O custo é um hero mais escuro que a referência.
+
+**Escopo**: fotografias das atrações individuais não foram incorporadas; ficam
+para fase posterior, começando pelas dez atrações do Rio de Janeiro. Catálogo e
+motor de planejamento não foram alterados.
+
+**Limitações**: a fotografia de Florianópolis não nomeia a Ponte Hercílio Luz na
+página de origem (identificação por etiqueta e aparência); o acesso ao Pexels foi
+recusado (HTTP 403); o Unsplash bloqueia o acesso automatizado às páginas, então a
+verificação foi feita pela ferramenta de consulta web, e as imagens vieram do CDN
+público, sem chave de API; fidelidade comparada visualmente com a referência.
