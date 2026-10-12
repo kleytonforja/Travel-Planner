@@ -541,6 +541,10 @@ permissões globais são `contents: read`; `pages: write` e
 condicionada à qualidade e sem etapas desnecessárias. O caminho base do
 Vite (`/Travel-Planner/`) foi confirmado conforme a D3.
 
+**Revisão (preparação experimental, 2026-10-12)**: o gatilho de push foi
+alinhado à branch `master` atualmente utilizada. Execução manual, sequência
+de qualidade, artefato `dist/` e permissões permanecem iguais. Ver D27.
+
 ## D20 — Git local sem commits até autorização
 
 **Decisão**: o repositório Git local foi inicializado (`git init`) e o
@@ -549,3 +553,21 @@ Vite (`/Travel-Planner/`) foi confirmado conforme a D3.
 **Justificativa**: as regras do projeto exigem autorização explícita para
 mutações de Git e operações externas; a preparação local não depende
 delas.
+
+## D27 — Preparação local da demonstração experimental
+
+**Decisão**: manter a branch `master` e alinhar o workflow a ela. Exibir no
+rodapé compartilhado pelas duas páginas o aviso experimental solicitado,
+em bloco destacado com identificação acessível. O aviso informa possível
+perda dos roteiros, ausência de sincronização e de garantia permanente,
+exportação JSON e ausência de importação de arquivos.
+
+**Justificativa**: resolve as pendências locais da revisão de prontidão
+sem alterar navegação, regras de negócio, persistência ou formato v1.
+Reutilizar o rodapé evita duplicação e novas dependências.
+
+**Limites**: o GO técnico vale para demonstração experimental. O aceite
+integral de produção permanece pendente; a ausência dos artefatos
+históricos originais é registrada como risco, não como bloqueio automático
+da demonstração. Configuração remota, commit, push e publicação exigem
+autorização posterior e não fazem parte desta preparação.

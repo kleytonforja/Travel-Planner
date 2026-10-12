@@ -51,7 +51,19 @@ export function Footer() {
           </nav>
         </div>
 
-        <p className="mt-8 border-t border-slate-200 pt-6 text-sm text-slate-500">
+        <aside
+          aria-label="Aviso de demonstração experimental"
+          className="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-900"
+        >
+          <p>
+            Demonstração experimental. Os roteiros ficam armazenados somente
+            neste navegador e podem ser perdidos. Não existe sincronização nem
+            garantia de preservação permanente. Exporte o JSON para guardar
+            uma cópia. Esta versão ainda não permite importar arquivos.
+          </p>
+        </aside>
+
+        <p className="mt-6 border-t border-slate-200 pt-6 text-sm text-slate-500">
           Custos e durações exibidos são valores ilustrativos para fins de
           demonstração e não representam cotações, horários oficiais ou
           disponibilidade real de serviços.

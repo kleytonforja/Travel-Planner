@@ -1,7 +1,7 @@
 # CI/CD do Travel Planner: qualidade (lint, typecheck, testes, build) e
 # publicação no GitHub Pages.
 #
-# O deploy só ocorre em pushes na branch `main` (ou via execução manual).
+# O deploy só ocorre em pushes na branch `master` (ou via execução manual).
 # As permissões são mínimas: leitura do conteúdo para o job de qualidade e
 # apenas `pages: write` + `id-token: write` para o job de publicação.
 
@@ -9,7 +9,7 @@ name: CI/CD e GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 permissions:

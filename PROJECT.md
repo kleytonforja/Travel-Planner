@@ -25,6 +25,8 @@ preços em tempo real.
 - Exportação do roteiro em JSON.
 - Testes automatizados com Vitest.
 - Pipeline de CI/CD para GitHub Pages (GitHub Actions).
+- Aviso visível e acessível de demonstração experimental nas duas páginas,
+  sem sincronização ou garantia de preservação permanente dos roteiros.
 
 ### Fora de escopo
 

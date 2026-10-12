@@ -15,15 +15,15 @@ considerado concluído após validação (typecheck, testes e/ou build).
 - [x] Testes de integridade da base de dados
 - [x] Caminho base do Vite para GitHub Pages
 
-## CHECKPOINT 2 — Interface Inicial ⬜ Pendente
+## CHECKPOINT 2 — Interface Inicial ✅ Concluído
 
-- [ ] Header com identidade Travel Planner
-- [ ] Hero com título e chamada para ação
-- [ ] Formulário de planejamento com validação e mensagens em pt-BR
-- [ ] Área de destinos disponíveis
-- [ ] Seção "como funciona"
-- [ ] Footer
-- [ ] Layout responsivo (desktop, tablet, smartphone) e acessível
+- [x] Header com identidade Travel Planner
+- [x] Hero com título e chamada para ação
+- [x] Formulário de planejamento com validação e mensagens em pt-BR
+- [x] Área de destinos disponíveis
+- [x] Seção "como funciona"
+- [x] Footer
+- [x] Layout responsivo (desktop, tablet, smartphone) e acessível
 
 ## CHECKPOINT 3 — Roteiro, Persistência e Exportação ✅ Concluído
 
@@ -33,15 +33,14 @@ considerado concluído após validação (typecheck, testes e/ou build).
 - [x] Tratamento de dados inválidos/corrompidos no LocalStorage
 - [x] Exportação do roteiro em JSON
 
-## CHECKPOINT 4 — Qualidade e Publicação ✅ Concluído
+## CHECKPOINT 4 — Qualidade e Preparação de Publicação ✅ Concluído
 
 - [x] Suíte completa de testes (validação, filtragem, distribuição,
       orçamento, atividades insuficientes, persistência, exportação)
 - [x] Build de produção validado
 - [x] Workflow `.github/workflows/deploy.yml` (typecheck → testes → lint →
       build → GitHub Pages, permissões mínimas)
-- [x] Inicialização do Git local e `.gitignore` (sem commit/push — requer
-      autorização)
+- [x] Git local e `.gitignore` configurados; histórico local existente
 
 > Publicação efetiva no GitHub Pages aguarda autorização explícita.
 
@@ -69,10 +68,22 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       AUD-07 (regressões, incluindo a colisão verdadeira reconstruída,
       e documentação reconciliada com as evidências). Implementadas e
       validadas localmente; NÃO declaradas corrigidas sem reauditoria.
-- [ ] **Auditoria independente final**: TP-02 a TP-05 e AUD-01 a AUD-07
-      só serão declarados corrigidos após nova verificação independente
-      (critério 12 do plano; parecer atual NO-GO). Detalhes e riscos
-      remanescentes em TASKS.md.
+- [x] **QA funcional direcionado** do commit `84b3330`: 11 cenários
+      aprovados em Chromium real e 233 testes automatizados passando,
+      incluindo a correção residual AUD-02.
+- [ ] **Aceite integral de produção**: permanece pendente; o par de colisão
+      e o corpus histórico originais estão indisponíveis. Essa limitação
+      está documentada e não bloqueia automaticamente a demonstração
+      experimental. Detalhes em TASKS.md e nos registros de auditoria.
+
+## Preparação local para demonstração experimental
+
+- [x] Workflow de publicação alinhado à branch `master`
+- [x] Aviso experimental visível e acessível nas duas páginas
+- [x] Revisão de prontidão: GO técnico para demonstração experimental,
+      sem aprovação integral de produção
+- [ ] Configurar remoto, GitHub Actions, Pages e ambiente `github-pages`
+- [ ] Publicar e validar a URL HTTPS após autorização explícita
 
 ## Evolução futura (pós-MVP, fora do escopo atual — NÃO implementar agora)
 

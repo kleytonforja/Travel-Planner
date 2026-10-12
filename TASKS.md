@@ -1029,3 +1029,47 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   continuam indisponíveis. Esta correção não declara GO ou aceite integral
   dos 12 critérios; aguarda nova verificação independente e autorização
   para qualquer próxima etapa.
+
+## Preparação local para publicação experimental (2026-10-12)
+
+- **Estado**: preparação local concluída e validada; pronto para configurar
+  o GitHub após autorização. Não constitui publicação nem aceite integral
+  de produção.
+- **Workflow**: gatilho de push alinhado à branch `master`. Execução manual,
+  jobs de qualidade/deploy, permissões mínimas e artefato `dist/` preservados.
+- **Interface**: aviso com o texto solicitado no rodapé compartilhado pela
+  página inicial e pelo roteiro. Bloco destacado, semanticamente um `aside`
+  com identificação acessível; informa perda possível de dados, ausência de
+  sincronização/garantia permanente, exportação e ausência de importação.
+- **Documentação**: Checkpoint 2 marcado concluído conforme implementação e
+  QA; Checkpoint 4 descrito como preparação de publicação. ROADMAP separa
+  demonstração experimental, configuração remota/publicação pendentes e
+  aceite integral de produção. PROJECT registra o aviso; DECISIONS registra
+  revisão da D19 e nova D27.
+- **Arquivos modificados**: `.github/workflows/deploy.yml`,
+  `src/components/Footer.tsx`, `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md`
+  e `TASKS.md`.
+- **Validações executadas**: `npm run typecheck` sem erros;
+  `npm run test:run` com 233 testes em 18 arquivos, todos passando;
+  `npm run lint` com zero erros e avisos; `npm run build` com sucesso.
+- **Verificação em navegador real**: Playwright 1.59.1 e Chromium 153,
+  build de produção servido somente em localhost, contextos isolados e
+  dados sintéticos. Quatro larguras (375, 768, 1366 e 1920 px), todas
+  aprovadas: aviso visível e acessível nas duas páginas, texto solicitado
+  completo e contraste 8,73:1; ausência de rolagem horizontal; geração,
+  agenda sem sobreposição, resumo financeiro (custo 30, saldo 270, média
+  15 para orçamento 300 em dois dias), salvar, reabrir, recarregar,
+  exportação JSON e navegação preservados. Nenhum erro de página.
+- **Escopo preservado**: nenhuma alteração nos serviços, gerador, resumo
+  financeiro, persistência, exportação, navegação, dependências ou formato
+  dos dados. A mudança visual reutiliza o rodapé e não acrescenta lógica
+  de negócio ou estado.
+- **Pendências**: configurar remoto, GitHub Actions, Pages e ambiente
+  `github-pages`; aprovar commit/push/publicação; validar URL HTTPS e
+  execução remota do workflow. Nenhuma dessas ações foi executada.
+- **Riscos**: LocalStorage e quarentena não garantem preservação permanente;
+  abas antigas podem ignorar locks; par de colisão e corpus histórico
+  originais continuam indisponíveis. Não bloqueiam automaticamente a
+  demonstração experimental, mas o aceite integral de produção permanece
+  pendente. Firefox/WebKit e configurações remotas não foram verificados
+  nesta preparação.
