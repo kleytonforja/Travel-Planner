@@ -13,6 +13,7 @@ import {
   FULL_DAY_THRESHOLD_MINUTES,
   SLOT_WINDOWS,
 } from './itineraryGenerator'
+import { isValidBudgetValue, isValidPace } from './planningValidation'
 
 /**
  * Persistência de roteiros no LocalStorage (ver DECISIONS.md, D7, D14,
@@ -161,8 +162,9 @@ export function buildPlanningFingerprint(input: PlanningInput): string {
     input.destinationId,
     input.days,
     input.style,
-    input.budget,
+    input.budget === undefined ? 'sem-orcamento' : input.budget,
     [...input.interests].sort().join(','),
+    ...(input.pace === undefined ? [] : [input.pace]),
   ].join('|')
 
   let hash = 5381
@@ -175,8 +177,9 @@ export function buildPlanningFingerprint(input: PlanningInput): string {
 /**
  * Equivalência de planejamentos (TP-03): dois planejamentos são
  * equivalentes somente quando coincidem destino, quantidade de dias,
- * estilo, orçamento numérico exato (sem arredondamento) e o CONJUNTO de
- * interesses, independentemente da ordem. Comparação direta entre
+ * estilo, orçamento numérico exato (sem arredondamento; ausente só equivale a
+ * ausente), ritmo (ausente só equivale a ausente) e o CONJUNTO de interesses,
+ * independentemente da ordem. Comparação direta entre
  * campos, sem hash.
  */
 export function arePlanningsEquivalent(
@@ -186,7 +189,10 @@ export function arePlanningsEquivalent(
   if (a.destinationId !== b.destinationId) return false
   if (a.days !== b.days) return false
   if (a.style !== b.style) return false
+  // Orçamento exato; ausente só equivale a ausente (nunca a um valor).
   if (a.budget !== b.budget) return false
+  // Ritmo: ausente só equivale a ausente (nunca a 'intenso' explícito).
+  if (a.pace !== b.pace) return false
   const aInterests = new Set(a.interests)
   const bInterests = new Set(b.interests)
   if (aInterests.size !== bInterests.size) return false
@@ -290,8 +296,11 @@ function isValidPlanningInput(value: unknown): value is PlanningInput {
       (INTEREST_CATEGORIES as readonly unknown[]).includes(item),
     ) &&
     (TRAVEL_STYLES as readonly unknown[]).includes(value.style) &&
-    isFiniteNumber(value.budget) &&
-    value.budget > 0
+    // Contrato v2: orçamento ausente (propriedade omitida) ou número finito > 0.
+    // `null`, 0, negativos e não finitos são inválidos.
+    (value.budget === undefined || isValidBudgetValue(value.budget)) &&
+    // Ritmo ausente ou um dos três valores conhecidos.
+    (value.pace === undefined || isValidPace(value.pace))
   )
 }
 
@@ -465,12 +474,6 @@ export function validateSavedItinerary(value: unknown): ItineraryValidationResul
 
   const input = itinerary.input
   const budget = input.budget
-  if (budget === undefined) {
-    // `isValidPlanningInput` já rejeita a ausência; a aceitação de orçamento
-    // opcional é escopo da M2.3 e não pode acontecer por acidente aqui.
-    reasons.push('planejamento sem orçamento ainda não é suportado')
-    return { ok: false, reasons }
-  }
   if (itinerary.days.length !== input.days) {
     reasons.push('quantidade de dias diferente do planejamento')
     return { ok: false, reasons }
@@ -527,19 +530,31 @@ export function validateSavedItinerary(value: unknown): ItineraryValidationResul
   const estimated = totals.estimatedActivitiesCost
   const unallocated = totals.unallocatedBudget
   const average = totals.averageCostPerDay
+  // Contrato v2: o saldo existe se, e somente se, existe orçamento. Orçamento
+  // presente exige saldo finito e não negativo; orçamento ausente exige saldo
+  // omitido (nunca 0, null ou qualquer valor).
+  const balanceInvalid =
+    budget === undefined
+      ? unallocated !== undefined
+      : !isFiniteNumber(unallocated) || unallocated < 0
   if (
     !isFiniteNumber(estimated) ||
     estimated < 0 ||
-    !isFiniteNumber(unallocated) ||
-    unallocated < 0 ||
+    balanceInvalid ||
     !isFiniteNumber(average) ||
     average < 0
   ) {
     if (!isFiniteNumber(estimated) || estimated < 0) {
       reasons.push('custo estimado das atividades inválido')
     }
-    // A tolerância não autoriza saldo negativo.
-    if (!isFiniteNumber(unallocated) || unallocated < 0) {
+    if (budget === undefined) {
+      if (unallocated !== undefined) {
+        reasons.push('saldo não alocado presente sem orçamento informado')
+      }
+    } else if (unallocated === undefined) {
+      reasons.push('saldo não alocado ausente com orçamento informado')
+    } else if (!isFiniteNumber(unallocated) || unallocated < 0) {
+      // A tolerância não autoriza saldo negativo.
       reasons.push('saldo não alocado inválido ou negativo')
     }
     if (!isFiniteNumber(average) || average < 0) {
@@ -571,7 +586,7 @@ export function validateSavedItinerary(value: unknown): ItineraryValidationResul
   // admitem; ela não autoriza custo acima do orçamento, por menor que
   // seja a diferença (plano, seção 5: "Rejeitar custo superior ao
   // orçamento").
-  if (estimated > budget) {
+  if (budget !== undefined && estimated > budget) {
     reasons.push('custo estimado superior ao orçamento informado')
   }
   // Correção AUD-04: o saldo é comparado DIRETAMENTE com
@@ -582,7 +597,7 @@ export function validateSavedItinerary(value: unknown): ItineraryValidationResul
   // fosse 0. A subtração de dois valores finitos não negativos do
   // orçamento/custo é sempre finita, e a não negatividade do saldo já
   // foi verificada acima.
-  if (!approxEqual(unallocated, budget - estimated)) {
+  if (budget !== undefined && !approxEqual(unallocated as number, budget - estimated)) {
     reasons.push('saldo não alocado inconsistente com orçamento e custo')
   }
   if (!approxEqual(average, estimated / input.days)) {

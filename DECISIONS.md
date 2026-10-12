@@ -1095,3 +1095,34 @@ opcionais, saldo opcional). Esta decisão registra **apenas os contratos de tipo
   e incluir ritmo e ausência de orçamento na equivalência de planejamentos.
 - M2.4 precisa da exportação v2 e da importação das versões 1 e 2.
 - M2.5 ativa a geração sem orçamento e os textos de interface.
+
+## D41 — Esquema v2: persistência compatível (M2.3) — parcial
+
+**Decisão**: o armazenamento (`itineraryStorage.ts`) passa a aceitar o contrato v2, sem migrar nem
+regravar nada e sem alterar chaves (`...:v1`, quarentena, lock):
+- **Orçamento**: ausente (propriedade omitida) ou número finito > 0. `null`, 0, negativos, não finitos e
+  texto são inválidos. Uma entrada em memória com `budget: undefined` equivale à ausência (some na
+  serialização).
+- **Saldo** (`unallocatedBudget`): existe **se, e somente se**, existe orçamento. Orçamento presente exige
+  saldo finito ≥ 0 e coerente (`≈ orçamento − custo`, tolerância absoluta 1e-6); orçamento ausente exige
+  saldo omitido (nunca 0, `null` ou outro valor). `custo ≤ orçamento` (estrito) vale só com orçamento.
+  Sem orçamento, custo estimado (soma das atividades) e média por dia seguem validados.
+- **Ritmo**: ausente ou `tranquilo`/`equilibrado`/`intenso`; qualquer outro valor (inclusive `null`) é inválido.
+- **Equivalência** (substituição com confirmação): compara também o ritmo e a ausência de orçamento;
+  **ausente só equivale a ausente**, nunca a um valor explícito (nem a "intenso"). Consequência aceita:
+  planejamentos que geram o mesmo roteiro, mas diferem na presença de ritmo, coexistem como registros
+  distintos (sem sobrescrita silenciosa).
+- **Impressão digital** (apenas nome de arquivo): inalterada para planejamentos legados; ritmo e
+  "sem-orcamento" entram só quando existem.
+- **Legados**: registros anteriores continuam válidos e byte a byte iguais; a leitura nunca grava.
+- **Preservados**: IDs, Web Locks, `expectedRaw`, confirmação de substituição, releitura após gravação,
+  quarentena (registros v2 inválidos tornam a coleção corrompida; a recuperação guarda o bruto) e
+  recuperação explícita.
+
+**Ainda NÃO feito**: a **geração** continua exigindo orçamento (motor e validação recusam entrada sem
+orçamento — M2.5); **importação/exportação** seguem na versão 1 (M2.4); o ritmo não é aplicado nem gravado
+pelo adaptador (M3). Portanto o esquema v2 **não** está totalmente implementado.
+
+**Riscos registrados**: (1) **downgrade** — um app anterior que leia registro sem orçamento tratará a coleção
+como corrompida e bloqueará escritas (sem apagar; a recuperação guarda o bruto na quarentena), como previsto
+no M2.1; (2) o validador agora aceita registros sem orçamento, mas nenhum fluxo da interface os cria ainda.

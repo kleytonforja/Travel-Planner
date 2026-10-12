@@ -13,8 +13,9 @@ import { buildHistoricalValidRecord, HISTORICAL_VALID_INPUT } from './fixtures/s
 
 /**
  * Contratos de dados do esquema v2 (M2.2): orçamento, ritmo e saldo opcionais.
- * Nesta etapa os tipos aceitam a ausência, mas a geração, a persistência e a
- * importação continuam exigindo o orçamento (M2.3 e M2.4 ainda não existem).
+ * Os tipos aceitam a ausência; a geração e a importação ainda exigem o orçamento
+ * (M2.4 e M2.5). A persistência aceita a omissão completa (ver
+ * `itineraryStorageV2.test.ts`, M2.3).
  */
 
 const KNOWN_IDS = destinations.map((destination) => destination.id)
@@ -72,7 +73,7 @@ describe('Contrato v2 — orçamento', () => {
     expect(result.errors.budget).toBeTruthy()
   })
 
-  it('a persistência continua rejeitando registro sem orçamento ou com orçamento inválido', () => {
+  it('a persistência rejeita orçamento inválido e orçamento omitido com saldo remanescente (M2.3 aceita a omissão completa)', () => {
     const record = buildHistoricalValidRecord()
     expect(isSavedItinerary(record)).toBe(true)
 
@@ -106,7 +107,7 @@ describe('Contrato v2 — saldo opcional', () => {
     expect(JSON.parse(JSON.stringify(totals))).not.toHaveProperty('unallocatedBudget')
   })
 
-  it('a persistência não aceita roteiro com saldo omitido enquanto exige orçamento', () => {
+  it('a persistência rejeita saldo omitido quando há orçamento', () => {
     const record = structuredClone(buildHistoricalValidRecord()) as SavedItinerary
     delete record.itinerary.totals.unallocatedBudget
     expect(isSavedItinerary(record)).toBe(false)

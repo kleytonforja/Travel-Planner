@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **M2.2** — tipos e contratos do esquema v2 (parcial). Anteriores: V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **M2.3** — persistência e compatibilidade do esquema v2 (parcial). Anteriores: M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | 🚧 **M2.2 implementada e validada localmente** em 2026-10-12 (ver "Relatório do M2.2"); esquema v2 **não** concluído (M2.3 a M2.6 pendentes); **sem commit** (aguarda autorização) |
-| Próximo checkpoint  | Revisão/commit do M2.2 e início do M2.3 (persistência e compatibilidade), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | 🚧 **M2.3 implementada e validada localmente** em 2026-10-12 (ver "Relatório do M2.3"); esquema v2 **não** concluído (M2.4 a M2.6 pendentes); **sem commit do M2.3** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do M2.3 e início do M2.4 (importação/exportação v2), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -1939,3 +1939,28 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   não foi tempo) apareceu em 2 execuções completas durante a tarefa e **não voltou** nas cerca de 8
   execuções completas seguintes nem isoladamente (29/29 em 4 rodadas); causa não identificada, registrada como
   pendência de observação.
+
+## Relatório do M2.3 — persistência e compatibilidade do esquema v2 (2026-10-12)
+
+- **Consolidação do M2.2**: validado (typecheck, lint, build, 691 testes, 28 do contrato v2, diff --check) e
+  commitado localmente (`b5b45af`); árvore limpa antes do M2.3.
+- **Falha intermitente de `itineraryImportInteraction`** ("o campo tem rótulo, descrição e filtro de
+  tipo…"): o teste depende de foco/estado assíncrono (importa arquivo inválido, depois válido, e exige o foco
+  na pré-visualização); a única alteração do M2.2 em `ImportItinerary` foi envolver a linha do orçamento em
+  `!== undefined` (sem relação com tempo ou foco). Não houve reprodução (29/29 isolado em 4 rodadas e nas
+  execuções completas seguintes). **Sem indício de regressão real**; timeouts não foram alterados. Segue
+  registrado como falha rara não reproduzida.
+- **Implementado** (D41): validação de orçamento/saldo/ritmo opcionais, invariantes financeiros condicionais ao
+  orçamento, equivalência com ritmo e orçamento ausente, impressão digital estável para legados.
+- **Não alterado**: chaves do LocalStorage, quarentena, Web Locks, `expectedRaw`, importação/exportação (v1),
+  geração (exige orçamento) e a interface.
+- **Testes** (`itineraryStorageV2.test.ts`, 36 casos): legado válido e intacto (leitura não grava); sem
+  orçamento/saldo válido; ritmos válidos; orçamento `null`/0/negativo/NaN/Infinity/texto, ritmo inválido, saldo
+  sem orçamento e orçamento sem saldo rejeitados; invariantes mantidos; JSON bruto com `"budget":null`;
+  equivalência (orçamento e ritmo ausentes ≠ explícitos) e impressão digital; gravação, substituição com
+  confirmação (id preservado), `expectedRaw` obsoleto, gravações concorrentes; coleção mista com registros v2
+  inválidos → corrompida, gravação bloqueada, recuperação com bruto preservado na quarentena e válidos intactos.
+  Verificação por mutação (remover a comparação de ritmo e a validação de orçamento) fez os testes falharem.
+  Total: 727 testes em 39 arquivos.
+- **Riscos**: downgrade (coleção vista como corrompida por app antigo, sem perda de dados); validador aceita
+  registros sem orçamento que nenhum fluxo cria ainda.
