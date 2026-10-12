@@ -1,13 +1,15 @@
 import type { ComponentType } from 'react'
 
+import { isValidDuration, validateTripDates } from '../../utils/tripDates'
+
 /**
  * Estrutura do planejamento progressivo (V1-T3).
  *
  * As sete etapas previstas ficam declaradas aqui. Uma etapa só é navegável
- * quando existe em `STEP_COMPONENTS`; as demais são exibidas apenas no
+ * quando existe em `STEP_REGISTRY`; as demais são exibidas apenas no
  * indicador de progresso, sem controles. Para entregar uma nova etapa,
- * basta criar o componente e registrá-lo no mapa — a navegação e o
- * indicador não precisam ser reescritos.
+ * basta criar o componente e registrá-lo — a navegação e o indicador não
+ * precisam ser reescritos.
  */
 
 export const PLANNING_STEPS = [
@@ -22,13 +24,47 @@ export const PLANNING_STEPS = [
 
 export type PlanningStepId = (typeof PLANNING_STEPS)[number]['id']
 
+/** Como o usuário informa a duração: datas exatas ou apenas a quantidade de dias. */
+export type DateMode = 'dates' | 'duration'
+
 /**
  * Rascunho do planejamento compartilhado entre as etapas e a navegação.
- * Hoje guarda apenas o destino; as próximas etapas acrescentam seus campos.
+ * Guarda, ao mesmo tempo, as escolhas dos dois modos da etapa de datas, para
+ * que alternar entre eles não apague nada. Vive apenas na sessão (memória).
  */
 export interface PlanningDraft {
   /** Identificador do destino do catálogo ('' = nenhum selecionado). */
   destinationId: string
+  /** Modo escolhido na etapa de datas (`null` = ainda não escolhido). */
+  dateMode: DateMode | null
+  /** Datas `AAAA-MM-DD` do modo "datas" ('' = não informada). */
+  startDate: string
+  endDate: string
+  /** Duração do modo "duração" (`null` = não escolhida ou inválida). */
+  durationDays: number | null
+}
+
+export const EMPTY_DRAFT: PlanningDraft = {
+  destinationId: '',
+  dateMode: null,
+  startDate: '',
+  endDate: '',
+  durationDays: null,
+}
+
+/**
+ * Duração em dias que o motor de roteiros usará, conforme o modo escolhido;
+ * `null` enquanto não houver duração válida (1 a 14 dias).
+ */
+export function resolveTripDays(draft: PlanningDraft): number | null {
+  if (draft.dateMode === 'dates') {
+    const result = validateTripDates(draft.startDate, draft.endDate)
+    return result.status === 'valid' ? result.days : null
+  }
+  if (draft.dateMode === 'duration') {
+    return isValidDuration(draft.durationDays) ? draft.durationDays : null
+  }
+  return null
 }
 
 export interface StepProps {

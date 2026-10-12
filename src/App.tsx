@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 
-import type { PlanningDraft } from './components/planning/planningSteps'
+import {
+  EMPTY_DRAFT,
+  resolveTripDays,
+  type PlanningDraft,
+} from './components/planning/planningSteps'
 import { HomePage } from './pages/HomePage'
 import { ItineraryPage } from './pages/ItineraryPage'
 import { PlanningPage } from './pages/PlanningPage'
@@ -11,8 +15,8 @@ import type { Itinerary, SavedItinerary } from './types'
  *
  * A navegação entre a página inicial, o planejamento progressivo e a página
  * do roteiro é feita por estado interno, sem roteador (ver DECISIONS.md, D8).
- * O rascunho do planejamento (hoje, o destino escolhido) vive aqui para
- * ser preservado ao alternar entre a home e o planejamento na mesma sessão.
+ * O rascunho do planejamento (destino e duração) vive aqui, apenas em memória,
+ * para ser preservado ao alternar entre a home e o planejamento na mesma sessão.
  */
 type View =
   | { name: 'home' }
@@ -21,7 +25,7 @@ type View =
 
 function App() {
   const [view, setView] = useState<View>({ name: 'home' })
-  const [draft, setDraft] = useState<PlanningDraft>({ destinationId: '' })
+  const [draft, setDraft] = useState<PlanningDraft>(EMPTY_DRAFT)
   // Âncora a rolar depois da próxima troca de tela (sem estado extra).
   const pendingAnchor = useRef<string | null>(null)
 
@@ -81,6 +85,7 @@ function App() {
       onItineraryGenerated={handleItineraryGenerated}
       onOpenSaved={handleOpenSaved}
       initialDestinationId={draft.destinationId}
+      initialDays={resolveTripDays(draft) ?? undefined}
       onDestinationChange={(id) => updateDraft({ destinationId: id })}
       onStartPlanning={() => setView({ name: 'planning' })}
     />

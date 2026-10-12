@@ -30,6 +30,8 @@ interface PlanningFormProps {
   onDestinationChange: (id: string) => void
   /** Chamado quando o roteiro é gerado com sucesso. */
   onItineraryGenerated: (itinerary: Itinerary) => void
+  /** Duração já escolhida (por exemplo, na etapa de datas do planejamento progressivo). */
+  initialDays?: number
 }
 
 type FormErrors = Partial<Record<PlanningField, string>>
@@ -51,8 +53,9 @@ export function PlanningForm({
   destinationId,
   onDestinationChange,
   onItineraryGenerated,
+  initialDays,
 }: PlanningFormProps) {
-  const [days, setDays] = useState('')
+  const [days, setDays] = useState(initialDays === undefined ? '' : String(initialDays))
   const [interests, setInterests] = useState<InterestCategory[]>([])
   const [style, setStyle] = useState<TravelStyle | ''>('')
   const [budget, setBudget] = useState('')

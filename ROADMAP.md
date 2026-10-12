@@ -139,7 +139,15 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
-- [ ] V1-T3.2 e seguintes: demais etapas do planejamento e demais telas — aguardam
+- [~] **V1-T3.2 — etapa 2, datas e duração (parcial)** (D33): duas opções
+      (já tenho as datas / ainda não defini), duração calculada sem erro de fuso,
+      validação de datas, atalhos e duração personalizada de 1 a 14 dias,
+      navegação voltar/continuar com escolhas preservadas. Etapas 3 a 7
+      **pendentes**. Validada localmente; sem commit.
+- [ ] **Fotografias dinâmicas (futuro, aprovado, NÃO implementar agora)**: rodízio
+      de imagens na Home, fundo contextual conforme o destino escolhido e
+      transições suaves (D33).
+- [ ] V1-T3.3 e seguintes: demais etapas do planejamento e demais telas — aguardam
       autorização.
 
 ## Evolução futura (pós-MVP, fora do escopo atual — NÃO implementar agora)

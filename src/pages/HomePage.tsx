@@ -33,6 +33,8 @@ interface HomePageProps {
   onOpenSaved: (saved: SavedItinerary) => void
   /** Destino já escolhido na sessão (por exemplo, no planejamento progressivo). */
   initialDestinationId?: string
+  /** Duração em dias já escolhida na sessão (preenche o formulário tradicional). */
+  initialDays?: number
   /** Informa a escolha de destino, para que ela seja preservada ao sair da home. */
   onDestinationChange?: (id: string) => void
   /** Abre o planejamento progressivo (botão principal do hero). */
@@ -62,6 +64,7 @@ export function HomePage({
   onItineraryGenerated,
   onOpenSaved,
   initialDestinationId = '',
+  initialDays,
   onDestinationChange,
   onStartPlanning,
 }: HomePageProps) {
@@ -684,6 +687,7 @@ export function HomePage({
         <PlanningForm
           destinationId={destinationId}
           onDestinationChange={changeDestination}
+          initialDays={initialDays}
           onItineraryGenerated={onItineraryGenerated}
         />
         <SavedItineraries

@@ -7,6 +7,7 @@ import App from '../App'
 import { DestinationStep } from '../components/planning/DestinationStep'
 import { PlanningFlow } from '../components/planning/PlanningFlow'
 import {
+  EMPTY_DRAFT,
   isStepImplemented,
   PLANNING_STEPS,
   type StepProps,
@@ -51,35 +52,44 @@ describe('Planejamento progressivo — estrutura', () => {
     expect(new Set(PLANNING_STEPS.map((step) => step.id)).size).toBe(7)
   })
 
-  it('só a etapa de destino está implementada', () => {
-    expect(Object.keys(STEP_REGISTRY)).toEqual(['destino'])
+  it('só as etapas de destino e datas estão implementadas', () => {
+    expect(Object.keys(STEP_REGISTRY)).toEqual(['destino', 'datas'])
     expect(isStepImplemented('destino', STEP_REGISTRY)).toBe(true)
-    for (const step of PLANNING_STEPS.slice(1)) {
+    expect(isStepImplemented('datas', STEP_REGISTRY)).toBe(true)
+    for (const step of PLANNING_STEPS.slice(2)) {
       expect(isStepImplemented(step.id, STEP_REGISTRY)).toBe(false)
     }
   })
 
   it('aceita novas etapas pelo registro, sem reescrever o fluxo', () => {
     const Dates: ComponentType<StepProps> = () => <p>Etapa de datas (teste)</p>
-    const registry: StepRegistry = { destino: DestinationStep, datas: Dates }
+    const onlyDestination: StepRegistry = { destino: DestinationStep }
+    const withDates: StepRegistry = { destino: DestinationStep, datas: Dates }
     const onDraftChange = vi.fn()
     const { rerender } = render(
-      <PlanningFlow draft={{ destinationId: '' }} onDraftChange={onDraftChange} onUseLegacyForm={vi.fn()} />,
+      <PlanningFlow
+        draft={EMPTY_DRAFT}
+        onDraftChange={onDraftChange}
+        onUseLegacyForm={vi.fn()}
+        registry={onlyDestination}
+      />,
     )
-    // Com o registro padrão, a próxima etapa não existe: aparece o aviso.
+    // Sem a etapa seguinte registrada, aparece o aviso e não há "Continuar".
     expect(screen.getByRole('complementary', { name: 'Próximas etapas' })).toHaveTextContent(
       'Datas, Viajantes, Transporte, Interesses, Orçamento, Revisão',
     )
+    expect(screen.queryByRole('button', { name: /^Continuar para/ })).toBeNull()
     rerender(
       <PlanningFlow
-        draft={{ destinationId: '' }}
+        draft={EMPTY_DRAFT}
         onDraftChange={onDraftChange}
         onUseLegacyForm={vi.fn()}
-        registry={registry}
+        registry={withDates}
       />,
     )
-    // Com a etapa seguinte registrada, o aviso deixa de ser exibido.
+    // Com a etapa seguinte registrada, o aviso some e surge "Continuar para Datas".
     expect(screen.queryByRole('complementary', { name: 'Próximas etapas' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Continuar para Datas' })).toBeDisabled()
   })
 })
 
@@ -220,7 +230,7 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     await user.click(within(cardOf('Florianópolis')).getByRole('button', { name: 'Selecionar destino' }))
     expect(within(cardOf('Florianópolis')).getByRole('button', { name: 'Destino selecionado' })).toBeInTheDocument()
     expect(cardOf('Florianópolis')).toHaveClass('border-brand-600')
-    expect(screen.getByRole('complementary', { name: 'Próximas etapas' })).toHaveTextContent(
+    expect(screen.getByRole('region', { name: 'Resumo do planejamento' })).toHaveTextContent(
       'Destino selecionado: Florianópolis',
     )
 
@@ -235,29 +245,39 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     lisboa.focus()
     await user.keyboard(' ')
     expect(cardOf('Lisboa')).toHaveClass('border-brand-600')
-    expect(screen.getByRole('complementary', { name: 'Próximas etapas' })).toHaveTextContent(
+    expect(screen.getByRole('region', { name: 'Resumo do planejamento' })).toHaveTextContent(
       'Destino selecionado: Lisboa',
     )
   })
 
-  it('sem destino, o caminho para o formulário tradicional fica desabilitado e explicado', async () => {
+  it('sem destino, "Continuar para Datas" fica desabilitado e explicado', async () => {
     const user = openPlanning()
     await goToPlanning(user)
-    const legacy = screen.getByRole('button', { name: 'Continuar com o formulário tradicional' })
-    expect(legacy).toBeDisabled()
+    const next = screen.getByRole('button', { name: 'Continuar para Datas' })
+    expect(next).toBeDisabled()
     expect(screen.getByText('Selecione um destino para continuar.')).toBeInTheDocument()
+    // O formulário tradicional só é oferecido depois da última etapa disponível.
+    expect(screen.queryByRole('button', { name: 'Continuar com o formulário tradicional' })).toBeNull()
 
     await user.click(within(cardOf('Lisboa')).getByRole('button', { name: 'Selecionar destino' }))
-    expect(legacy).toBeEnabled()
+    expect(next).toBeEnabled()
     expect(screen.queryByText('Selecione um destino para continuar.')).toBeNull()
   })
 
   it('não oferece controles de etapas inexistentes', async () => {
     const user = openPlanning()
     await goToPlanning(user)
-    expect(screen.queryByRole('button', { name: /próxima|avançar|^continuar$/i })).toBeNull()
+    // Etapa 1: só existe o avanço para a etapa 2, que está implementada.
+    expect(screen.getAllByRole('button', { name: /^Continuar para/ }).map((b) => b.textContent)).toEqual(['Continuar para Datas'])
+    expect(screen.queryByRole('complementary', { name: 'Próximas etapas' })).toBeNull()
+
+    await user.click(within(cardOf('Lisboa')).getByRole('button', { name: 'Selecionar destino' }))
+    await user.click(screen.getByRole('button', { name: 'Continuar para Datas' }))
+    await screen.findByRole('heading', { name: 'Quando começa sua aventura?' })
+    // Etapa 2: a etapa 3 não existe, então não há "Continuar", só o aviso e o formulário tradicional.
+    expect(screen.queryByRole('button', { name: /^Continuar para/ })).toBeNull()
     expect(screen.getByRole('complementary', { name: 'Próximas etapas' })).toHaveTextContent(
-      'ainda estão em desenvolvimento',
+      'Viajantes, Transporte, Interesses, Orçamento, Revisão ainda estão em desenvolvimento',
     )
   })
 
@@ -298,16 +318,18 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     const user = openPlanning()
     await goToPlanning(user)
     await user.click(within(cardOf('Rio de Janeiro')).getByRole('button', { name: 'Selecionar destino' }))
+    await user.click(screen.getByRole('button', { name: 'Continuar para Datas' }))
+    await user.click(screen.getByRole('radio', { name: /Ainda não defini as datas/ }))
+    await user.click(screen.getByRole('button', { name: '5 dias' }))
     await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
 
-    // Volta para a home e rola até o formulário.
+    // Volta para a home e rola até o formulário, já com destino e duração.
     expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
+    expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('5')
     expect(scrollIntoView).toHaveBeenCalled()
     const target = scrollIntoView.mock.contexts.at(-1) as HTMLElement
     expect(target.id).toBe('planejar')
 
-    await user.clear(document.getElementById('duracao') as HTMLInputElement)
-    await user.type(document.getElementById('duracao') as HTMLInputElement, '2')
     const interesses = screen.getByRole('group', { name: 'Interesses' })
     await user.click(within(interesses).getByText('Cultura'))
     await user.click(within(screen.getByRole('group', { name: 'Estilo de viagem' })).getByText('Equilibrado'))

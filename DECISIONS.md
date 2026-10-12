@@ -822,3 +822,36 @@ continua sendo de escolha única e **não** é a seleção múltipla de interess
 pertence à etapa 5 (Interesses). **O formulário tradicional será substituído
 somente depois da conclusão do planejamento progressivo (etapas 2 a 7)**; até lá
 ele permanece disponível na home.
+
+## D33 — Planejamento progressivo: etapa de datas e duração (V1-T3.2)
+
+**Contexto**: a etapa 2 ("Quando começa sua aventura?") precisa aceitar datas
+exatas ou apenas a duração, sem erros de fuso e dentro do limite do motor.
+
+**Decisão**:
+- O rascunho (`PlanningDraft`, em memória no `App`) ganhou `dateMode`
+  (`dates` | `duration`), `startDate`, `endDate` e `durationDays`. Os valores
+  dos dois modos coexistem, então alternar o modo não apaga nada. A duração
+  efetiva vem de `resolveTripDays` conforme o modo ativo.
+- Datas são strings `AAAA-MM-DD` convertidas em **número de dia UTC**
+  (`Date.UTC(...)/86400000`), sem `Date` local: virada de mês/ano, bissexto e
+  horário de verão não alteram a contagem. A duração é **inclusiva** (12/01 a
+  19/01 = 8 dias). A data de início não pode ser anterior a hoje (calendário
+  local).
+- Limites **1 a 14 dias** reutilizam `MIN_DAYS`/`MAX_DAYS` de
+  `planningValidation`; não há segunda fonte da regra. Duração personalizada
+  aceita só inteiros; atalhos 3/5/7/10/14.
+- Navegação: `STEP_COMPLETION` e `STEP_HINTS` (ao lado de `STEP_REGISTRY`)
+  definem quando cada etapa está completa; "Continuar para X" só aparece se a
+  etapa X existe e só habilita com a atual completa; "Voltar" preserva tudo.
+- O formulário tradicional recebe a duração via `initialDays` (campo
+  pré-preenchido) e continua sendo o desfecho até o wizard ser concluído.
+- Nada é gravado no LocalStorage; o motor de roteiros e a persistência não foram
+  alterados.
+
+**Decisão de produto registrada (NÃO implementada)**: **fotografias dinâmicas**
+— rodízio de imagens na Home, fundo contextual conforme o destino escolhido e
+transições suaves. Aprovada para fase futura, sem tarefa aberta; deverá respeitar
+`prefers-reduced-motion`, contraste e os créditos em `docs/IMAGE_CREDITS.md`.
+
+**Consequências**: etapas 3 a 7 pendentes; apenas Chromium verificado.

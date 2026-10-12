@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **V1-T3.1** — estrutura do planejamento progressivo (7 etapas) e etapa de destino. Anteriores: V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **V1-T3.2** — planejamento progressivo, etapa 2 (datas e duração). Anteriores: V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | 🚧 **parcial por desenho**: estrutura e etapa de destino implementadas e validadas localmente em 2026-10-12 (ver "Relatório do V1-T3.1"); etapas 2 a 7 pendentes; commit local feito, sem push |
-| Próximo checkpoint  | Revisão/commit do V1-T3.1 e definição da etapa 2 (datas), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | 🚧 **parcial por desenho**: etapa 2 implementada e validada localmente em 2026-10-12 (ver "Relatório do V1-T3.2"); etapas 3 a 7 pendentes; **sem commit** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do V1-T3.2 e definição da etapa 3 (viajantes), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -1680,3 +1680,29 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   375, 768, 1366 e 1920 px; capturas conferidas em 375 e 1366 px.
 - **Validações executadas (resultados reais)**: ver o resumo da entrega;
   `typecheck`, `lint`, `build` e `git diff --check` sem problemas.
+
+## Relatório do V1-T3.2 — planejamento progressivo: datas e duração (2026-10-12)
+
+- **Status**: implementado e validado localmente; **sem commit, push ou deploy**.
+  Etapas 3 a 7 pendentes.
+- **Funcionalidades**: etapa 2 "Quando começa sua aventura?" com dois cards
+  (`Já tenho as datas` / `Ainda não defini as datas`); modo datas com duração
+  inclusiva calculada e validação (data inexistente, término antes do início,
+  início no passado, mais de 14 dias); modo duração com atalhos 3/5/7/10/14 e
+  valor personalizado (inteiro de 1 a 14); alternar modos preserva valores;
+  voltar/continuar com foco no título; resumo de destino e duração; formulário
+  tradicional pré-preenchido com a duração (`initialDays`). Decisão em D33.
+- **Fotografias dinâmicas**: registrada como decisão futura aprovada em D33 e no
+  ROADMAP; **não implementada**.
+- **Arquivos**: novos `src/utils/tripDates.ts`, `src/components/planning/DatesStep.tsx`,
+  `src/tests/tripDates.test.ts`, `src/tests/datesStep.test.tsx`; alterados
+  `planningSteps.ts`, `stepRegistry.ts`, `PlanningFlow.tsx`, `PlanningForm.tsx`,
+  `HomePage.tsx`, `App.tsx`, `src/tests/planningFlow.test.tsx`, `DECISIONS.md`,
+  `ROADMAP.md`, `PROJECT.md`, `TASKS.md`. Motor, persistência e importação/exportação intocados.
+- **Chromium** (build servida por `vite preview`): 27 de 27 verificações
+  aprovadas; sem rolagem horizontal em 375, 768, 1366 e 1920 px. Em
+  `prefers-reduced-motion`, a transição mede 0,00001 s: vem da regra global de
+  `index.css` (`0.01ms !important`, não nulo de propósito); só há transição de cor,
+  sem movimento. O critério do script (0 s exato) foi corrigido para "<= 1 ms".
+- **Riscos**: apenas Chromium; o seletor nativo de data varia por navegador; o
+  fluxo ainda termina no formulário tradicional.
