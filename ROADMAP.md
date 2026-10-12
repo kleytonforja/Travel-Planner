@@ -92,6 +92,20 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
 > GitHub Actions, Pages, ambiente `github-pages` nem URL HTTPS validada.
 > Ver `TASKS.md`, "Estado do Git e da publicação".
 
+## Importação de roteiros JSON (C5, mudança de escopo — D28)
+
+- [x] **C5-T2 — serviço** `parseItineraryImport` (leitura, reconstrução pelo
+      catálogo atual e validação), 119 testes; commit `b505a66`.
+- [x] **C5-T3 — interface** `ImportItinerary` na página inicial, próxima de
+      "Meus roteiros salvos": validação, pré-visualização, confirmação,
+      gravação exclusivamente por `saveItinerary` e confirmação de
+      substituição vinculada ao conteúdo; 29 testes de interação; aviso do
+      rodapé atualizado. Implementada e validada localmente (testes
+      automatizados e fluxo real em Chromium, 28 verificações); commit local
+      feito, **sem push** e **sem reauditoria independente**.
+- [ ] Reauditoria independente da nova superfície de entrada (arquivo não
+      confiável) junto com a verificação pendente dos achados AUD-01 a AUD-07.
+
 ## Evolução futura (pós-MVP, fora do escopo atual — NÃO implementar agora)
 
 - Planejamento passo a passo (wizard)

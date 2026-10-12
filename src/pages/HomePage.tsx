@@ -5,6 +5,7 @@ import { Footer } from '../components/Footer'
 import { Header } from '../components/Header'
 import { Hero } from '../components/Hero'
 import { HowItWorks } from '../components/HowItWorks'
+import { ImportItinerary } from '../components/ImportItinerary'
 import { PlanningForm } from '../components/PlanningForm'
 import { SavedItineraries } from '../components/SavedItineraries'
 import { downloadRecoveryJson } from '../services/itineraryExport'
@@ -124,6 +125,16 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
         nextQuarantine.status === 'occupied' ? nextQuarantine.raw : null
       return currentRaw === authorized.raw ? authorized : null
     })
+  }
+
+  /**
+   * Chamado pela importação ao fim de toda tentativa de gravação: relê o
+   * armazenamento (a lista só muda se a gravação foi confirmada) e
+   * remove um sucesso anterior que já não descreve o estado atual.
+   */
+  function handleImportSettled() {
+    setSuccessMessage(null)
+    reloadSaved()
   }
 
   function handleSelectDestination(id: string) {
@@ -660,6 +671,13 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
           onRemove={handleRemoveSaved}
           actionsDisabled={actionsDisabled}
           storageStatus={storage.status}
+        />
+        <ImportItinerary
+          storageStatus={storage.status}
+          storageRaw={storage.raw}
+          externalBusy={busy}
+          onBusyChange={setBusy}
+          onStorageChanged={handleImportSettled}
         />
         <DestinationsSection
           selectedDestinationId={destinationId}

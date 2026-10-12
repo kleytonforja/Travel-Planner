@@ -23,6 +23,9 @@ preços em tempo real.
 - Página de roteiro com resumo financeiro e avisos.
 - Persistência em LocalStorage (salvar, reabrir, excluir, novo planejamento).
 - Exportação do roteiro em JSON.
+- Importação segura de roteiros JSON exportados por este próprio aplicativo
+  (validação contra a base atual, pré-visualização e confirmação; nada é
+  substituído sem confirmação — ver D28).
 - Testes automatizados com Vitest.
 - Pipeline de CI/CD para GitHub Pages (GitHub Actions).
 - Aviso visível e acessível de demonstração experimental nas duas páginas,
@@ -34,6 +37,10 @@ preços em tempo real.
 - Cotações, horários oficiais ou disponibilidade real (custos e durações da
   base são **ilustrativos** e rotulados como tal na interface).
 - Backend, autenticação, banco de dados remoto.
+- Importação de arquivos de outras origens ou de versões anteriores da base,
+  mesclagem de coleções e importação do envelope de recuperação do
+  armazenamento (a recuperação continua sendo feita pelos fluxos de
+  quarentena da página inicial).
 
 ## Stack
 

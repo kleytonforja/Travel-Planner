@@ -59,7 +59,10 @@ export function Footer() {
             Demonstração experimental. Os roteiros ficam armazenados somente
             neste navegador e podem ser perdidos. Não existe sincronização nem
             garantia de preservação permanente. Exporte o JSON para guardar
-            uma cópia. Esta versão ainda não permite importar arquivos.
+            uma cópia e, se precisar, use "Importar roteiro" na página
+            inicial para recuperá-la. A importação aceita apenas arquivos
+            exportados por este aplicativo e nunca substitui um roteiro salvo
+            sem a sua confirmação.
           </p>
         </aside>
 

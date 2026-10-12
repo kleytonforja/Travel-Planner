@@ -9,11 +9,15 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **C5-T2** — serviço de importação de roteiros JSON (somente serviço e testes; sem interface) |
+| Tarefa ativa        | **C5-T3** — interface e integração da importação de roteiros JSON |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
-| Arquivos previstos  | `src/services/itineraryImport.ts` (novo), `src/tests/itineraryImport.test.ts` (novo), `TASKS.md` |
-| Status              | ✅ implementada e validada localmente em 2026-10-12 (ver "Relatório do C5-T2" no fim do arquivo); sem commit, aguardando revisão |
-| Próximo checkpoint  | C5-T3 (interface de importação), mediante autorização. Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Arquivos previstos  | `src/components/ImportItinerary.tsx` (novo), `src/tests/itineraryImportInteraction.test.tsx` (novo), `src/pages/HomePage.tsx`, `src/components/Footer.tsx`, `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D28), `TASKS.md` |
+| Status              | ✅ implementada e validada localmente em 2026-10-12, inclusive em Chromium real (ver "Relatório do C5-T3" e "Verificação funcional em Chromium" no fim do arquivo); commit local feito, sem push e sem reauditoria independente |
+| Próximo checkpoint  | Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+
+> Registro anterior da fila (C5-T2, preservado): serviço de importação
+> `src/services/itineraryImport.ts` e testes; ✅ validada localmente em
+> 2026-10-12 e registrada no commit `b505a66`.
 
 > Registro anterior da fila (preservado): "Nenhuma. Reconciliação documental
 > concluída (2026-10-12), aguardando revisão do usuário"; último agente: Claude
@@ -1257,3 +1261,88 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   interface do C5-T3, reutilizando `saveItinerary`; a nova superfície deve
   entrar na próxima reauditoria independente. Nada foi declarado corrigido ou
   aprovado em auditoria.
+
+## Relatório do C5-T3 — interface e integração da importação JSON (2026-10-12)
+
+- **Escopo**: componente de importação na página inicial, integração com o
+  serviço do C5-T2 e com `saveItinerary`, testes de interação, aviso do
+  rodapé e documentação da mudança de escopo (D28). C5-T2 já estava no Git
+  (`b505a66`) e a árvore estava limpa antes de iniciar.
+- **Implementado**: `src/components/ImportItinerary.tsx` — arquivo acima de
+  256 KB é recusado antes da leitura; `parseItineraryImport`; mensagens e
+  motivos claros quando inválido (sem gravar); pré-visualização (destino,
+  dias, estilo, interesses, atividades, orçamento, custo ilustrativo e
+  avisos); "Confirmar importação" e "Cancelar"; gravação exclusivamente por
+  `saveItinerary`; `needs-confirmation` usa o painel de substituição
+  vinculado ao conteúdo; sucesso só depois da confirmação do serviço; lista
+  relida após toda tentativa de gravação. Integração em
+  `src/pages/HomePage.tsx` (montagem do componente, `onBusyChange` para
+  bloquear ações concorrentes e relida da lista). Rodapé atualizado somente
+  depois da funcionalidade pronta.
+- **Integridade**: o registro importado recebe UUID e `savedAt` gerados na
+  gravação (nada do arquivo é reaproveitado); nenhuma escrita direta no
+  LocalStorage; autorização de substituição descartada ao cancelar, concluir,
+  falhar ou quando a página observa outro conteúdo; importação bloqueada
+  quando o armazenamento não está legível (`ok`/`empty` apenas) e durante
+  outras operações; quarentena e dados brutos preservados; texto do arquivo
+  sempre renderizado como texto (sem HTML).
+- **Arquivos criados**: `src/components/ImportItinerary.tsx`,
+  `src/tests/itineraryImportInteraction.test.tsx`. **Alterados**:
+  `src/pages/HomePage.tsx`, `src/components/Footer.tsx`, `PROJECT.md`,
+  `ROADMAP.md`, `DECISIONS.md` (D28), `TASKS.md`. `itineraryStorage.ts`,
+  `itineraryExport.ts` e `itineraryImport.ts` não foram tocados.
+- **Testes novos (29)**: importação válida (também com armazenamento vazio);
+  pré-visualização sem gravação; cancelamento; lista atualizada só após o
+  sucesso; arquivo inválido, acima de 256 KB (sem leitura), versão
+  incompatível, envelope de recuperação, outro aplicativo, divergência com a
+  base e totais adulterados; HTML tratado como texto; duplicata com
+  confirmação, cancelamento, substituição, confirmação desatualizada e
+  autorização descartada; quota, armazenamento indisponível (inicial e
+  posterior), ausência de Web Locks e resultado incerto; quarentena
+  preservada, coleção corrompida e bloqueio de ações concorrentes;
+  acessibilidade (rótulo, descrição, foco na pré-visualização, papéis ARIA) e
+  aviso do rodapé. Três mutações deliberadas (sem descarte de autorização
+  desatualizada, sem limite antes da leitura, sem releitura da lista) fizeram
+  testes falharem e foram revertidas.
+- **Validações executadas (resultados reais)**: `npm run typecheck` sem
+  erros (um erro de tipo no teste foi corrigido); `npm run test:run` com 381
+  testes em 20 arquivos, todos passando (233 + 119 do C5-T2 + 29 novos);
+  `npm run lint` com saída vazia e código 0 (um aviso de
+  `set-state-in-effect` foi eliminado ajustando o estado durante a
+  renderização); `npm run build` com sucesso.
+- **Skills consultadas**: `tdd-testing`, `security-review`,
+  `react-next-best-practices` e `codebase-architecture` (seleção da fase
+  mantida).
+- **Riscos e limitações**: sem verificação em navegador real (somente jsdom);
+  arquivos exportados com outra versão da base são rejeitados; a seleção de
+  arquivo usa `FileReader` e `accept` do navegador; a nova superfície ainda
+  não passou por reauditoria independente; nada foi declarado corrigido ou
+  aprovado. Nenhum commit, push ou publicação.
+
+## Verificação funcional em Chromium — importação JSON (C5-T3, 2026-10-12)
+
+- **Ambiente**: build de produção (`npm run build`) servido apenas em
+  `127.0.0.1:4173` com `vite preview` (encerrado ao final); Chromium 1243 já
+  presente no cache do Playwright do usuário, acionado por `playwright-core`
+  1.59.1 de uma instalação global existente (n8n) — **nenhuma dependência do
+  projeto foi adicionada ou alterada** e nada foi instalado. Contexto isolado,
+  dados sintéticos; roteiros e scripts de apoio ficaram fora do repositório.
+- **Resultado**: 28 verificações, 28 aprovadas. Fluxo executado de ponta a
+  ponta: gerar e salvar um roteiro de Lisboa (3 dias), exportar o JSON (v1,
+  3.008 bytes), excluir o registro, importar o arquivo exportado,
+  pré-visualização (destino, dias, estilo, interesses, atividades, orçamento,
+  custo ilustrativo e foco na pré-visualização), cancelar (nada gravado),
+  confirmar (registro novo com UUID e `savedAt` da importação, diferentes dos
+  do arquivo; itinerário coerente com o exportado), atualizar a página
+  (persistência idêntica), reimportar (duplicata pede confirmação, cancelar não
+  altera, confirmar substitui preservando o id), recusa de arquivo não JSON,
+  versão incompatível, envelope de recuperação, divergência com a base e
+  arquivo de 300 KB (sem gravação e sem quarentena criada), ausência de
+  rolagem horizontal em 375 px, aviso do rodapé, ausência de erros de página e
+  de requisições externas.
+- **Achado fora do escopo (pré-existente)**: o navegador registra um 404 para
+  `/favicon.ico` ao apenas abrir a página, pois `index.html` não declara ícone
+  e `public/` está vazio. Não tem relação com a importação e não foi alterado;
+  a verificação de console exclui esse item de forma explícita.
+- **Limites**: apenas Chromium (Firefox e WebKit não verificados); o seletor
+  de arquivo foi acionado por `setInputFiles`, sem o diálogo nativo do sistema.

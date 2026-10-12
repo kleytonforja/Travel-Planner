@@ -590,3 +590,54 @@ acima foram preservados; as notas indicam o que vale hoje.
   substituída pela recuperação explícita), prevalecem D22 e D23.
 - **Referências técnicas de persistência**: `docs/PERSISTENCE_REMEDIATION_PLAN.md`
   (plano) e `docs/FINAL_AUDIT_FINDINGS.md` (achados AUD-01 a AUD-07).
+
+## D28 — Importação de roteiros JSON exportados (C5)
+
+**Decisão**: o aplicativo passa a permitir importar um roteiro exportado por
+ele mesmo (JSON, `schemaVersion` 1). A importação não estava no MVP; esta
+decisão altera o escopo registrado na D27 ("ausência de importação de
+arquivos"), que passa a descrever o estado anterior. Regras:
+
+1. **Serviço puro** (`src/services/itineraryImport.ts`,
+   `parseItineraryImport`): trata o texto como entrada não confiável. Limite de
+   256 KB (bytes UTF-8), BOM removido, leitura apenas de propriedades próprias
+   conhecidas, objetos novos (campos extras e `__proto__` ignorados), avisos
+   limitados a 50 itens de até 500 caracteres sem caracteres de controle. Não
+   acessa o armazenamento, não gera identificador e não define `savedAt`.
+2. **Reconstrução pelo catálogo atual**: destino e atividades são localizados
+   pelo nome na base atual; qualquer divergência de custo, duração, categorias,
+   país ou moeda **rejeita o arquivo inteiro** (sem adaptação). O resultado é
+   validado por `validateSavedItinerary`, o mesmo validador da leitura e da
+   gravação (regras de AUD-03 e AUD-04 incluídas).
+3. **Interface** (`ImportItinerary`, na página inicial, próxima de "Meus
+   roteiros salvos"): arquivo acima do limite é recusado antes da leitura;
+   arquivo válido gera pré-visualização; a gravação ocorre somente após
+   confirmação e **exclusivamente por `saveItinerary`**. O roteiro vira um
+   registro **novo**: identificador (UUID) e `savedAt` são gerados na
+   importação; o `id` e a data do arquivo nunca são usados.
+4. **Duplicatas**: um planejamento equivalente já salvo só é substituído
+   mediante a confirmação vinculada ao conteúdo bruto observado pelo serviço
+   (mecanismo existente `ReplaceConfirmation`). A autorização é descartada ao
+   cancelar, concluir, falhar ou quando a página observa outro conteúdo.
+5. **Resultados**: sucesso somente depois da confirmação por releitura do
+   serviço; falha (por exemplo, quota) mantém a pré-visualização para nova
+   tentativa; resultado incerto exibe a mensagem fixa do serviço, descarta a
+   pré-visualização e não afirma preservação. Importação bloqueada quando o
+   armazenamento não está legível (`ok` ou `empty` são os únicos estados que a
+   permitem) e durante outras operações.
+6. **Sem alterações** em `itineraryStorage.ts` e `itineraryExport.ts`; a
+   exportação continua no formato v1 e o envelope de recuperação não é aceito
+   pela importação.
+
+**Justificativa**: recuperar um roteiro exportado sem ampliar a superfície de
+persistência já auditada. A rejeição por divergência com a base evita gravar
+dados reconstruídos de forma ambígua. Não conflita com o plano de remediação,
+que deixa fora de escopo apenas a "mesclagem/importação geral de arquivos de
+recuperação".
+
+**Limitações**: arquivos exportados com uma base de dados diferente são
+rejeitados (a preservação entre versões da base segue como evolução futura);
+a data de gravação é a da importação; a nova superfície ainda não passou por
+reauditoria independente. Aviso do rodapé atualizado: ele só passou a citar a
+importação depois de a funcionalidade estar implementada e validada
+localmente.
