@@ -9,7 +9,7 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **C5-T3** — interface e integração da importação de roteiros JSON |
+| Tarefa ativa        | **C5-T4** — finalização da importação JSON e favicon (preparação do push; concluída localmente em 2026-10-12, aguardando autorização de push/deploy). Anterior: C5-T3 — interface e integração da importação de roteiros JSON |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/ImportItinerary.tsx` (novo), `src/tests/itineraryImportInteraction.test.tsx` (novo), `src/pages/HomePage.tsx`, `src/components/Footer.tsx`, `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D28), `TASKS.md` |
 | Status              | ✅ implementada e validada localmente em 2026-10-12, inclusive em Chromium real (ver "Relatório do C5-T3" e "Verificação funcional em Chromium" no fim do arquivo); commit local feito, sem push e sem reauditoria independente |
@@ -1346,3 +1346,29 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   a verificação de console exclui esse item de forma explícita.
 - **Limites**: apenas Chromium (Firefox e WebKit não verificados); o seletor
   de arquivo foi acionado por `setInputFiles`, sem o diálogo nativo do sistema.
+
+## Relatório do C5-T4 — finalização da importação JSON e favicon (2026-10-12)
+
+- **Conclusão da importação JSON**: serviço (C5-T2, `b505a66`) e interface
+  (C5-T3, `2c883f2`) concluídos, validados localmente e em Chromium real
+  (28 verificações).
+- **Auditoria independente**: informada pelo usuário como **aprovada** (Codex),
+  com 148 testes específicos da importação. O relatório da auditoria não está
+  no repositório; este registro reproduz a informação recebida e não a
+  substitui. A verificação independente de AUD-01 a AUD-07 segue pendente.
+- **Favicon**: `public/favicon.svg` (traço do ícone `Plane` do Lucide, o mesmo
+  do cabeçalho, em quadrado azul `blue-600`) e `<link rel="icon">` em
+  `index.html`. O build gera `href="/Travel-Planner/favicon.svg"` e o servidor
+  de preview responde 200 `image/svg+xml` nesse caminho. `/favicon.ico` na raiz
+  continua inexistente, mas os navegadores usam o link declarado. Não foi
+  repetida a navegação completa em Chromium após esta mudança.
+- **Arquivos**: criado `public/favicon.svg`; alterados `index.html`,
+  `DECISIONS.md` (revisão da D28), `ROADMAP.md`, `TASKS.md`. Lógica de
+  importação, serviços e dependências não foram tocados.
+- **Validações executadas**: `typecheck` sem erros; `test:run` com 381 testes
+  em 20 arquivos passando; `lint` código 0; `build` com sucesso.
+- **Riscos residuais**: apenas Chromium verificado; seletor nativo de arquivo
+  não exercitado; arquivos exportados com outra versão da base são rejeitados
+  (por decisão); a importação depende do formato de exportação v1 e do
+  catálogo atual; reauditoria de AUD-01 a AUD-07 pendente; push e publicação
+  não executados.

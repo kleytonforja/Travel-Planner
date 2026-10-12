@@ -641,3 +641,10 @@ a data de gravação é a da importação; a nova superfície ainda não passou 
 reauditoria independente. Aviso do rodapé atualizado: ele só passou a citar a
 importação depois de a funcionalidade estar implementada e validada
 localmente.
+
+**Revisão (C5-T4, 2026-10-12)**: a importação foi finalizada. Auditoria
+independente do Codex informada pelo usuário como aprovada (148 testes
+específicos da importação); o relatório dela não está no repositório. Também
+foi adicionado `public/favicon.svg` (ícone de avião da identidade visual, em
+fundo azul) referenciado em `index.html`, que elimina o 404 de `/favicon.ico`
+sob o caminho base `/Travel-Planner/`. A lógica de importação não foi alterada.

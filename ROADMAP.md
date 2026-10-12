@@ -103,8 +103,14 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       rodapé atualizado. Implementada e validada localmente (testes
       automatizados e fluxo real em Chromium, 28 verificações); commit local
       feito, **sem push** e **sem reauditoria independente**.
-- [ ] Reauditoria independente da nova superfície de entrada (arquivo não
-      confiável) junto com a verificação pendente dos achados AUD-01 a AUD-07.
+- [x] **C5-T4 — finalização**: favicon (`public/favicon.svg`, ícone de avião
+      da identidade visual, sob o caminho base `/Travel-Planner/`) que
+      elimina o 404 de favicon. Auditoria independente da importação
+      informada pelo usuário como aprovada (Codex; 148 testes específicos); o
+      relatório não está no repositório. Riscos residuais: ver D28 e TASKS.md.
+- [ ] Push/publicação no GitHub Pages — aguardam autorização explícita.
+- [ ] Verificação independente dos achados AUD-01 a AUD-07 continua pendente
+      (a auditoria da importação não a substitui).
 
 ## Evolução futura (pós-MVP, fora do escopo atual — NÃO implementar agora)
 
