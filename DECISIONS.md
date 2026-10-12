@@ -648,3 +648,51 @@ específicos da importação); o relatório dela não está no repositório. Tam
 foi adicionado `public/favicon.svg` (ícone de avião da identidade visual, em
 fundo azul) referenciado em `index.html`, que elimina o 404 de `/favicon.ico`
 sob o caminho base `/Travel-Planner/`. A lógica de importação não foi alterada.
+
+## D29 — Fundamentos do Design System (V1-T1)
+
+**Decisão**: o redesign (identidade moderna e premium: fundo azul-escuro com
+gradientes, azul vibrante nos elementos interativos, cards claros e
+arredondados, ícones coloridos por categoria) começa por fundamentos
+reutilizáveis, sem reconstruir o aplicativo:
+
+1. **Tokens em `@theme` (`src/index.css`)**, que o Tailwind v4 transforma em
+   utilitários: marca (`brand-*`), fundo noturno (`night-*`), superfícies,
+   linhas e texto (`surface*`, `line*`, `ink*`), foco (`focus`,
+   `focus-on-dark`), categorias (`cat-*` e `cat-*-soft`), raios (`control`,
+   `card`, `card-lg`), sombras (`card`, `card-hover`, `float`), espaçamentos
+   semânticos (`gutter`, `section`) e easing. Marca, superfícies claras e
+   texto repetem os valores atuais (blue/slate do Tailwind): a interface
+   publicada **não muda de aparência**. Os tokens `night-*` e `cat-*` são novos.
+2. **Estilos globais**: foco visível padrão com especificidade zero
+   (`:where(...)`), utilitários `focus-ring`, `focus-ring-on-dark` e
+   `bg-night-gradient`, e `prefers-reduced-motion` (sem rolagem suave nem
+   transições longas).
+3. **Primitivos em `src/components/ui/`** (classes de variantes em
+   `variants.ts`): `Button` (primary, secondary, soft, onDark), `Card` (light e
+   photo), `CategoryBadge` (chip e bloco com ícone colorido), `SearchField` e
+   `ProgressSteps`. `Button` e `Card` já são usados por `Hero` e
+   `DestinationCard`, com renderização idêntica; os demais ficam preparados
+   para as próximas telas (busca de destinos, cards com foto, planejamento em
+   etapas, categorias) e não foram aplicados às telas atuais.
+4. **Contraste verificado por teste**: `src/tests/designSystem.test.tsx` lê os
+   tokens do próprio CSS e confere o contraste WCAG (texto ≥ 4,5:1; elementos de
+   interface ≥ 3:1). Uma verificação encontrou que o número branco sobre
+   `brand-500` daria 3,76:1; o indicador de progresso usa `brand-600` (5,26:1).
+
+**Justificativa**: base visual consistente e acessível antes de redesenhar as
+telas, com risco mínimo para a versão publicada (capturas em Chromium de
+1280 px e 375 px idênticas, byte a byte, antes e depois).
+
+**Limitações**: não há fotografias nem novas telas ainda; categorias coloridas
+e demais primitivos aguardam adoção; o CSS gerado cresceu (de 28,4 KB para
+37,3 KB, cerca de +1,4 KB comprimido); fontes (Inter) continuam sem carregamento
+explícito; nada foi publicado.
+
+**Revisão (consolidação do V1-T1, 2026-10-12)**: a imagem
+`docs/references/travel-planner-design-approved.png` passa a ser a referência
+visual oficial do redesign (alta fidelidade; ver `PROJECT.md`). A skill
+`frontend-design` foi ativada de forma seletiva, como auxiliar, para tarefas de
+interface da fase de redesign (ver `TASKS.md`). Avatar e perfil local, mapa
+interativo, rotas reais, fotografias e planejamento progressivo seguem como
+requisitos planejados, não implementados.

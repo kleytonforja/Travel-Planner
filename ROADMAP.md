@@ -112,6 +112,18 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
 - [ ] Verificação independente dos achados AUD-01 a AUD-07 continua pendente
       (a auditoria da importação não a substitui).
 
+## Redesign visual (V1)
+
+- [x] **V1-T1 — fundamentos do Design System** (D29): tokens (marca, fundo
+      noturno, superfícies, texto, foco, categorias, raios, sombras),
+      estilos globais (foco visível e prefers-reduced-motion) e primitivos em
+      `src/components/ui/` (Button, Card, CategoryBadge, SearchField,
+      ProgressSteps). Aparência atual preservada (capturas idênticas).
+      Implementado e validado localmente; commit local feito, sem push.
+      Referência visual oficial: `docs/references/travel-planner-design-approved.png`.
+- [ ] V1-T2 e seguintes: telas com fotografias, fundo azul-escuro e
+      navegação progressiva — aguardam autorização.
+
 ## Evolução futura (pós-MVP, fora do escopo atual — NÃO implementar agora)
 
 - Planejamento passo a passo (wizard)

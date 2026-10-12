@@ -9,11 +9,13 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **C5-T4** — finalização da importação JSON e favicon (preparação do push; concluída localmente em 2026-10-12, aguardando autorização de push/deploy). Anterior: C5-T3 — interface e integração da importação de roteiros JSON |
+| Tarefa ativa        | **V1-T1** — fundamentos do Design System (tokens, estilos globais e primitivos de UI). Anteriores: C5-T4 (finalização da importação e favicon) e C5-T3 (interface da importação) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
-| Arquivos previstos  | `src/components/ImportItinerary.tsx` (novo), `src/tests/itineraryImportInteraction.test.tsx` (novo), `src/pages/HomePage.tsx`, `src/components/Footer.tsx`, `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D28), `TASKS.md` |
-| Status              | ✅ implementada e validada localmente em 2026-10-12, inclusive em Chromium real (ver "Relatório do C5-T3" e "Verificação funcional em Chromium" no fim do arquivo); commit local feito, sem push e sem reauditoria independente |
-| Próximo checkpoint  | Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Arquivos previstos  | `src/index.css`, `src/components/ui/*` (novos), `src/components/Hero.tsx`, `src/components/DestinationCard.tsx`, `src/tests/designSystem.test.tsx` (novo), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D29), `TASKS.md` |
+| Status              | ✅ implementada e validada localmente em 2026-10-12 (ver "Relatório do V1-T1" no fim do arquivo); commit local feito, sem push |
+| Próximo checkpoint  | Revisão/commit do V1-T1 e definição do V1-T2 (primeira tela com a nova identidade), mediante autorização. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+
+> Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
 > Registro anterior da fila (C5-T2, preservado): serviço de importação
 > `src/services/itineraryImport.ts` e testes; ✅ validada localmente em
@@ -53,6 +55,34 @@ Justificativa resumida:
   modelagem), `frontend-design` (sem trabalho de UI nesta fase),
   `database-design` (sem banco; LocalStorage), `project-bootstrap`,
   `skill-router` e `find-skills` (projeto já estruturado e seleção feita).
+
+##### Seleção de skills para a fase de redesign V1 (2026-10-12)
+
+Complementa a tabela acima, que permanece como registro da fase anterior.
+
+| Campo               | Valor                                                                  |
+| ------------------- | ---------------------------------------------------------------------- |
+| Fase                | Redesign visual V1 (Design System e telas com a nova identidade)       |
+| Essenciais          | `tdd-testing`, `diagnosing-bugs`, `codebase-architecture` (inalteradas) |
+| Auxiliares (sob demanda) | `security-review`, `react-next-best-practices`, **`frontend-design` (ativação seletiva, nova)** |
+| Total               | 6 skills (limite: 3 auxiliares; acima de 8 exigiria justificativa)     |
+
+- **Disponibilidade**: `frontend-design` consta no `registry.yaml` da
+  biblioteca global (aprovada, versão 1.0.0,
+  `frontend/frontend-design/SKILL.md`); a biblioteca está com a árvore limpa e
+  não foi modificada.
+- **Utilidade**: cobre hierarquia, espaçamento, estados, responsividade e
+  consistência — o núcleo do redesign. Ativada somente em tarefas de interface
+  (`avoid_when`: backend e migração de banco não se aplicam).
+- **Sobreposições**: parcial com `react-next-best-practices` (limites de
+  componentes) e nenhuma com `codebase-architecture`; as regras de
+  acessibilidade e os tokens do D29 continuam valendo.
+- **Riscos**: a skill é uma única frase genérica; "evitar complexidade
+  decorativa" pode tensionar com a fidelidade à referência visual premium —
+  nesse caso a referência oficial (`docs/references/`) prevalece. Não
+  substitui verificação de contraste, foco e movimento reduzido.
+- Nenhuma dependência instalada e nenhuma skill ou configuração global
+  alterada.
 
 Modelo para uma nova tarefa: tarefa · agente (Claude Code, Codex ou Kimi K3) ·
 arquivos previstos · status (⬜ pendente, 🚧 em andamento, ✅ validada) ·
@@ -1372,3 +1402,50 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   (por decisão); a importação depende do formato de exportação v1 e do
   catálogo atual; reauditoria de AUD-01 a AUD-07 pendente; push e publicação
   não executados.
+
+## Relatório do V1-T1 — fundamentos do Design System (2026-10-12)
+
+- **Escopo**: tokens, estilos globais e primitivos reutilizáveis para o
+  redesign, sem reconstruir o aplicativo, sem tocar no motor de planejamento,
+  na persistência nem na importação/exportação (D29).
+- **Skills consultadas**: `frontend-design` (descartada na seleção da fase em
+  "Skills ativas"; consultada sob demanda, **sem alterar a seleção** — decisão
+  pendente abaixo), além de `tdd-testing`, `react-next-best-practices` e
+  `codebase-architecture`.
+- **Implementado**: `src/index.css` (tokens `@theme`, foco visível padrão,
+  `prefers-reduced-motion`, utilitários `focus-ring`, `focus-ring-on-dark` e
+  `bg-night-gradient`); `src/components/ui/` com `Button`, `Card`,
+  `CategoryBadge`, `SearchField`, `ProgressSteps` e `variants.ts`. `Hero` e
+  `DestinationCard` passaram a usar `Button`/`Card`; os demais primitivos
+  ficam preparados para as próximas telas e ainda não aparecem na interface.
+- **Aparência preservada (evidência)**: capturas de página inteira em
+  Chromium (1280 px e 375 px) do build anterior e do novo têm o mesmo SHA-256;
+  a única diferença de estilo computado é `column-gap` nos CTAs do Hero (sem
+  efeito, conteúdo só de texto) e o foco por teclado em um elemento sem estilo
+  próprio, que passou do contorno padrão do navegador para o anel azul de 2 px.
+- **Contraste**: verificado por teste a partir dos tokens (texto ≥ 4,5:1,
+  elementos de interface ≥ 3:1): por exemplo ink/superfície 17,84; texto
+  atenuado 7,56; discreto 4,77; branco sobre brand-600 5,26; texto noturno
+  15,83; categorias entre 6,38 e 8,06. Defeito encontrado e corrigido: número
+  branco sobre brand-500 (3,76:1) no indicador de progresso sobre fundo escuro.
+- **Testes**: `src/tests/designSystem.test.tsx` com 52 casos (tokens,
+  contraste, movimento reduzido, foco, botões, cards, categorias, busca,
+  progresso e adoção em Hero/DestinationCard). Total da suíte: 433 testes em
+  21 arquivos.
+- **Validações executadas (resultados reais)**: `typecheck` sem erros (um erro
+  de tipos Node no teste foi resolvido com referência de tipos restrita ao
+  arquivo, sem mexer em `tsconfig`); `test:run` com 433 testes passando em duas
+  execuções consecutivas; `lint` com código 0; `build` com sucesso;
+  `git diff --check` sem problemas. Uma execução intermediária da suíte falhou
+  em todos os arquivos ("no tests") e não se reproduziu em quatro execuções
+  seguintes; a causa não foi identificada.
+- **Arquivos**: criados `src/components/ui/{Button,Card,CategoryBadge,
+  SearchField,ProgressSteps}.tsx`, `src/components/ui/variants.ts`,
+  `src/tests/designSystem.test.tsx`; alterados `src/index.css`,
+  `src/components/Hero.tsx`, `src/components/DestinationCard.tsx`,
+  `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md`, `TASKS.md`. Nenhuma dependência
+  alterada; `package.json` e serviços intactos.
+- **Riscos e limitações**: apenas Chromium; CSS gerado maior (+8,9 KB, cerca de
+  +1,4 KB comprimido); primitivos sem uso nas telas ainda; fotografias, fundo
+  noturno e navegação progressiva ainda não aplicados; Inter sem carregamento
+  explícito. Nenhum commit, push ou deploy.

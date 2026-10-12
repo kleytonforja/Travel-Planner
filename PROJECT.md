@@ -58,7 +58,7 @@ preços em tempo real.
 
 ```
 src/
-  components/   # Componentes de interface reutilizáveis
+  components/   # Componentes de interface reutilizáveis (ui/: primitivos do Design System)
   pages/        # Páginas da aplicação (inicial, roteiro)
   data/         # Base local de destinos e atividades (tipada)
   services/     # Regras de negócio: gerador de roteiros, persistência, exportação
@@ -97,3 +97,34 @@ Antes de considerar uma tarefa de código concluída, `typecheck`, `test:run`,
 
 Fluxo entre agentes e estado do Git/publicação: `AGENTS.md` ("Fluxo
 multiagente") e `TASKS.md` ("Fila atual").
+
+## Referência visual oficial (redesign V1)
+
+- **Arquivo**: `docs/references/travel-planner-design-approved.png` (PNG,
+  1536 × 1024). Mostra a página inicial (hero com fotografia, destinos em
+  destaque), o passo 1 de 7 do planejamento (busca, filtros e cards com foto)
+  e o roteiro por dia com mapa. É a **referência visual oficial aprovada**.
+- **Fidelidade**: o redesign deve buscar **alta fidelidade** a esse modelo
+  (fundo azul-escuro com gradientes, azul vibrante nos elementos interativos,
+  cards claros e arredondados, ícones coloridos por categoria), respeitando
+  a stack, as proibições do `AGENTS.md` e os tokens do Design System (D29).
+  Os textos do modelo são ilustrativos; dados e valores continuam sendo os da
+  base local, rotulados como ilustrativos.
+
+### Funcionalidades atuais × planejadas
+
+| Situação | Funcionalidade |
+| --- | --- |
+| **Atual** | Formulário de planejamento, 3 destinos, gerador determinístico, roteiro por dia com resumo financeiro, salvar/reabrir/excluir, exportação e importação JSON, quarentena e recuperação, Design System (tokens e primitivos, V1-T1) |
+| **Planejada** | Avatar e perfil local |
+| **Planejada** | Mapa interativo com atrações |
+| **Planejada** | Rotas reais entre atrações |
+| **Planejada** | Fotografias e ícones coloridos de categorias (tokens e `CategoryBadge` existem; sem fotografias nem aplicação nas telas) |
+| **Planejada** | Planejamento progressivo em etapas (7 etapas na referência: Destino, Datas, Viajantes, Transporte, Interesses, Orçamento e Roteiro; `ProgressSteps` existe, sem o fluxo) |
+
+As funcionalidades planejadas **não estão implementadas** e só entram com
+autorização, registro no `ROADMAP.md` e decisão no `DECISIONS.md`. Atenção:
+mapa interativo e rotas reais costumam exigir serviços externos de mapas e
+roteamento, o que o `AGENTS.md` só permite com autorização (sem APIs pagas);
+é uma decisão pendente. Itens do modelo como viajantes, transporte e
+funcionamento offline também ampliam o escopo atual do MVP.

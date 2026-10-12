@@ -1,5 +1,7 @@
 import { CalendarDays, MapPin, Wallet } from 'lucide-react'
 
+import { buttonClasses } from './ui/variants'
+
 const HIGHLIGHTS = [
   {
     icon: MapPin,
@@ -42,13 +44,13 @@ export function Hero() {
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <a
             href="#planejar"
-            className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:w-auto"
+            className={`${buttonClasses({ variant: 'primary', size: 'lg', width: 'responsive' })} shadow-sm`}
           >
             Começar a planejar
           </a>
           <a
             href="#destinos"
-            className="inline-flex w-full items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 text-base font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:w-auto"
+            className={buttonClasses({ variant: 'secondary', size: 'lg', width: 'responsive' })}
           >
             Ver destinos
           </a>

@@ -2,6 +2,8 @@ import { Check, MapPin } from 'lucide-react'
 
 import { INTEREST_LABELS } from '../data/labels'
 import type { Destination, InterestCategory } from '../types'
+import { Button } from './ui/Button'
+import { Card } from './ui/Card'
 
 interface DestinationCardProps {
   destination: Destination
@@ -24,11 +26,7 @@ export function DestinationCard({
   ]
 
   return (
-    <article
-      className={`flex flex-col rounded-xl border bg-white p-6 shadow-sm transition-shadow hover:shadow-md ${
-        selected ? 'border-blue-600 ring-2 ring-blue-100' : 'border-slate-200'
-      }`}
-    >
+    <Card selected={selected}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">
@@ -66,18 +64,15 @@ export function DestinationCard({
         ))}
       </ul>
 
-      <button
-        type="button"
+      <Button
+        variant={selected ? 'soft' : 'primary'}
+        width="full"
+        className="mt-6"
         onClick={() => onSelect(destination.id)}
-        className={`mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
-          selected
-            ? 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-            : 'bg-blue-600 text-white hover:bg-blue-700'
-        }`}
       >
         {selected && <Check className="h-4 w-4" aria-hidden="true" />}
         {selected ? 'Destino selecionado' : 'Planejar para este destino'}
-      </button>
-    </article>
+      </Button>
+    </Card>
   )
 }

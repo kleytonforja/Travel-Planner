@@ -1,12 +1,150 @@
 @import 'tailwindcss';
 
+/*
+ * Design System do Travel Planner — fundamentos (V1-T1).
+ *
+ * Tokens semânticos declarados em @theme: o Tailwind v4 gera utilitários a
+ * partir deles (bg-brand-600, text-ink-muted, rounded-card, shadow-card...).
+ * Os valores da marca e das superfícies claras COINCIDEM com a paleta atual
+ * (blue/slate do Tailwind), de modo que a interface publicada não muda de
+ * aparência. Os tokens "night" (fundo azul-escuro) e "cat-*" (categorias)
+ * são novos e preparam as próximas telas.
+ *
+ * Contraste: os pares de texto/fundo abaixo são verificados por teste
+ * (src/tests/designSystem.test.tsx) contra WCAG 2.x AA.
+ */
 @theme {
   --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  /* Marca: azul vibrante dos elementos interativos (= blue do Tailwind). */
+  --color-brand-50: oklch(97% 0.014 254.604);
+  --color-brand-100: oklch(93.2% 0.032 255.585);
+  --color-brand-200: oklch(88.2% 0.059 254.128);
+  --color-brand-300: oklch(80.9% 0.105 251.813);
+  --color-brand-500: oklch(62.3% 0.214 259.815);
+  --color-brand-600: oklch(54.6% 0.245 262.881);
+  --color-brand-700: oklch(48.8% 0.243 264.376);
+  --color-brand-800: oklch(42.4% 0.199 265.638);
+
+  /* Fundo azul-escuro com gradientes (telas imersivas). */
+  --color-night-950: #050b1c;
+  --color-night-900: #0a1530;
+  --color-night-800: #0f1f45;
+  --color-night-700: #172c5e;
+  --color-night-ink: #eaf0ff;
+  --color-night-ink-muted: #b8c5e8;
+
+  /* Superfícies claras, linhas e texto (= slate do Tailwind). */
+  --color-surface: #ffffff;
+  --color-surface-muted: oklch(98.4% 0.003 247.858);
+  --color-surface-sunken: oklch(96.8% 0.007 247.896);
+  --color-line: oklch(92.9% 0.013 255.508);
+  --color-line-strong: oklch(86.9% 0.022 252.894);
+  --color-ink: oklch(20.8% 0.042 265.755);
+  --color-ink-muted: oklch(44.6% 0.043 257.281);
+  --color-ink-subtle: oklch(55.4% 0.046 257.417);
+
+  /* Foco visível. */
+  --color-focus: oklch(54.6% 0.245 262.881);
+  --color-focus-on-dark: #ffffff;
+
+  /* Categorias de atrações: ícone/texto (fg) e fundo suave (soft). */
+  --color-cat-gastronomia: #9a3412;
+  --color-cat-gastronomia-soft: #ffedd5;
+  --color-cat-natureza: #166534;
+  --color-cat-natureza-soft: #dcfce7;
+  --color-cat-cultura: #6b21a8;
+  --color-cat-cultura-soft: #f3e8ff;
+  --color-cat-aventura: #9f1239;
+  --color-cat-aventura-soft: #ffe4e6;
+  --color-cat-compras: #9d174d;
+  --color-cat-compras-soft: #fce7f3;
+  --color-cat-relaxamento: #115e59;
+  --color-cat-relaxamento-soft: #ccfbf1;
+  --color-cat-vida-noturna: #3730a3;
+  --color-cat-vida-noturna-soft: #e0e7ff;
+
+  /* Raios. */
+  --radius-control: 0.5rem;
+  --radius-card: 0.75rem;
+  --radius-card-lg: 1rem;
+
+  /* Sombras: card e hover repetem sm/md atuais; float é a sombra suave premium. */
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-float: 0 20px 40px -12px rgb(5 11 28 / 0.35);
+
+  /* Espaçamentos semânticos (além da escala padrão). */
+  --spacing-gutter: 1rem;
+  --spacing-section: 4rem;
+
+  /* Movimento. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
-html {
-  font-family: var(--font-sans);
-  scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /*
+   * Foco visível padrão para qualquer elemento interativo que não declare
+   * o próprio (especificidade zero: estilos explícitos prevalecem).
+   */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  /* Respeito a prefers-reduced-motion: sem rolagem suave nem transições longas. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Anel de foco reutilizável (mesmo traço do foco atual da interface). */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+/* Anel de foco para superfícies escuras. */
+@utility focus-ring-on-dark {
+  &:focus-visible {
+    outline: 2px solid var(--color-focus-on-dark);
+    outline-offset: 2px;
+  }
+}
+
+/* Fundo azul-escuro com gradientes para telas imersivas. */
+@utility bg-night-gradient {
+  background-color: var(--color-night-900);
+  background-image:
+    radial-gradient(
+      60rem 28rem at 85% -10%,
+      color-mix(in oklab, var(--color-brand-600) 38%, transparent),
+      transparent
+    ),
+    linear-gradient(
+      180deg,
+      var(--color-night-950),
+      var(--color-night-900) 45%,
+      var(--color-night-800)
+    );
 }
