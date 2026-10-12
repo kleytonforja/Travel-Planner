@@ -286,10 +286,13 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
   IDs duplicados, par de colisão), `src/tests/itineraryStorageIdentity.test.ts`
   (10 testes), `src/tests/itineraryStorageValidation.test.ts` (35 testes).
 - **Cenários de colisão testados**: registro legado cujo id coincide com
-  o fingerprint de outro planejamento é preservado ao salvar (o par exato
+  o fingerprint de outro planejamento é preservado ao salvar — colisão
+  SIMULADA pela fixture, sem cálculo de dois hashes iguais (o par exato
   da auditoria, fingerprint `roteiro-2cd27b6e`, não foi transcrito no
   plano — ambiguidade nº 9 — e o mecanismo foi reproduzido com
-  planejamentos da base local); interesses em ordens diferentes;
+  planejamentos da base local; a colisão verdadeira, com fingerprints
+  calculados, foi incorporada depois, em `trueCollisionAud07.test.ts`);
+  interesses em ordens diferentes;
   UUID repetido com geração de alternativa; esgotamento das 10
   tentativas sem escrita; indisponibilidade de `crypto.randomUUID`;
   mais de um equivalente bloqueado; IDs duplicados na coleção.
@@ -403,6 +406,19 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
   a colisão verdadeira reconstruída com origem sintética identificada);
   a reavaliação dos 12 critérios é pendência da nova auditoria
   independente.
+
+  **Revisão (encerramento documental AUD-07, 2026-10-11)**: o teste
+  antigo foi renomeado para "colisão SIMULADA de identificadores" em
+  `itineraryStorageIdentity.test.ts` (lógica e verificações
+  preservadas), eliminando a nomenclatura que sugeria colisão real. O
+  teste separado de colisão verdadeira
+  (`trueCollisionAud07.test.ts`) foi conferido: ambos os fingerprints
+  são efetivamente CALCULADOS e a igualdade comprovada. Registra-se
+  explicitamente que a amostra histórica original citada pelo plano
+  (64.851 roteiros aceitos e 837 sobrepostos) NÃO está disponível para
+  reprodução independente — o corpus e o procedimento original não
+  foram transcritos (ambiguidade nº 9) e nenhum dado ausente foi
+  inventado. Nenhuma aprovação da auditoria final é declarada.
 - **Riscos remanescentes** (inalterados em relação ao P2): abas
   executando versões antigas ignoram o lock (limitação explícita do
   plano, seção 12); o resultado incerto depende de releitura antes da
@@ -416,7 +432,8 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
 - **Pendências para a auditoria independente**: reproduzir os caminhos
   de perda da auditoria original (TP-02 a TP-05) contra o estado atual;
   validar a amostra histórica citada no plano (64.851 aceitos / 837
-  sobrepostos — ambiguidade nº 9, valores não transcritos no plano);
+  sobrepostos — ambiguidade nº 9, valores não transcritos no plano;
+  amostra original NÃO disponível para reprodução independente);
   revisar as ambiguidades resolvidas (nº 2, 5 e 10, registradas na D23).
 - **TP-02 a TP-05 NÃO estão declarados totalmente corrigidos**: a
   declaração depende da auditoria independente final (critério 12 do
@@ -541,7 +558,7 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
 | #      | Problema                                                                 | Status | Critério de aceite                                              |
 | ------ | ------------------------------------------------------------------------ | ------ | --------------------------------------------------------------- |
 | AUD-01 | Confirmação antiga de descarte apagava uma nova quarentena               | 🚧     | Correção implementada e validada na suíte local; reauditoria pendente |
-| AUD-02 | Mensagem falsa de preservação após resultado incerto                     | 🚧     | Correção implementada e validada na suíte local (C2-A); reauditoria pendente |
+| AUD-02 | Mensagem falsa de preservação após resultado incerto                     | 🚧     | Correção residual da restauração implementada e validada (2026-10-12); nova verificação independente pendente |
 | AUD-03 | Custo superior ao orçamento aceito dentro da tolerância                  | 🚧     | Correção implementada e validada na suíte local (C2-B); reauditoria pendente |
 | AUD-04 | Saldo incorreto aceito pela perda de precisão na soma                    | 🚧     | Correção implementada e validada na suíte local (C2-B); reauditoria pendente |
 | AUD-05 | Falta exportação bruta da principal corrompida                           | 🚧     | Correção implementada e validada na suíte local (C2-B); reauditoria pendente |
@@ -661,6 +678,12 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
   e os sucessos só aparecem após confirmação por releitura — nenhum
   outro caminho prometia preservação, backup ou conclusão sem
   evidência.
+
+**Revisão (correção final AUD-02, 2026-10-11)**: a garantia acima era
+restrita à sessão da HomePage e não cobria o salvamento na ItineraryPage
+seguido de navegação pela App. A auditoria independente reproduziu a falsa
+afirmação após esse fluxo. A correção final remove a afirmação absoluta do
+alerta genérico e o estado local que a condicionava; ver relatório ao final.
 
 ### AUD-06 — Restauração com aviso prévio de IDs
 
@@ -938,3 +961,71 @@ Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
 - **AUD-03, AUD-04, AUD-05 e AUD-07 NÃO estão declarados totalmente
   corrigidos**: a declaração depende de nova auditoria independente
   (critério 12 do plano e seção 10 dos achados).
+
+## Relatório da correção final AUD-02 — navegação após resultado incerto (2026-10-11)
+
+- **Causa raiz**: a ItineraryPage exibe o resultado incerto retornado pelo
+  serviço, mas a App remonta a HomePage ao voltar por "Novo planejamento".
+  O estado local `mutationAttempted` reinicia como falso; a ausência de
+  tentativa nessa nova instância não prova que nenhuma escrita ocorreu.
+- **Correção mínima**: removidos o estado e suas quatro atribuições da
+  HomePage. O alerta genérico de indisponibilidade orienta recarregar os
+  roteiros e verificar o estado real dos dados antes de tentar alteração.
+  Não contém mais a afirmação "Nenhum dado foi alterado.".
+- **Arquivos modificados**: `src/pages/HomePage.tsx`,
+  `src/tests/securityMessagesAud02.test.tsx`, `DECISIONS.md` e `TASKS.md`.
+- **Regressão criada**: renderiza a App, preenche o formulário, gera e salva
+  o roteiro, permite a escrita real no LocalStorage isolado do jsdom e
+  bloqueia a confirmação e as leituras posteriores. Após exibir incerteza,
+  navega por "Novo planejamento" até a HomePage e exige ausência da falsa
+  afirmação e da falsa lista vazia. Confere uma única escrita, o conteúdo
+  principal exato após navegar e a quarentena intacta, sem rollback.
+- **TDD observado**: a nova regressão falhou antes da correção exatamente
+  na afirmação de preservação; depois, os cinco testes de AUD-02 passaram.
+  O teste de carga inicial indisponível foi ajustado à orientação neutra.
+- **Validações executadas**: `npm run typecheck` sem erros;
+  `npm run test:run` com 231 testes em 18 arquivos, todos passando;
+  `npm run lint` com zero erros e avisos; `npm run build` com sucesso.
+- **Escopo preservado**: contratos de persistência e recuperação, gerador,
+  App e ItineraryPage sem mudanças; nenhuma dependência nova. Testes usam
+  armazenamento isolado, sem alterar dados reais do navegador.
+- **Riscos remanescentes**: resultado incerto ainda exige nova leitura para
+  determinar o estado real; este teste não valida duas abas de navegador.
+  Nenhum commit, push ou publicação executado.
+- **AUD-02 aguarda nova auditoria independente**: implementação e validação
+  local registradas; nenhuma aprovação final ou GO técnico declarado.
+
+## Relatório da correção residual AUD-02 — restauração incerta (2026-10-12)
+
+- **Causa raiz**: o painel de corrupção afirmava "Eles não foram alterados
+  nem apagados" com base apenas na classificação da releitura. Após uma
+  restauração com escrita efetiva e confirmação indisponível ou divergente,
+  esse painel podia contradizer a mensagem de resultado incerto.
+- **Correção**: substituída a afirmação absoluta por orientação para
+  recarregar os roteiros e verificar o estado real dos dados antes de
+  outra operação. Nenhum handler ou serviço de persistência foi alterado.
+- **Arquivos alterados nesta tarefa**: `src/pages/HomePage.tsx`,
+  `src/tests/securityMessagesAud02.test.tsx`, `DECISIONS.md` e `TASKS.md`.
+- **Regressões adicionadas (2)**: principal inicialmente `[]`, quarentena
+  com registro válido, confirmação da restauração e escrita real, seguidas
+  de confirmação indisponível ou divergente. A releitura retorna conteúdo
+  incompatível para exibir o painel de corrupção. Os testes exigem a
+  mensagem de incerteza sem afirmação falsa, principal com o conteúdo
+  restaurado exato, quarentena intacta, uma única escrita e zero remoções,
+  sem rollback, repetição ou falso sucesso.
+- **TDD observado**: as duas regressões falharam antes da correção
+  exatamente na afirmação de preservação; após a correção, os sete testes
+  de mensagens do AUD-02 passaram.
+- **Validações executadas**: `npm run typecheck` sem erros;
+  `npm run test:run` com 233 testes em 18 arquivos, todos passando;
+  `npm run lint` com zero erros e avisos; `npm run build` com sucesso.
+- **Escopo preservado**: gerador, arquitetura, dependências, formato v1,
+  contratos de recuperação/quarentena e operações de escrita intactos.
+  Alterações locais anteriores foram preservadas. Nenhum commit, push ou
+  publicação executado.
+- **Limites e riscos**: testes em jsdom com falhas injetadas, sem nova
+  execução Playwright; resultado incerto ainda exige nova leitura para
+  determinar o estado real. O par de colisão e o corpus histórico originais
+  continuam indisponíveis. Esta correção não declara GO ou aceite integral
+  dos 12 critérios; aguarda nova verificação independente e autorização
+  para qualquer próxima etapa.

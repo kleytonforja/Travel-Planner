@@ -399,6 +399,25 @@ adição é uma leitura) e sem mudar a identidade visual.
 **Limitações**: AUD-02 e AUD-06 NÃO são declarados corrigidos sem nova
 auditoria independente. Ver TASKS.md, relatório do C2-A.
 
+**Revisão (correção final AUD-02, 2026-10-11)**: a auditoria independente
+reproduziu salvamento efetivo com confirmação indisponível na ItineraryPage,
+seguido de "Novo planejamento". A App remonta a HomePage, reinicializando
+`mutationAttempted` como falso; o alerta voltava a afirmar que nenhum dado
+foi alterado. O alerta genérico agora orienta recarregar e verificar o estado
+real dos dados, sem afirmar preservação. O estado local e suas atribuições
+foram removidos. A regressão usa a App e a navegação real entre as páginas.
+A aprovação do AUD-02 continua dependendo de nova auditoria independente.
+
+**Revisão (correção residual AUD-02, 2026-10-12)**: a reauditoria
+reproduziu restauração com escrita efetiva e confirmação divergente,
+seguida do painel de corrupção afirmando que os dados não foram alterados
+nem apagados. Esse painel agora orienta recarregar os roteiros e verificar
+o estado real dos dados antes de outra operação, sem garantir preservação.
+Somente o texto mudou; contratos e operações do serviço permanecem intactos.
+As regressões cobrem confirmação indisponível e divergente, uma única
+escrita principal e quarentena intacta. A validação local não declara GO
+nem substitui nova verificação independente.
+
 ## D26 — Validação financeira estrita e exportação da principal corrompida (C2-B)
 
 **Decisão**: correção dos achados AUD-03, AUD-04, AUD-05 e AUD-07 da
@@ -434,10 +453,21 @@ auditoria independente final:
 4. **Regressões e documentação fiel (AUD-07)**: a colisão verdadeira
    reconstruída pela auditoria (dois planejamentos sintéticos cujos
    fingerprints CALCULADOS são exatamente `roteiro-2cd27b6e`) foi
-   incorporada como regressão, com a origem sintética identificada no
-   teste — o par original permanece indisponível (ambiguidade nº 9). A
-   declaração de cobertura dos critérios 1–11 no relatório do P3
-   (TASKS.md) recebeu revisão explícita: ela excedia as evidências.
+    incorporada como regressão, com a origem sintética identificada no
+    teste — o par original permanece indisponível (ambiguidade nº 9). A
+    declaração de cobertura dos critérios 1–11 no relatório do P3
+    (TASKS.md) recebeu revisão explícita: ela excedia as evidências.
+    **Revisão (encerramento documental AUD-07, 2026-10-11)**: o teste
+    antigo de `itineraryStorageIdentity.test.ts`, antes denominado
+    "colisão real", foi renomeado para "colisão SIMULADA de
+    identificadores" (a fixture atribui o fingerprint de um
+    planejamento a outro registro, sem calcular dois hashes iguais);
+    sua lógica e verificações foram preservadas integralmente. O teste
+    separado `trueCollisionAud07.test.ts` continua calculando ambos os
+    fingerprints e comprovando a igualdade. A amostra histórica
+    original (64.851 aceitos / 837 sobrepostos) NÃO está disponível
+    para reprodução independente; nenhum dado ausente foi inventado e
+    nenhuma aprovação da auditoria final é declarada.
 
 **Justificativa**: AUD-03 e AUD-04 estavam no mesmo validador
 compartilhado entre leitura e gravação e foram corrigidos juntos, sem

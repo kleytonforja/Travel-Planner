@@ -85,15 +85,6 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
     idsToFixCount: number
   } | null>(null)
   /**
-   * Correção AUD-02: registra se alguma mutação foi tentada nesta
-   * sessão da página. O alerta genérico de indisponibilidade só afirma
-   * "Nenhum dado foi alterado" quando NENHUMA mutação foi tentada —
-   * evidência de que esta página não escreveu nada. Após qualquer
-   * tentativa (inclusive falhas, que podem deixar cópia adicional na
-   * quarentena — plano, 3.2), a afirmação absoluta não é mais exibida.
-   */
-  const [mutationAttempted, setMutationAttempted] = useState(false)
-  /**
    * Autorização do descarte da quarentena (correção AUD-01): guarda o
    * CONTEÚDO BRUTO exato da cópia apresentada ao usuário quando o painel
    * de confirmação foi aberto — nunca um simples booleano. O conteúdo
@@ -142,7 +133,6 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
 
   async function handleRemoveSaved(id: string) {
     setBusy(true)
-    setMutationAttempted(true)
     setSuccessMessage(null)
     try {
       // A exclusão é vinculada ao conteúdo bruto observado nesta leitura.
@@ -187,7 +177,6 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
   async function handleConfirmRecovery() {
     if (!recoveryPreview) return
     setBusy(true)
-    setMutationAttempted(true)
     setSuccessMessage(null)
     try {
       const result = await recoverCorruptedStorage(recoveryPreview.raw)
@@ -276,7 +265,6 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
     if (restoreAuthorization === null) return
     const expectedRaw = restoreAuthorization.raw
     setBusy(true)
-    setMutationAttempted(true)
     setSuccessMessage(null)
     try {
       const result = await restoreQuarantineCopy(expectedRaw)
@@ -314,7 +302,6 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
     if (discardAuthorization === null) return
     const expectedRaw = discardAuthorization
     setBusy(true)
-    setMutationAttempted(true)
     setSuccessMessage(null)
     try {
       const result = await discardQuarantineCopy(expectedRaw)
@@ -387,13 +374,8 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
                 seus roteiros salvos não puderam ser exibidos. Verifique as
                 configurações de privacidade do navegador e recarregue a
                 página.
-                {/* Correção AUD-02: a afirmação de preservação só aparece
-                    com evidência (nenhuma mutação tentada nesta sessão).
-                    Após qualquer tentativa, o alerta não afirma ausência
-                    de alterações — orienta a verificação do estado real. */}
-                {mutationAttempted
-                  ? ' Uma operação de alteração foi tentada antes desta falha de leitura; recarregue os roteiros e verifique o estado real dos dados antes de tentar novamente.'
-                  : ' Nenhum dado foi alterado.'}
+                Recarregue os roteiros e verifique o estado real dos dados
+                antes de tentar uma alteração.
               </p>
             )}
 
@@ -404,8 +386,9 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
               >
                 <p className="text-sm text-amber-800">
                   Encontramos dados de roteiros salvos que não puderam ser
-                  validados. Eles não foram alterados nem apagados, e as
-                  alterações estão bloqueadas até a recuperação. Você pode
+                  validados. As alterações estão bloqueadas até a recuperação.
+                  Recarregue os roteiros e verifique o estado real dos dados
+                  antes de tentar outra operação. Você pode
                   baixar o conteúdo bruto para guardá-lo fora do navegador,
                   preservar uma cópia de segurança neste navegador e recuperar
                   os registros válidos.

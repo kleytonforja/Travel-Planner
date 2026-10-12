@@ -73,10 +73,14 @@ describe('identidade e equivalência (TP-03)', () => {
     expect(record.id).toMatch(UUID_ID_PATTERN)
   })
 
-  it('TP-03: colisão real — registro legado cujo id coincide com o fingerprint de outro planejamento é preservado', async () => {
-    // O par exato da auditoria (fingerprint roteiro-2cd27b6e) não foi
-    // transcrito no plano (ambiguidade nº 9); esta fixture reproduz o
-    // mesmo mecanismo com planejamentos da base local.
+  it('TP-03: colisão SIMULADA de identificadores — registro legado cujo id coincide com o fingerprint de outro planejamento é preservado', async () => {
+    // Colisão SIMULADA: a fixture atribui ao registro legado o fingerprint
+    // de outro planejamento; os dois hashes NÃO são calculados aqui. O par
+    // exato da auditoria (fingerprint roteiro-2cd27b6e) não foi transcrito
+    // no plano (ambiguidade nº 9); esta fixture reproduz o mesmo mecanismo
+    // com planejamentos da base local. A colisão VERDADEIRA, com
+    // fingerprints efetivamente calculados, está em
+    // trueCollisionAud07.test.ts.
     const { legacyRecord, collidingItinerary } = buildCollisionPair()
     localStorage.setItem(STORAGE_KEY, JSON.stringify([legacyRecord]))
 

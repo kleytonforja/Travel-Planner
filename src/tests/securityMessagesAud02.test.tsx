@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import App from '../App'
 import { HomePage } from '../pages/HomePage'
 import {
   CORRUPTED_BACKUP_KEY,
@@ -20,12 +21,9 @@ import {
  *
  * Causa raiz auditada (interface): o alerta genérico de indisponibilidade
  * afirmava "Nenhum dado foi alterado" sem considerar que uma escrita
- * anterior já havia ocorrido (resultado incerto). A correção condiciona
- * a afirmação à evidência: ela só aparece quando NENHUMA mutação foi
- * tentada nesta sessão da página; depois de qualquer tentativa, o
- * alerta informa a indisponibilidade e orienta a verificação do estado
- * real, sem prometer preservação (plano, 3.2: uma falha também pode
- * deixar cópia adicional na quarentena).
+ * anterior já havia ocorrido (resultado incerto). O alerta de
+ * indisponibilidade orienta verificar os dados após restabelecer a
+ * leitura, sem afirmar preservação a partir do estado local da página.
  *
  * Todos os cenários comparam o CONTEÚDO BRUTO das chaves antes e
  * depois. Dados sintéticos (fixtures geradas da base local).
@@ -121,18 +119,114 @@ describe('AUD-02 — mensagens correspondentes ao estado real', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('carga inicial indisponível, sem nenhuma mutação tentada: a afirmação de preservação é verdadeira e permanece', async () => {
+  it('não afirma preservação ao voltar para HomePage após salvamento incerto pela App', async () => {
+    const user = userEvent.setup()
+    const copyBefore = 'cópia anterior preservada'
+    localStorage.setItem(STORAGE_KEY, '[]')
+    localStorage.setItem(CORRUPTED_BACKUP_KEY, copyBefore)
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    render(<App />)
+
+    await user.selectOptions(screen.getByLabelText('Destino'), 'florianopolis')
+    await user.type(screen.getByLabelText(/Duração/), '1')
+    await user.click(screen.getByRole('checkbox', { name: 'Cultura' }))
+    await user.click(screen.getByRole('radio', { name: /Econômico/ }))
+    await user.type(screen.getByLabelText('Orçamento total por pessoa'), '100')
+    await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
+
+    // A escrita real ocorre; apenas a confirmação e as leituras seguintes falham.
+    const originalSet = Storage.prototype.setItem.bind(localStorage)
+    const originalGet = Storage.prototype.getItem.bind(localStorage)
+    let written = false
+    const setSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key, value) => {
+      originalSet(key, value)
+      if (key === STORAGE_KEY) written = true
+    })
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation((key) => {
+      if (key === STORAGE_KEY && written) {
+        throw new DOMException('leitura bloqueada após gravação', 'SecurityError')
+      }
+      return originalGet(key)
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Salvar roteiro' }))
+    expect(await screen.findByText(/Não foi possível confirmar a operação/)).toBeInTheDocument()
+    const rawAfterSave = originalGet(STORAGE_KEY)
+    const persisted = JSON.parse(rawAfterSave ?? 'null')
+    expect(persisted).toHaveLength(1)
+    expect(persisted[0].itinerary.input).toEqual({
+      destinationId: 'florianopolis', days: 1, interests: ['cultura'],
+      style: 'economico', budget: 100,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Novo planejamento' }))
+    expect(await screen.findByRole('heading', { name: 'Planeje sua viagem' })).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent(/não puderam ser exibidos/)
+    expect(screen.getByRole('alert')).not.toHaveTextContent(ABSOLUTE_PRESERVATION_CLAIM)
+    expect(screen.queryByText(/Nenhum roteiro salvo ainda/)).not.toBeInTheDocument()
+    expect(setSpy).toHaveBeenCalledTimes(1)
+    expect(originalGet(STORAGE_KEY)).toBe(rawAfterSave)
+    expect(originalGet(CORRUPTED_BACKUP_KEY)).toBe(copyBefore)
+  })
+
+  it.each(['indisponível', 'divergente'])(
+    'restauração com confirmação %s não afirma preservação após a escrita efetiva',
+    async (confirmation) => {
+      const user = userEvent.setup()
+      const quarantineRaw = JSON.stringify([buildHistoricalValidRecord()])
+      localStorage.setItem(STORAGE_KEY, '[]')
+      localStorage.setItem(CORRUPTED_BACKUP_KEY, quarantineRaw)
+      renderHome()
+
+      await user.click(screen.getByRole('button', { name: 'Restaurar registros da cópia' }))
+
+      const originalSet = Storage.prototype.setItem.bind(localStorage)
+      const originalGet = Storage.prototype.getItem.bind(localStorage)
+      let written = false
+      let confirmationRead = false
+      const setSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key, value) => {
+        originalSet(key, value)
+        if (key === STORAGE_KEY) written = true
+      })
+      const removeSpy = vi.spyOn(Storage.prototype, 'removeItem')
+      vi.spyOn(Storage.prototype, 'getItem').mockImplementation((key) => {
+        if (key === STORAGE_KEY && written) {
+          if (confirmation === 'indisponível' && !confirmationRead) {
+            confirmationRead = true
+            throw new DOMException('confirmação indisponível', 'SecurityError')
+          }
+          // A releitura exibe o painel de corrupção após a operação incerta.
+          return 'conteudo-divergente'
+        }
+        return originalGet(key)
+      })
+
+      await user.click(screen.getByRole('button', { name: 'Confirmar restauração' }))
+
+      expect(await screen.findByText(/Não foi possível confirmar a operação/)).toBeInTheDocument()
+      expect(screen.getByText(/não puderam ser validados/)).toBeInTheDocument()
+      expect(originalGet(STORAGE_KEY)).toBe(quarantineRaw)
+      expect(originalGet(CORRUPTED_BACKUP_KEY)).toBe(quarantineRaw)
+      expect(setSpy).toHaveBeenCalledTimes(1)
+      expect(setSpy).toHaveBeenCalledWith(STORAGE_KEY, quarantineRaw)
+      expect(removeSpy).not.toHaveBeenCalled()
+      expect(screen.queryByText(/Restauração concluída e confirmada/)).not.toBeInTheDocument()
+      expect(document.body).not.toHaveTextContent(/não foram alterados nem apagados|Nenhum dado foi alterado/i)
+    },
+  )
+
+  it('carga inicial indisponível orienta verificação sem afirmar preservação', async () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new DOMException('leitura bloqueada', 'SecurityError')
     })
     renderHome()
 
-    // Sem nenhuma tentativa de mutação nesta sessão, a interface TEM
-    // evidência de que não alterou dado algum: a afirmação é mantida.
+    // A indisponibilidade não permite concluir o estado real dos dados.
     expect(
       await screen.findByText(/Não foi possível acessar o armazenamento do navegador/),
     ).toBeInTheDocument()
-    expect(screen.getByText(/Nenhum dado foi alterado\./)).toBeInTheDocument()
+    expect(screen.getByRole('alert')).not.toHaveTextContent(ABSOLUTE_PRESERVATION_CLAIM)
+    expect(screen.getByRole('alert')).toHaveTextContent(/verifique o estado real dos dados/)
     // Leitura de verificação com o acesso restabelecido.
     vi.restoreAllMocks()
     expect(readMainRaw()).toBeNull()
