@@ -886,3 +886,36 @@ motor é tarefa futura (V1-T3.7). Nada é persistido (apenas sessão).
 (Transporte) não está implementada; o formulário tradicional continua como
 fallback, com destino e duração. A etapa 3 está sempre completa (1 adulto é o
 padrão válido).
+
+## D35 — Planejamento progressivo: etapa de transporte (V1-T3.4)
+
+**Decisão**: a etapa 4 ("Como você pretende viajar?") registra apenas
+**preferências declaradas** em `PlanningDraft.transport` (memória da sessão):
+- **Chegada ao destino** (escolha única, opcional, clique repetido remove):
+  Carro próprio, Avião, Ônibus, Trem, Ainda não decidi.
+- **Cidade de origem**: texto livre e opcional, **não verificado**. Validação em
+  `src/utils/transport.ts`: espaços normalizados, 2 a 80 caracteres, começa com
+  letra e aceita letras (inclusive acentuadas), espaço, hífen, apóstrofo, ponto e
+  vírgula. Origem inválida impede avançar; vazia não.
+- **Deslocamentos locais** (múltipla escolha): Carro próprio, Carro alugado,
+  Táxi ou aplicativo, Transporte público, Caminhada, Combinação de transportes;
+  "Ainda não decidi" é **exclusivo** (marcá-lo limpa os demais; marcar outro o
+  remove). "Combinação de transportes" é uma opção comum, combinável.
+- Todas as escolhas são opcionais; a etapa só fica incompleta com origem inválida.
+- Cards são botões com `aria-pressed`, alvo mínimo de 56 px de altura.
+
+**Limitações (registradas para o V1-T3.7)**: não há cálculo de rotas,
+distâncias, tempos ou tarifas, nem API externa, nem mapa; o motor de roteiros
+**não usa** estas preferências e não otimiza atrações por meio de transporte. A
+tela informa isso. Nada é persistido. Etapas 5 a 7 e o fallback do formulário
+tradicional seguem como antes.
+
+**Revisão visual (consolidação do V1-T3.4)**: os cards da etapa usam o novo
+`SelectableCard` (`src/components/ui/SelectableCard.tsx`), o mesmo visual para
+escolha única e múltipla: selecionado = fundo azul-claro (`brand-100`), borda
+azul de 2 px (`brand-600`), check no canto superior direito (decorativo,
+`aria-hidden`) e sombra de destaque; não selecionado = fundo branco e borda
+neutra. Semântica: botão com `aria-pressed`; o anel de foco independe da
+seleção. O componente é reutilizável pelas próximas etapas (Interesses) sem
+refatoração; os cards de perfil da etapa Viajantes (V1-T3.3) ainda usam o
+estilo anterior e podem migrar depois, sem mudar comportamento.

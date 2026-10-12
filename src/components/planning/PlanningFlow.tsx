@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { destinations } from '../../data/destinations'
+import { describeTransport } from '../../utils/transport'
 import { describeTravelers } from '../../utils/travelers'
 import { formatShortDate } from '../../utils/tripDates'
 import { Button } from '../ui/Button'
@@ -116,6 +117,9 @@ export function PlanningFlow({
         )}
         {reached >= PLANNING_STEPS.findIndex((item) => item.id === 'viajantes') && (
           <p className="mt-1 text-sm">Viajantes: {describeTravelers(draft.travelers)}</p>
+        )}
+        {reached >= PLANNING_STEPS.findIndex((item) => item.id === 'transporte') && (
+          <p className="mt-1 text-sm">Transporte: {describeTransport(draft.transport)}</p>
         )}
       </section>
 

@@ -306,6 +306,7 @@ describe('Etapa 2 — Datas e duração', () => {
     await user.click(radio(/Já tenho as datas/))
     setDates('2026-10-20', '2026-10-22')
     await user.click(legacyButton())
+    await user.click(screen.getByRole('button', { name: 'Continuar para Transporte' }))
     await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
 
     expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('3')

@@ -43,9 +43,9 @@ describe('Etapa 3 — Viajantes', () => {
     expect(less('adultos')).toBeDisabled()
     expect(less('crianças')).toBeDisabled()
     expect(summary()).toHaveTextContent('Viajantes: 1 adulto')
-    // Não há etapa 4: nada de "Continuar para Transporte".
-    expect(screen.queryByRole('button', { name: /^Continuar para/ })).toBeNull()
-    expect(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' })).toBeEnabled()
+    // A etapa 4 existe: o avanço é "Continuar para Transporte"; o fallback só aparece na última etapa disponível.
+    expect(screen.getByRole('button', { name: 'Continuar para Transporte' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Continuar com o formulário tradicional' })).toBeNull()
     expect(screen.getByText(/ainda não\s+personalizam atrações nem custos/)).toBeInTheDocument()
   })
 
@@ -221,6 +221,7 @@ describe('Etapa 3 — Viajantes', () => {
     const user = userEvent.setup()
     await toTravelers(user, 'Rio de Janeiro')
     await user.click(more('adultos'))
+    await user.click(screen.getByRole('button', { name: 'Continuar para Transporte' }))
     await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
     expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
     expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('7')

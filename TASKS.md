@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **V1-T3.3** — planejamento progressivo, etapa 3 (viajantes). Anteriores: V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **V1-T3.4** — planejamento progressivo, etapa 4 (transporte). Anteriores: V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | 🚧 **parcial por desenho**: etapa 3 implementada e validada localmente em 2026-10-12 (ver "Relatório do V1-T3.3"); etapas 4 a 7 pendentes; **sem commit** (aguarda autorização) |
-| Próximo checkpoint  | Revisão/commit do V1-T3.3 e definição da etapa 4 (transporte), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | 🚧 **parcial por desenho**: etapa 4 implementada e validada localmente em 2026-10-12 (ver "Relatório do V1-T3.4"); etapas 5 a 7 pendentes; **sem commit** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do V1-T3.4 e definição da etapa 5 (interesses), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -1735,3 +1735,42 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   perfis, acessibilidade, teclado, preservação, navegação, formulário
   tradicional); sem rolagem horizontal e alvos ≥ 44 px em 375, 768, 1366 e 1920 px.
 - **Riscos**: apenas Chromium; os dados ainda não afetam o roteiro.
+
+## Relatório do V1-T3.4 — planejamento progressivo: transporte (2026-10-12)
+
+- **Status**: implementado e validado localmente; **sem commit, push ou deploy**.
+  Etapas 5 a 7 pendentes. Próxima etapa: Interesses.
+- **Funcionalidade**: etapa 4 "Como você pretende viajar?" com duas seções:
+  chegada ao destino (Carro próprio, Avião, Ônibus, Trem, Ainda não decidi;
+  escolha única) e deslocamentos locais (6 meios combináveis + "Ainda não
+  decidi" exclusivo); cidade de origem opcional com validação de formato e
+  tamanho (2 a 80 caracteres); resumo "Transporte: …"; escolhas preservadas ao
+  voltar/avançar e ao alterar destino, datas ou viajantes; fallback para o
+  formulário tradicional com destino e duração. Decisão em D35.
+- **Dados coletados** (só em memória): modo de chegada, cidade de origem (texto
+  livre, não verificado), lista de deslocamentos locais.
+- **Depende da integração futura (V1-T3.7)**: cálculo de rotas, distâncias,
+  tempos e tarifas; uso das preferências pelo motor de roteiros. Nada disso
+  existe: a tela informa que as preferências não geram cálculos nem alteram as
+  atrações sugeridas. Sem API externa, mapa ou persistência.
+- **Arquivos**: novos `src/utils/transport.ts`, `src/components/planning/TransportStep.tsx`,
+  `src/tests/transport.test.ts`, `src/tests/transportStep.test.tsx`; alterados
+  `planningSteps.ts`, `stepRegistry.ts`, `PlanningFlow.tsx`, `planningFlow.test.tsx`,
+  `datesStep.test.tsx`, `travelersStep.test.tsx`, `DECISIONS.md` (D35), `ROADMAP.md`,
+  `PROJECT.md`, `TASKS.md`. Motor, persistência e importação/exportação intocados.
+- **Chromium**: 21 de 21 verificações (seleção única e múltipla, exclusividade,
+  validação da origem, teclado, preservação, navegação, fallback, reduced-motion);
+  sem rolagem horizontal e cards ≥ 44 px em 375, 768, 1366 e 1920 px.
+- **Riscos**: apenas Chromium; preferências sem efeito no roteiro.
+
+### Consolidação do V1-T3.4 (2026-10-12)
+
+- **Refinamento visual**: novo `SelectableCard` no Design System (selecionado:
+  fundo `brand-100`, borda azul de 2 px, check no canto superior direito, sombra
+  de destaque; não selecionado: branco e borda neutra), igual para escolha única
+  e múltipla; lógica de transporte e opcionalidade preservadas. Ver D35.
+- **Testes**: `selectableCard.test.tsx` (novo) e um caso novo em
+  `transportStep.test.tsx`. Total: 587 testes em 31 arquivos.
+- **Chromium**: 21/21 (transporte) + 13/13 (estilo calculado, check, múltiplos,
+  foco por teclado no card selecionado, remoção, preservação, sem overflow) em
+  375 e 1366 px.

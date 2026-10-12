@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 
+import { DEFAULT_TRANSPORT, type TransportDraft } from '../../utils/transport'
 import { DEFAULT_TRAVELERS, type TravelersDraft } from '../../utils/travelers'
 import { isValidDuration, validateTripDates } from '../../utils/tripDates'
 
@@ -45,6 +46,8 @@ export interface PlanningDraft {
   durationDays: number | null
   /** Perfil do grupo (etapa 3); começa com 1 adulto. */
   travelers: TravelersDraft
+  /** Preferências de transporte (etapa 4); só declaradas, sem cálculo. */
+  transport: TransportDraft
 }
 
 export const EMPTY_DRAFT: PlanningDraft = {
@@ -54,6 +57,7 @@ export const EMPTY_DRAFT: PlanningDraft = {
   endDate: '',
   durationDays: null,
   travelers: DEFAULT_TRAVELERS,
+  transport: DEFAULT_TRANSPORT,
 }
 
 /**

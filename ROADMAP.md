@@ -139,7 +139,13 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
-- [~] **V1-T3.3 — etapa 3, viajantes (parcial)** (D34): quantidades de adultos
+- [~] **V1-T3.4 — etapa 4, transporte (parcial)** (D35): chegada ao destino
+      (escolha única), cidade de origem opcional (texto livre, validado, não
+      verificado) e deslocamentos locais (múltipla escolha, "Ainda não decidi"
+      exclusivo). **Só preferências**: sem rotas, distâncias, tarifas ou mapa; o
+      motor não as usa (integração em V1-T3.7). Próxima etapa: Interesses.
+      Validada localmente; sem commit.
+- [x] V1-T3.3 — etapa 3, viajantes (D34, commit `a36d506`): quantidades de adultos
       (padrão 1), crianças e bebês, faixas etárias opcionais, perfil e
       acessibilidade opcionais, tudo preservado entre etapas. **Não personaliza
       o roteiro**: o motor ainda ignora o grupo (integração em V1-T3.7). Próxima
