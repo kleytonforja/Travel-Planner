@@ -131,7 +131,15 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       mais escuro que o modelo por exigência de contraste.
 - [ ] Fotografias das atrações (começando pelas dez do Rio de Janeiro) e de
       uma Ponte Hercílio Luz identificada — fase posterior.
-- [ ] V1-T3 e seguintes: planejamento progressivo, demais telas — aguardam
+- [~] **V1-T3.1 — planejamento progressivo (parcial)** (D32): estrutura de sete
+      etapas, indicador de progresso e etapa 1 (destino com pesquisa, filtros,
+      cards fotográficos e seleção preservada na sessão); formulário
+      tradicional mantido **até a conclusão do wizard**, quando será
+      substituído. Filtros da etapa Destino separados em Localização e
+      Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
+      Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
+      commit local feito, sem push.
+- [ ] V1-T3.2 e seguintes: demais etapas do planejamento e demais telas — aguardam
       autorização.
 
 ## Evolução futura (pós-MVP, fora do escopo atual — NÃO implementar agora)

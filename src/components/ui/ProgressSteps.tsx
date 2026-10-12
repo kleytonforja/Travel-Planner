@@ -35,7 +35,7 @@ export function ProgressSteps({
   const onDark = tone === 'onDark'
 
   return (
-    <ol aria-label={label} className="flex items-center gap-2">
+    <ol aria-label={label} className="flex flex-wrap items-center gap-x-2 gap-y-3">
       {steps.map((step, index) => {
         const state: StepState =
           index < current ? 'done' : index === current ? 'current' : 'todo'
@@ -67,7 +67,7 @@ export function ProgressSteps({
               {state === 'done' ? <Check className="h-4 w-4" /> : index + 1}
             </span>
             <span
-              className={`text-sm ${text} ${state === 'current' ? '' : 'sr-only sm:not-sr-only'}`}
+              className={`text-sm ${text} ${state === 'current' ? '' : 'sr-only lg:not-sr-only'}`}
             >
               {step.label}
               <span className="sr-only"> ({STATE_TEXT[state]})</span>
@@ -75,7 +75,7 @@ export function ProgressSteps({
             {index < steps.length - 1 && (
               <span
                 aria-hidden="true"
-                className={`hidden h-px w-6 sm:block ${onDark ? 'bg-white/30' : 'bg-line-strong'}`}
+                className={`hidden h-px w-4 sm:block lg:w-6 ${onDark ? 'bg-white/30' : 'bg-line-strong'}`}
               />
             )}
           </li>

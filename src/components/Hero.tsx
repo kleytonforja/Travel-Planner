@@ -27,8 +27,13 @@ const HIGHLIGHTS = [
   },
 ] as const
 
+interface HeroProps {
+  /** Abre o planejamento progressivo; sem ele, o botão leva ao formulário tradicional. */
+  onStartPlanning?: () => void
+}
+
 /** Seção principal da home: fundo imersivo azul-escuro, mensagem e chamadas para ação. */
-export function Hero() {
+export function Hero({ onStartPlanning }: HeroProps) {
   return (
     <section
       id="inicio"
@@ -62,6 +67,12 @@ export function Hero() {
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <a
             href="#planejar"
+            onClick={(event) => {
+              if (onStartPlanning) {
+                event.preventDefault()
+                onStartPlanning()
+              }
+            }}
             className={buttonClasses({ variant: 'primary', size: 'lg', width: 'responsive' }) + ' focus-ring-on-dark'}
           >
             Planejar minha viagem

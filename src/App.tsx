@@ -1,21 +1,41 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
+import type { PlanningDraft } from './components/planning/planningSteps'
 import { HomePage } from './pages/HomePage'
 import { ItineraryPage } from './pages/ItineraryPage'
+import { PlanningPage } from './pages/PlanningPage'
 import type { Itinerary, SavedItinerary } from './types'
 
 /**
  * Componente raiz da aplicação.
  *
- * A navegação entre a página inicial e a página do roteiro é feita por
- * estado interno, sem roteador (ver DECISIONS.md, D8).
+ * A navegação entre a página inicial, o planejamento progressivo e a página
+ * do roteiro é feita por estado interno, sem roteador (ver DECISIONS.md, D8).
+ * O rascunho do planejamento (hoje, o destino escolhido) vive aqui para
+ * ser preservado ao alternar entre a home e o planejamento na mesma sessão.
  */
 type View =
   | { name: 'home' }
+  | { name: 'planning' }
   | { name: 'itinerary'; itinerary: Itinerary; saved: SavedItinerary | null }
 
 function App() {
   const [view, setView] = useState<View>({ name: 'home' })
+  const [draft, setDraft] = useState<PlanningDraft>({ destinationId: '' })
+  // Âncora a rolar depois da próxima troca de tela (sem estado extra).
+  const pendingAnchor = useRef<string | null>(null)
+
+  useEffect(() => {
+    const anchor = pendingAnchor.current
+    if (anchor) {
+      pendingAnchor.current = null
+      document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [view])
+
+  function updateDraft(patch: Partial<PlanningDraft>) {
+    setDraft((current) => ({ ...current, ...patch }))
+  }
 
   function handleItineraryGenerated(itinerary: Itinerary) {
     setView({ name: 'itinerary', itinerary, saved: null })
@@ -30,6 +50,11 @@ function App() {
     window.scrollTo(0, 0)
   }
 
+  function handleUseLegacyForm() {
+    pendingAnchor.current = 'planejar'
+    setView({ name: 'home' })
+  }
+
   if (view.name === 'itinerary') {
     return (
       <ItineraryPage
@@ -40,10 +65,24 @@ function App() {
     )
   }
 
+  if (view.name === 'planning') {
+    return (
+      <PlanningPage
+        draft={draft}
+        onDraftChange={updateDraft}
+        onBackHome={handleNewPlanning}
+        onUseLegacyForm={handleUseLegacyForm}
+      />
+    )
+  }
+
   return (
     <HomePage
       onItineraryGenerated={handleItineraryGenerated}
       onOpenSaved={handleOpenSaved}
+      initialDestinationId={draft.destinationId}
+      onDestinationChange={(id) => updateDraft({ destinationId: id })}
+      onStartPlanning={() => setView({ name: 'planning' })}
     />
   )
 }

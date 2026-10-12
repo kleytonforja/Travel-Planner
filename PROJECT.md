@@ -120,7 +120,7 @@ multiagente") e `TASKS.md` ("Fila atual").
 | **Planejada** | Mapa interativo com atrações |
 | **Planejada** | Rotas reais entre atrações |
 | **Parcial** | Fotografias e ícones coloridos: ícones de categoria e fotografias do hero e dos três destinos já aplicados na home (Unsplash, créditos em `docs/IMAGE_CREDITS.md`); fotografias das atrações individuais ainda planejadas, começando pelas dez do Rio de Janeiro |
-| **Planejada** | Planejamento progressivo em etapas (7 etapas na referência: Destino, Datas, Viajantes, Transporte, Interesses, Orçamento e Roteiro; `ProgressSteps` existe, sem o fluxo) |
+| **Parcial** | Planejamento progressivo em etapas: estrutura de sete etapas, indicador de progresso e a etapa de destino (V1-T3.1) existem; as etapas 2 a 7 seguem planejadas, e o formulário tradicional continua disponível até a conclusão do wizard, quando será substituído. Referência: planejamento progressivo em etapas (7 etapas na referência: Destino, Datas, Viajantes, Transporte, Interesses, Orçamento e Roteiro; `ProgressSteps` existe, sem o fluxo) |
 
 As funcionalidades planejadas **não estão implementadas** e só entram com
 autorização, registro no `ROADMAP.md` e decisão no `DECISIONS.md`. Atenção:

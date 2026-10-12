@@ -766,3 +766,59 @@ página de origem (identificação por etiqueta e aparência); o acesso ao Pexel
 recusado (HTTP 403); o Unsplash bloqueia o acesso automatizado às páginas, então a
 verificação foi feita pela ferramenta de consulta web, e as imagens vieram do CDN
 público, sem chave de API; fidelidade comparada visualmente com a referência.
+
+## D32 — Planejamento progressivo: estrutura de sete etapas e etapa de destino (V1-T3.1)
+
+**Decisão**: o formulário tradicional será substituído gradualmente por um
+planejamento em etapas. Esta entrega cria a **estrutura** e implementa
+**somente a etapa 1 (destino)**; as etapas 2 a 7 (Datas, Viajantes, Transporte,
+Interesses, Orçamento e Revisão) aparecem no indicador de progresso, mas não
+existem ainda e não têm controles.
+
+1. **Estrutura extensível** (`src/components/planning/`): `planningSteps.ts`
+   declara as sete etapas, o rascunho (`PlanningDraft`, hoje só o destino) e o
+   contrato `StepProps`; `stepRegistry.ts` registra as etapas implementadas;
+   `PlanningFlow` exibe o indicador, a etapa atual e, enquanto a próxima etapa
+   não existir, o aviso "Próximas etapas" com o caminho para o formulário
+   tradicional. Entregar uma nova etapa é criar o componente e registrá-lo; o
+   indicador e a navegação não são reescritos (há teste com uma etapa fictícia
+   registrada).
+2. **Etapa de destino** (`DestinationStep`): pergunta "Para onde vamos viajar?",
+   `SearchField`, filtros (Todos, países e categorias derivados do catálogo,
+   com `aria-pressed`), mensagem de resultados em região `status` e os mesmos
+   `DestinationCard` da home (fotografia, resumo e categorias coloridas). A
+   seleção é por mouse, toque ou teclado (botões dos cards) e destaca o card
+   escolhido. A pesquisa e os filtros são funções puras
+   (`src/utils/destinationSearch.ts`) sobre o catálogo existente, sem duplicar
+   registros; ignoram acentos e caixa e exigem todos os termos.
+3. **Navegação e sessão**: nova tela `PlanningPage` (cabeçalho escuro, botão
+   "Voltar para o início"). O rascunho vive no `App`, então a escolha de destino
+   é preservada ao alternar entre a home e o planejamento na mesma sessão, e a
+   seleção feita na home aparece no planejamento. O botão principal do hero
+   ("Planejar minha viagem") abre o planejamento; o formulário tradicional segue
+   na home (menu "Planejar"), já preenchido com o destino, e o botão "Continuar
+   com o formulário tradicional" leva até ele (desabilitado, com explicação,
+   enquanto não há destino).
+4. **Sem controles enganosos**: não há botão "Próxima/Continuar" para etapas
+   inexistentes nem itens clicáveis no indicador.
+5. **Ajuste do indicador**: `ProgressSteps` passou a quebrar linha e a mostrar os
+   rótulos das etapas não atuais apenas a partir de `lg`, para caber sete etapas
+   em 375 e 768 px.
+
+**Justificativa**: preparar a experiência progressiva inspirada na referência
+sem entregar etapas incompletas, mantendo o formulário atual funcional e o
+motor de roteiros, a persistência e a importação/exportação intactos.
+
+**Limitações**: etapas 2 a 7 pendentes; o planejamento ainda não gera roteiro;
+o rascunho não é persistido entre sessões (apenas na sessão do navegador);
+apenas Chromium verificado.
+
+**Revisão (consolidação do V1-T3.1, 2026-10-12)**: os filtros da etapa Destino
+foram separados em dois grupos rotulados — **Localização** (Todos e países, com
+ícone de local) e **Categorias dos destinos** (ícones coloridos das categorias)
+— e uma nota discreta informa que esses controles apenas filtram os destinos
+listados e que os interesses de viagem serão escolhidos em etapa própria. O filtro
+continua sendo de escolha única e **não** é a seleção múltipla de interesses, que
+pertence à etapa 5 (Interesses). **O formulário tradicional será substituído
+somente depois da conclusão do planejamento progressivo (etapas 2 a 7)**; até lá
+ele permanece disponível na home.

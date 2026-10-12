@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **V1-T2 / V1-T2.1 / V1-T2.2** — nova Home, fotografias reais e refinamento final (consolidadas em commit local). Anterior: V1-T1 (Design System, commit `2a3580c`) |
+| Tarefa ativa        | **V1-T3.1** — estrutura do planejamento progressivo (7 etapas) e etapa de destino. Anteriores: V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
-| Arquivos previstos  | `src/components/{Header,Hero,DestinationCard,DestinationsSection}.tsx`, `src/components/ui/{scenes.tsx,CategoryBadge.tsx,variants.ts}`, `src/pages/HomePage.tsx`, `src/tests/{homeRedesign,designSystem}.test.tsx`, `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D30), `TASKS.md` |
-| Status              | ✅ Home e fotografias do hero e dos três destinos implementadas e validadas localmente em 2026-10-12 (ver "Relatório do V1-T2.1" no fim do arquivo); refinamentos V1-T2.2 aplicados; fotografias das atrações pendentes (fase posterior); commit local feito, sem push |
-| Próximo checkpoint  | Decisão sobre as fotografias (fornecer arquivos com licença ou autorizar uma fonte), revisão/commit do V1-T2 e definição do V1-T3 (planejamento progressivo), mediante autorização. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
+| Status              | 🚧 **parcial por desenho**: estrutura e etapa de destino implementadas e validadas localmente em 2026-10-12 (ver "Relatório do V1-T3.1"); etapas 2 a 7 pendentes; commit local feito, sem push |
+| Próximo checkpoint  | Revisão/commit do V1-T3.1 e definição da etapa 2 (datas), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -1615,3 +1615,68 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   dependências ou biblioteca de skills.
 - **Riscos**: apenas Chromium; hero ainda mais escuro que a referência (limite
   imposto pelo contraste); fotos das atrações e da Hercílio Luz pendentes.
+
+## Relatório do V1-T3.1 — estrutura do planejamento progressivo e seleção visual de destino (2026-10-12)
+
+- **Escopo**: estrutura de sete etapas, indicador de progresso e **somente** a
+  etapa de destino. Etapas 2 a 7 **não** foram implementadas. Sem alterações no
+  motor de roteiros, na persistência, na importação/exportação nem em
+  dependências. Skill `frontend-design` ativada seletivamente. Base: commit
+  `d6d70d0`.
+- **Implementado**: `src/components/planning/{planningSteps.ts,stepRegistry.ts,
+  PlanningFlow.tsx,DestinationStep.tsx}`; `src/pages/PlanningPage.tsx`;
+  `src/utils/destinationSearch.ts`; `App.tsx` com o rascunho e a nova tela;
+  `HomePage` com `initialDestinationId`, `onDestinationChange` e
+  `onStartPlanning` (props opcionais); `Hero` com `onStartPlanning`;
+  `ProgressSteps` com quebra de linha e rótulos a partir de `lg`. Decisão D32.
+- **Funcionalidades**: pergunta "Para onde vamos viajar?"; pesquisa por nome,
+  país, descrição e categoria; filtros Todos, países e categorias; cards
+  fotográficos com categorias coloridas; seleção por mouse, toque e teclado com
+  destaque; preservação da seleção entre home e planejamento na sessão;
+  formulário tradicional mantido e pré-preenchido, acessível pelo botão
+  "Continuar com o formulário tradicional" e pelo menu "Planejar".
+- **Chromium (build de produção)**: 21 verificações aprovadas: abertura pelo
+  hero, indicador com as sete etapas na ordem, cards com fotografia carregada,
+  pesquisa e filtro (1 e 2 cards), mensagem de vazio e limpeza, seleção por
+  teclado (Enter) e por clique, destaque do card, preservação da seleção ao voltar
+  e retornar, formulário tradicional aberto com o destino e ainda gerando o
+  roteiro, ausência de erros de página e de console; sem rolagem horizontal em
+  375, 768, 1366 e 1920 px (cards em 3, 2, 1 e 1 linhas). Seleção por **toque** não
+  foi testada em dispositivo real (o clique equivalente passou).
+- **Observação de captura**: o botão selecionado aparecia esmaecido numa
+  captura feita no meio da transição de cor; medido após a transição, usa fundo
+  claro, texto azul e opacidade 1.
+- **Testes**: `planningFlow.test.tsx` (14 casos) e `destinationSearch.test.ts`
+  (13). Uma mutação deliberada (remover o destino inicial da home) fez dois testes
+  falharem e foi revertida. Total: 474 testes em 24 arquivos.
+- **Validações executadas (resultados reais)**: `typecheck` sem erros; `lint`
+  código 0; `test:run` com 474 testes passando em duas execuções; `build` com
+  sucesso; `git diff --check` sem problemas.
+- **Pendente**: etapas 2 a 7 (Datas, Viajantes, Transporte, Interesses,
+  Orçamento, Revisão) e a geração do roteiro pelo fluxo progressivo; persistência
+  do rascunho entre sessões; remoção do formulário tradicional.
+- **Riscos**: o fluxo ainda termina no formulário tradicional; apenas Chromium; o
+  filtro por categoria usa as categorias das atividades (todos os destinos têm
+  várias, então filtra pouco).
+- **Arquivos**: criados `src/components/planning/*` (4), `src/pages/PlanningPage.tsx`,
+  `src/utils/destinationSearch.ts`, `src/tests/planningFlow.test.tsx`,
+  `src/tests/destinationSearch.test.ts`; alterados `App.tsx`, `HomePage.tsx`,
+  `Hero.tsx`, `ui/ProgressSteps.tsx`, `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` e
+  `TASKS.md`. Nenhum commit, push ou deploy.
+
+### Consolidação do V1-T3.1 (2026-10-12)
+
+- **Refinamento**: filtros da etapa Destino separados em **Localização** (Todos,
+  Brasil, Portugal, com ícone de local) e **Categorias dos destinos** (ícones
+  coloridos), cada grupo com legenda visível e nome acessível, mais a nota "Estes
+  controles apenas filtram os destinos listados abaixo. Os seus interesses de
+  viagem serão escolhidos em uma etapa própria." Filtro continua de escolha única;
+  a seleção múltipla de interesses fica para a etapa 5.
+- **Formulário tradicional**: preservado na home; **será substituído somente após
+  a conclusão do wizard** (etapas 2 a 7). Registrado em D32, ROADMAP e PROJECT.
+- **Testes**: +2 casos em `planningFlow.test.tsx` (grupos e nota; escolha única).
+  Total: 476 testes em 24 arquivos.
+- **Chromium**: 21 verificações aprovadas novamente, sem rolagem horizontal em
+  375, 768, 1366 e 1920 px; capturas conferidas em 375 e 1366 px.
+- **Validações executadas (resultados reais)**: ver o resumo da entrega;
+  `typecheck`, `lint`, `build` e `git diff --check` sem problemas.

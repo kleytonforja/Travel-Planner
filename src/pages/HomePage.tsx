@@ -31,6 +31,12 @@ interface HomePageProps {
   onItineraryGenerated: (itinerary: Itinerary) => void
   /** Chamado quando o usuário reabre um roteiro salvo. */
   onOpenSaved: (saved: SavedItinerary) => void
+  /** Destino já escolhido na sessão (por exemplo, no planejamento progressivo). */
+  initialDestinationId?: string
+  /** Informa a escolha de destino, para que ela seja preservada ao sair da home. */
+  onDestinationChange?: (id: string) => void
+  /** Abre o planejamento progressivo (botão principal do hero). */
+  onStartPlanning?: () => void
 }
 
 /** Pré-visualização de recuperação pronta para confirmação. */
@@ -52,8 +58,19 @@ type RecoveryPreviewReady = Extract<RecoveryPreview, { status: 'corrupted' }>
  * roteiros ativos) ou descartada definitivamente, sempre com
  * confirmação vinculada ao próprio conteúdo.
  */
-export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
-  const [destinationId, setDestinationId] = useState('')
+export function HomePage({
+  onItineraryGenerated,
+  onOpenSaved,
+  initialDestinationId = '',
+  onDestinationChange,
+  onStartPlanning,
+}: HomePageProps) {
+  const [destinationId, setDestinationId] = useState(initialDestinationId)
+
+  function changeDestination(id: string) {
+    setDestinationId(id)
+    onDestinationChange?.(id)
+  }
   const [storage, setStorage] = useState<StorageLoadResult>(() =>
     loadSavedItineraries(),
   )
@@ -138,7 +155,7 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
   }
 
   function handleSelectDestination(id: string) {
-    setDestinationId(id)
+    changeDestination(id)
     document.getElementById('planejar')?.scrollIntoView({ behavior: 'smooth' })
   }
 
@@ -658,7 +675,7 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
           </div>
         )}
 
-        <Hero />
+        <Hero onStartPlanning={onStartPlanning} />
         <DestinationsSection
           selectedDestinationId={destinationId}
           onSelectDestination={handleSelectDestination}
@@ -666,7 +683,7 @@ export function HomePage({ onItineraryGenerated, onOpenSaved }: HomePageProps) {
 
         <PlanningForm
           destinationId={destinationId}
-          onDestinationChange={setDestinationId}
+          onDestinationChange={changeDestination}
           onItineraryGenerated={onItineraryGenerated}
         />
         <SavedItineraries
