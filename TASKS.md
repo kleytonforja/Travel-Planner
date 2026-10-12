@@ -9,11 +9,15 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | Nenhuma. Reconciliação documental concluída (2026-10-12), aguardando revisão do usuário |
-| Agente responsável  | — (última execução: Claude Code)                                       |
-| Arquivos previstos  | — (alterados na última execução: `AGENTS.md`, `CLAUDE.md`, `TASKS.md`, `ROADMAP.md`, `DECISIONS.md`, `PROJECT.md`) |
-| Status              | ⬜ livre para nova tarefa mediante autorização; alterações documentais ainda sem commit |
-| Próximo checkpoint  | A definir pelo usuário. Pendentes: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Tarefa ativa        | **C5-T2** — serviço de importação de roteiros JSON (somente serviço e testes; sem interface) |
+| Agente responsável  | Claude Code (Sonnet 5.5)                                               |
+| Arquivos previstos  | `src/services/itineraryImport.ts` (novo), `src/tests/itineraryImport.test.ts` (novo), `TASKS.md` |
+| Status              | ✅ implementada e validada localmente em 2026-10-12 (ver "Relatório do C5-T2" no fim do arquivo); sem commit, aguardando revisão |
+| Próximo checkpoint  | C5-T3 (interface de importação), mediante autorização. Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+
+> Registro anterior da fila (preservado): "Nenhuma. Reconciliação documental
+> concluída (2026-10-12), aguardando revisão do usuário"; último agente: Claude
+> Code; status "livre para nova tarefa mediante autorização".
 
 #### Skills ativas (biblioteca global, registrado em 2026-10-12)
 
@@ -1200,3 +1204,56 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   demonstração experimental, mas o aceite integral de produção permanece
   pendente. Firefox/WebKit e configurações remotas não foram verificados
   nesta preparação.
+
+## Relatório do C5-T2 — serviço de importação de roteiros JSON (2026-10-12)
+
+- **Escopo**: somente o serviço de leitura, reconstrução e validação do JSON
+  exportado, mais seus testes. **Sem interface**: nada grava, abre ou lê
+  arquivos ainda (isso é o C5-T3). Importação não fazia parte do MVP; a
+  mudança de escopo (PROJECT, ROADMAP, DECISIONS/D28, rodapé) fica para a
+  entrega da interface, conforme a restrição desta tarefa.
+- **Arquivos criados**: `src/services/itineraryImport.ts` e
+  `src/tests/itineraryImport.test.ts`. **Alterado**: `TASKS.md` (Fila atual e
+  este relatório). `itineraryStorage.ts`, `itineraryExport.ts`, páginas,
+  componentes, PROJECT, ROADMAP e DECISIONS não foram tocados.
+- **Contrato**: `parseItineraryImport(text: string): ItineraryImportResult`,
+  `{ ok: true, itinerary }` (sem `id` nem `savedAt`) ou
+  `{ ok: false, code, message, details }`. Códigos: `invalid-json`,
+  `too-large`, `not-an-export`, `recovery-envelope`, `unsupported-version`,
+  `invalid-structure`, `unknown-destination`, `unknown-activity`,
+  `catalog-mismatch`, `invalid-schedule`, `invalid-warnings`,
+  `validation-failed`. Constantes: `IMPORT_MAX_FILE_BYTES` (256 KB),
+  `IMPORT_MAX_WARNINGS` (50), `IMPORT_MAX_WARNING_LENGTH` (500).
+- **Comportamento**: entrada tratada como não confiável; lê só propriedades
+  próprias e conhecidas, monta objetos novos (campos extras e `__proto__`
+  são ignorados); reconstrói atividades pelo catálogo atual (cópias
+  independentes) e rejeita divergência de custo, duração, categorias, país ou
+  moeda; interpreta `"HH:MM – HH:MM"`; valida o resultado com o mesmo
+  `validateSavedItinerary` usado na leitura e na gravação (regras de AUD-03 e
+  AUD-04 incluídas). Não acessa o armazenamento, não gera identificador e não
+  executa conteúdo do arquivo.
+- **Testes**: 119 em `src/tests/itineraryImport.test.ts` (TDD: a suíte foi
+  escrita antes do serviço e falhou por ausência do módulo). Cobrem ida e
+  volta com a exportação real (inclusive varredura de destinos, estilos,
+  interesses, dias e orçamentos), JSON inválido, versão incompatível,
+  envelope de recuperação, campos ausentes e de tipo inválido, atividades
+  desconhecidas, divergência com o catálogo, valores financeiros alterados
+  (inclusive custo acima do orçamento por 5e-7), horários inválidos e
+  sobrepostos, dias inconsistentes, avisos excessivos ou inválidos, BOM,
+  campos adicionais maliciosos, ausência de efeitos no armazenamento e
+  entradas extremas. Uma mutação deliberada (leitura de propriedades
+  herdadas) fez exatamente o teste de protótipos falhar e foi revertida.
+- **Validações executadas (resultados reais)**: `npm run typecheck` sem
+  erros; `npm run test:run` com 352 testes em 19 arquivos, todos passando
+  (233 anteriores + 119 novos); `npm run lint` com saída vazia e código 0;
+  `npm run build` com sucesso.
+- **Skills consultadas**: `tdd-testing` e `security-review` (seleção da fase
+  mantida; `codebase-architecture` e `react-next-best-practices` não foram
+  necessárias nesta etapa).
+- **Limitações e riscos**: arquivos exportados com uma base de dados
+  diferente são rejeitados (por decisão); o serviço depende do formato de
+  exportação v1 e do catálogo atual; a definição de `savedAt`, a gravação, a
+  confirmação de duplicatas e o tratamento de erro de armazenamento ficam na
+  interface do C5-T3, reutilizando `saveItinerary`; a nova superfície deve
+  entrar na próxima reauditoria independente. Nada foi declarado corrigido ou
+  aprovado em auditoria.
