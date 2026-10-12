@@ -167,13 +167,12 @@ describe('Etapa 7 — Revisão e geração', () => {
     expect(card('Estilo e orçamento')).toHaveTextContent(/1\.500,00/)
   })
 
-  it('o formulário tradicional segue disponível, com os dados do fluxo', async () => {
+  it('não há mais acesso ao formulário tradicional', async () => {
     const user = userEvent.setup()
     await toReview(user)
-    await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
-    expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
-    expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('5')
-    expect((document.getElementById('orcamento') as HTMLInputElement).value).toBe('1500.00')
+    expect(screen.queryByText(/formulário tradicional/i)).toBeNull()
+    expect(screen.queryByRole('button', { name: /formulário tradicional/i })).toBeNull()
+    expect(document.getElementById('destino')).toBeNull()
   })
 
   it('nada é gravado no armazenamento antes de salvar o roteiro', async () => {

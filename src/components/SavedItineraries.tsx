@@ -64,7 +64,7 @@ export function SavedItineraries({
         {saved.length === 0 ? (
           showEmptyMessage ? (
             <p className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white px-5 py-6 text-sm text-slate-500">
-              Nenhum roteiro salvo ainda. Gere um roteiro no formulário acima e
+              Nenhum roteiro salvo ainda. Planeje uma viagem e
               use o botão "Salvar roteiro" na página de resultado.
             </p>
           ) : null

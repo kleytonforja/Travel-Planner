@@ -6,7 +6,6 @@ import {
   computeBudget,
   DEFAULT_BUDGET,
   describeBudget,
-  engineBudgetInput,
   isBudgetComplete,
   MAX_AMOUNT_CENTS,
   parseAmount,
@@ -99,15 +98,7 @@ describe('computeBudget', () => {
   })
 })
 
-describe('integração com o motor', () => {
-  it('entrega ao formulário o valor por pessoa em texto aceito pelo campo numérico', () => {
-    expect(engineBudgetInput(value('3000'), 3)).toBe('1000.00')
-    expect(engineBudgetInput(value('1000'), 3)).toBe('333.33')
-    expect(engineBudgetInput(value('250,5', 'perPerson'), 2)).toBe('250.50')
-    expect(engineBudgetInput(value('0,05'), 20)).toBe('') // 0 centavo por pessoa: inutilizável
-    expect(engineBudgetInput(DEFAULT_BUDGET, 2)).toBe('')
-  })
-
+describe('centavos para texto', () => {
   it('centsToInputValue preserva os zeros dos centavos', () => {
     expect(centsToInputValue(5)).toBe('0.05')
     expect(centsToInputValue(100)).toBe('1.00')

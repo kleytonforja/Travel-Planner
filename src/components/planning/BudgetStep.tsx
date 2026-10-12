@@ -30,8 +30,8 @@ const BASIS_OPTIONS: ReadonlyArray<{ id: BudgetBasis; label: string; description
  * Etapa 6 do planejamento progressivo: "Quanto você pretende investir na
  * viagem?". Estilo financeiro (mesmos valores do motor), orçamento opcional em
  * valor total ou por pessoa, na moeda do destino, sem conversão cambial. O
- * motor ainda não é alterado: o formulário tradicional recebe estilo e valor por
- * pessoa já preenchidos; hospedagem, alimentação e transporte não são calculados.
+ * motor não é alterado: a revisão converte o orçamento em valor por pessoa para
+ * gerar o roteiro; hospedagem, alimentação e transporte não são calculados.
  */
 export function BudgetStep({ draft, onDraftChange }: StepProps) {
   const budget = draft.budget
@@ -171,9 +171,9 @@ export function BudgetStep({ draft, onDraftChange }: StepProps) {
       <p className="mt-4 text-sm text-night-ink-muted">
         Valores de atrações são estimativas ilustrativas. O orçamento serve de teto para
         escolher atrações e não representa dinheiro disponível para outras despesas;
-        hospedagem, alimentação e transporte não são calculados. Por enquanto, estas escolhas
-        são guardadas apenas nesta sessão e o planejamento progressivo ainda não gera o
-        roteiro: o formulário tradicional abre já com o estilo e o valor por pessoa.
+        hospedagem, alimentação e transporte não são calculados. O estilo e o valor por pessoa
+        são usados na geração do roteiro, na revisão. Estas escolhas ficam guardadas apenas
+        nesta sessão.
       </p>
     </section>
   )

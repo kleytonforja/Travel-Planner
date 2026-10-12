@@ -73,7 +73,6 @@ describe('Planejamento progressivo — estrutura', () => {
       <PlanningFlow
         draft={EMPTY_DRAFT}
         onDraftChange={onDraftChange}
-        onUseLegacyForm={vi.fn()}
         registry={onlyDestination}
       />,
     )
@@ -86,7 +85,6 @@ describe('Planejamento progressivo — estrutura', () => {
       <PlanningFlow
         draft={EMPTY_DRAFT}
         onDraftChange={onDraftChange}
-        onUseLegacyForm={vi.fn()}
         registry={withDates}
       />,
     )
@@ -295,11 +293,11 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     expect(screen.getAllByRole('button', { name: /^Continuar para/ }).map((b) => b.textContent)).toEqual(['Continuar para Revisão'])
     await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
     await screen.findByRole('heading', { name: 'Sua viagem está quase pronta!' })
-    // Etapa 7: última etapa; só resta o formulário tradicional (temporário).
+    // Etapa 7: última etapa; não há avanço, aviso de etapas pendentes nem formulário antigo.
     expect(screen.queryByRole('button', { name: /^Continuar para/ })).toBeNull()
-    expect(screen.getByRole('complementary', { name: 'Próximas etapas' })).toHaveTextContent(
-      'O formulário tradicional continua disponível por enquanto',
-    )
+    expect(screen.queryByRole('complementary', { name: 'Próximas etapas' })).toBeNull()
+    expect(screen.queryByText(/formulário tradicional/i)).toBeNull()
+    expect(screen.getByRole('button', { name: 'Gerar roteiro' })).toBeDisabled()
   })
 
   it('preserva a seleção ao voltar para a home e ao retornar ao planejamento', async () => {
@@ -308,10 +306,9 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     await user.click(within(cardOf('Lisboa')).getByRole('button', { name: 'Selecionar destino' }))
 
     await user.click(screen.getByRole('button', { name: 'Voltar para o início' }))
-    // Home: cartão de Lisboa selecionado e formulário tradicional já preenchido.
+    // Home: cartão de Lisboa continua selecionado.
     const destinosHome = screen.getByRole('region', { name: 'Destinos em destaque' })
     expect(within(destinosHome).getByRole('button', { name: 'Destino selecionado' })).toBeInTheDocument()
-    expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('lisboa')
 
     await user.click(screen.getByRole('link', { name: 'Planejar minha viagem' }))
     await screen.findByRole('heading', { name: 'Para onde vamos viajar?' })
@@ -319,11 +316,10 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     expect(within(cardOf('Lisboa')).getByRole('button', { name: 'Destino selecionado' })).toBeInTheDocument()
   })
 
-  it('a seleção feita na home também aparece no planejamento', async () => {
+  it('escolher um destino na home abre o planejamento com ele já selecionado', async () => {
     const user = openPlanning()
     const destinosHome = screen.getByRole('region', { name: 'Destinos em destaque' })
-    await user.click(within(destinosHome).getAllByRole('button', { name: 'Selecionar destino' })[1])
-    await user.click(screen.getByRole('link', { name: 'Planejar minha viagem' }))
+    await user.click(within(destinosHome).getAllByRole('button', { name: 'Planejar este destino' })[1])
     await screen.findByRole('heading', { name: 'Para onde vamos viajar?' })
     expect(cardOf('Rio de Janeiro')).toHaveClass('border-brand-600')
   })
@@ -335,8 +331,12 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Viagens incríveis começam com boas escolhas.')
   })
 
-  it('o formulário tradicional continua acessível: abre já com o destino e gera o roteiro', async () => {
+  it('o planejamento é o único caminho: o formulário tradicional não existe mais e o roteiro sai da revisão', async () => {
     const user = openPlanning()
+    // Na home não há formulário nem campos de planejamento.
+    expect(document.getElementById('destino')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Gerar roteiro' })).toBeNull()
+    expect(screen.queryByText(/formulário tradicional/i)).toBeNull()
     await goToPlanning(user)
     await user.click(within(cardOf('Rio de Janeiro')).getByRole('button', { name: 'Selecionar destino' }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Datas' }))
@@ -347,22 +347,11 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     await user.click(screen.getByRole('button', { name: 'Continuar para Interesses' }))
     await user.click(screen.getByRole('button', { name: /^Cultura/ }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
+    await user.click(screen.getByRole('button', { name: /^Informar um valor/ }))
+    await user.click(screen.getByRole('button', { name: /^Valor por pessoa/ }))
+    await user.type(screen.getByLabelText(/^Valor por pessoa/), '800')
     await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
-    await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
-
-    // Volta para a home e rola até o formulário, já com destino e duração.
-    expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
-    expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('5')
-    expect(scrollIntoView).toHaveBeenCalled()
-    const target = scrollIntoView.mock.contexts.at(-1) as HTMLElement
-    expect(target.id).toBe('planejar')
-
-    const interesses = screen.getByRole('group', { name: 'Interesses' })
-    expect(within(interesses).getByRole('checkbox', { name: 'Cultura' })).toBeChecked() // pré-selecionado na etapa 5
-    await user.click(within(screen.getByRole('group', { name: 'Estilo de viagem' })).getByText('Equilibrado'))
-    await user.type(document.getElementById('orcamento') as HTMLInputElement, '800')
     await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
-
     expect(await screen.findByRole('button', { name: 'Salvar roteiro' })).toBeInTheDocument()
   })
 })

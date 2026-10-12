@@ -11,6 +11,8 @@ interface DestinationCardProps {
   destination: Destination
   selected: boolean
   onSelect: (id: string) => void
+  /** Rótulo da ação quando o destino ainda não está selecionado. */
+  actionLabel?: string
 }
 
 /** Card de apresentação de um destino cadastrado na base local. */
@@ -18,6 +20,7 @@ export function DestinationCard({
   destination,
   selected,
   onSelect,
+  actionLabel = 'Selecionar destino',
 }: DestinationCardProps) {
   const categories = [
     ...new Set(
@@ -71,7 +74,7 @@ export function DestinationCard({
             onClick={() => onSelect(destination.id)}
           >
             {selected && <Check className="h-4 w-4" aria-hidden="true" />}
-            {selected ? 'Destino selecionado' : 'Selecionar destino'}
+            {selected ? 'Destino selecionado' : actionLabel}
             {!selected && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
           </Button>
         </div>

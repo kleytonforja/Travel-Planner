@@ -37,7 +37,7 @@ export const STEP_COMPLETION: Partial<Record<PlanningStepId, (draft: PlanningDra
   transporte: (draft) => isTransportComplete(draft.transport),
   interesses: (draft) => hasInterests(draft.interests),
   orcamento: (draft) => isBudgetComplete(draft.budget),
-  // A revisão não bloqueia o formulário tradicional: ele pede os dados que faltarem.
+  // A revisão mostra o que falta e bloqueia só a geração (ver `planningAdapter`).
   revisao: () => true,
 }
 

@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **V1-T3.7** — planejamento progressivo, etapa 7 (revisão e geração direta). Anteriores: V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **V1-T3.8** — consolidação do planejamento progressivo e retirada do formulário tradicional. Anteriores: V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | ✅ **implementado e validado localmente** em 2026-10-12 (ver "Relatório do V1-T3.7"); as sete etapas existem; formulário tradicional mantido até o V1-T3.8; **sem commit** (aguarda autorização) |
-| Próximo checkpoint  | Revisão/commit do V1-T3.7 e definição do V1-T3.8 (remoção do formulário tradicional), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | ✅ **implementado e validado localmente** em 2026-10-12 (ver "Relatório do V1-T3.8"); planejamento progressivo é o único caminho de criação; **sem commit do V1-T3.8** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do V1-T3.8, mediante autorização; depois, definir o próximo ciclo (pendências abaixo). Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -1891,3 +1891,24 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   teclado, sem overflow em 375, 768, 1366 e 1920 px).
 - **Riscos**: apenas Chromium; formulário tradicional ainda duplica a entrada de dados
   (V1-T3.8); preferências sem efeito no roteiro.
+
+## Relatório do V1-T3.8 — consolidação do planejamento progressivo (2026-10-12)
+
+- **Etapa A**: V1-T3.7 validado (664 testes, typecheck, lint, build, diff --check) e commitado
+  localmente (`a7ba23f`); árvore limpa antes de seguir.
+- **Etapa B — retirada do formulário legado** (D39): `PlanningForm` removido; home com a seção
+  "Planeje sua viagem" (âncora `#planejar`) e botão "Começar o planejamento"; cards da home com
+  "Planejar este destino" abrem a etapa 1 com o destino selecionado; removidos `initial*`,
+  `onUseLegacyForm` e `engineBudgetInput`. Preservados: geração, salvar, listar/abrir, excluir
+  (com a confirmação por releitura já existente, sem diálogo prévio), exportar, importar e a
+  navegação entre páginas. Motor, esquema de persistência e importação/exportação intocados.
+- **Testes**: 663 em 37 arquivos; testes que usavam o formulário migraram para o fluxo
+  (`helpers/wizardDriver.ts`) ou passaram a verificar a ausência do formulário.
+- **Chromium (22/22)**: home sem formulário; âncoras válidas; botão e cards da home abrem o
+  planejamento; sete etapas; edição na revisão; geração; salvar; abrir salvo; exportar;
+  excluir; importar; navegação reversível com rascunho preservado; sem erros de console;
+  sem overflow em 375, 768, 1366 e 1920 px.
+- **Pendências (não implementadas)**: orçamento ausente bloqueia a geração; ritmo não influencia
+  o roteiro; datas exatas, viajantes, transporte, perfil e acessibilidade não influenciam nem
+  são persistidos; fotografias dinâmicas; imagens das atrações; mapas e rotas.
+- **Riscos**: apenas Chromium; sem confirmação prévia na exclusão (comportamento herdado).

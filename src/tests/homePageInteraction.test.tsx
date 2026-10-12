@@ -28,15 +28,13 @@ import {
  */
 
 function renderHome() {
-  const onItineraryGenerated = vi.fn()
   const onOpenSaved = vi.fn()
   render(
     <HomePage
-      onItineraryGenerated={onItineraryGenerated}
       onOpenSaved={onOpenSaved}
     />,
   )
-  return { onItineraryGenerated, onOpenSaved }
+  return { onOpenSaved }
 }
 
 function seedMain(raw: string): string {

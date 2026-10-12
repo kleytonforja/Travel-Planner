@@ -6,7 +6,7 @@ import { Header } from '../components/Header'
 import { Hero } from '../components/Hero'
 import { HowItWorks } from '../components/HowItWorks'
 import { ImportItinerary } from '../components/ImportItinerary'
-import { PlanningForm } from '../components/PlanningForm'
+import { Button } from '../components/ui/Button'
 import { SavedItineraries } from '../components/SavedItineraries'
 import { downloadRecoveryJson } from '../services/itineraryExport'
 import {
@@ -24,23 +24,16 @@ import {
   type RecoveryPreview,
   type StorageLoadResult,
 } from '../services/itineraryStorage'
-import type { InterestCategory, Itinerary, SavedItinerary, TravelStyle } from '../types'
+import type { SavedItinerary } from '../types'
 
 interface HomePageProps {
-  /** Chamado quando o formulário gera um roteiro com sucesso. */
-  onItineraryGenerated: (itinerary: Itinerary) => void
   /** Chamado quando o usuário reabre um roteiro salvo. */
   onOpenSaved: (saved: SavedItinerary) => void
   /** Destino já escolhido na sessão (por exemplo, no planejamento progressivo). */
   initialDestinationId?: string
-  /** Duração em dias já escolhida na sessão (preenche o formulário tradicional). */
-  initialDays?: number
-  initialInterests?: InterestCategory[]
-  initialStyle?: TravelStyle
-  initialBudget?: string
   /** Informa a escolha de destino, para que ela seja preservada ao sair da home. */
   onDestinationChange?: (id: string) => void
-  /** Abre o planejamento progressivo (botão principal do hero). */
+  /** Abre o planejamento progressivo (hero, destinos e chamada "Planeje"). */
   onStartPlanning?: () => void
 }
 
@@ -64,13 +57,8 @@ type RecoveryPreviewReady = Extract<RecoveryPreview, { status: 'corrupted' }>
  * confirmação vinculada ao próprio conteúdo.
  */
 export function HomePage({
-  onItineraryGenerated,
   onOpenSaved,
   initialDestinationId = '',
-  initialDays,
-  initialInterests,
-  initialStyle,
-  initialBudget,
   onDestinationChange,
   onStartPlanning,
 }: HomePageProps) {
@@ -164,8 +152,9 @@ export function HomePage({
   }
 
   function handleSelectDestination(id: string) {
+    // O destino escolhido já chega selecionado na primeira etapa do planejamento.
     changeDestination(id)
-    document.getElementById('planejar')?.scrollIntoView({ behavior: 'smooth' })
+    onStartPlanning?.()
   }
 
   async function handleRemoveSaved(id: string) {
@@ -688,17 +677,24 @@ export function HomePage({
         <DestinationsSection
           selectedDestinationId={destinationId}
           onSelectDestination={handleSelectDestination}
+          actionLabel="Planejar este destino"
         />
 
-        <PlanningForm
-          destinationId={destinationId}
-          onDestinationChange={changeDestination}
-          initialDays={initialDays}
-          initialInterests={initialInterests}
-          initialStyle={initialStyle}
-          initialBudget={initialBudget}
-          onItineraryGenerated={onItineraryGenerated}
-        />
+        <section id="planejar" aria-labelledby="planejar-titulo" className="scroll-mt-20 bg-white">
+          <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6 sm:py-20">
+            <h2 id="planejar-titulo" className="text-3xl font-bold tracking-tight text-slate-900">
+              Planeje sua viagem
+            </h2>
+            <p className="mt-3 text-lg text-slate-600">
+              Responda a sete etapas rápidas, revise suas escolhas e gere um roteiro dia a dia.
+            </p>
+            <div className="mt-8">
+              <Button variant="primary" size="lg" onClick={() => onStartPlanning?.()}>
+                Começar o planejamento
+              </Button>
+            </div>
+          </div>
+        </section>
         <SavedItineraries
           saved={storage.records}
           onOpen={onOpenSaved}

@@ -41,7 +41,7 @@ let capturedDownloads: CapturedDownload[]
 
 function renderHome() {
   render(
-    <HomePage onItineraryGenerated={vi.fn()} onOpenSaved={vi.fn()} />,
+    <HomePage onOpenSaved={vi.fn()} />,
   )
 }
 

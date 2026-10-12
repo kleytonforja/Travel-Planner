@@ -6,12 +6,15 @@ import { DestinationCard } from './DestinationCard'
 interface DestinationsSectionProps {
   selectedDestinationId: string
   onSelectDestination: (id: string) => void
+  /** Rótulo do botão de cada card (padrão: "Selecionar destino"). */
+  actionLabel?: string
 }
 
 /** Painel "Destinos em destaque": sobrepõe a base do hero, com os destinos da base local. */
 export function DestinationsSection({
   selectedDestinationId,
   onSelectDestination,
+  actionLabel,
 }: DestinationsSectionProps) {
   return (
     <section
@@ -51,6 +54,7 @@ export function DestinationsSection({
               destination={destination}
               selected={destination.id === selectedDestinationId}
               onSelect={onSelectDestination}
+              actionLabel={actionLabel}
             />
           ))}
         </div>

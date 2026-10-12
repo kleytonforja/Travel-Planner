@@ -67,8 +67,7 @@ describe('Etapa 2 — Datas e duração', () => {
     expect(a).not.toBeChecked()
     expect(b).not.toBeChecked()
     expect(screen.queryByLabelText('Data de início')).toBeNull()
-    // A etapa 3 existe, mas só libera com a duração válida; a etapa 4 não existe.
-    expect(screen.queryByRole('button', { name: 'Continuar com o formulário tradicional' })).toBeNull()
+    // O avanço para a etapa 3 só libera com a duração válida.
     expect(legacyButton()).toBeDisabled()
     expect(screen.getByText('Informe uma duração válida (de 1 a 14 dias) para continuar.')).toBeInTheDocument()
   })
@@ -292,9 +291,6 @@ describe('Etapa 2 — Datas e duração', () => {
 
     await user.click(screen.getByRole('button', { name: 'Voltar para o início' }))
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Viagens incríveis começam com boas escolhas.')
-    // O formulário tradicional da home já vem com o destino e a duração.
-    expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('lisboa')
-    expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('8')
 
     await user.click(screen.getByRole('link', { name: 'Planejar minha viagem' }))
     await user.click(await screen.findByRole('button', { name: 'Continuar para Datas' }))
@@ -303,7 +299,7 @@ describe('Etapa 2 — Datas e duração', () => {
     expect(endInput()).toHaveValue('2026-10-27')
   })
 
-  it('a duração calculada abre o formulário tradicional já preenchida e ele ainda gera o roteiro', async () => {
+  it('a duração calculada pelas datas chega à revisão', async () => {
     const user = userEvent.setup()
     await toDatesStep(user, 'Rio de Janeiro')
     await user.click(radio(/Já tenho as datas/))
@@ -314,16 +310,11 @@ describe('Etapa 2 — Datas e duração', () => {
     await user.click(screen.getByRole('button', { name: /^Cultura/ }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
-    await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
 
-    expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('3')
-    expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
-
-    expect(within(screen.getByRole('group', { name: 'Interesses' })).getByRole('checkbox', { name: 'Cultura' })).toBeChecked()
-    await user.click(within(screen.getByRole('group', { name: 'Estilo de viagem' })).getByText('Equilibrado'))
-    await user.type(document.getElementById('orcamento') as HTMLInputElement, '900')
-    await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
-    expect(await screen.findByRole('button', { name: 'Salvar roteiro' })).toBeInTheDocument()
+    const dates = screen.getByRole('region', { name: 'Datas e duração' })
+    expect(dates).toHaveTextContent('3 dias')
+    expect(dates).toHaveTextContent(/20\/10.*22\/10/)
+    expect(screen.getByRole('region', { name: 'Destino' })).toHaveTextContent('Rio de Janeiro')
   })
 
   it('não grava rascunho no armazenamento e não oferece etapas futuras como funcionais', async () => {

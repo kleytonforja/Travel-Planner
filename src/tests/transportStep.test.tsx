@@ -65,7 +65,6 @@ describe('Etapa 4 — Transporte', () => {
     expect(screen.getByText(/não geram\s+cálculos de rotas, distâncias ou tarifas/)).toBeInTheDocument()
     // A etapa 5 existe: o avanço é "Continuar para Interesses"; o fallback só aparece na última etapa.
     expect(screen.getByRole('button', { name: 'Continuar para Interesses' })).toBeEnabled()
-    expect(screen.queryByRole('button', { name: 'Continuar com o formulário tradicional' })).toBeNull()
   })
 
   it('transporte até o destino: escolha única que pode ser removida', async () => {
@@ -208,7 +207,7 @@ describe('Etapa 4 — Transporte', () => {
     expect(summary()).toHaveTextContent('Transporte: Trem (saindo de Curitiba)')
   })
 
-  it('o formulário tradicional mantém destino e duração e nada vai ao armazenamento', async () => {
+  it('as preferências de transporte chegam à revisão e nada vai ao armazenamento', async () => {
     const setItem = vi.spyOn(Storage.prototype, 'setItem')
     const user = userEvent.setup()
     await toTransport(user, 'Rio de Janeiro')
@@ -218,10 +217,11 @@ describe('Etapa 4 — Transporte', () => {
     await user.click(screen.getByRole('button', { name: /^Cultura/ }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
-    await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
-    expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
-    expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('7')
+    expect(screen.getByRole('region', { name: 'Transporte até o destino' })).toHaveTextContent('Avião')
+    expect(screen.getByRole('region', { name: 'Transporte até o destino' })).toHaveTextContent('Curitiba')
+    expect(screen.getByRole('region', { name: 'Datas e duração' })).toHaveTextContent('7 dias')
     expect(setItem).not.toHaveBeenCalled()
     expect(localStorage.length).toBe(0)
   })
+
 })

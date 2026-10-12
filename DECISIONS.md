@@ -1033,3 +1033,33 @@ esquema salvo/exportado: **fora de escopo**, decisão futura.
 
 **Próximos passos**: V1-T3.8 remove o formulário tradicional; usar as preferências
 não utilizadas na geração exige alterar o motor e o esquema (nova decisão).
+
+## D39 — Planejamento progressivo como único caminho; retirada do formulário tradicional (V1-T3.8)
+
+**Decisão**: o formulário tradicional (`PlanningForm`) foi **removido** da interface e do
+código; o planejamento progressivo de sete etapas é a única forma de criar roteiros.
+- **Home**: o formulário deu lugar à seção "Planeje sua viagem" (âncora `#planejar`, mantida
+  para o cabeçalho, o rodapé e o hero) com o botão "Começar o planejamento". O hero abre o
+  planejamento; os cards de destino passaram a dizer "Planejar este destino" e abrem a etapa 1
+  com o destino já selecionado (`DestinationCard` ganhou `actionLabel`, o padrão continua
+  "Selecionar destino" na etapa 1).
+- **Código removido**: `PlanningForm.tsx`, o pré-preenchimento (`initialDays`,
+  `initialInterests`, `initialStyle`, `initialBudget`), `onUseLegacyForm`, a âncora de rolagem
+  pós-troca de tela e `engineBudgetInput`. Os componentes compartilhados (`DestinationCard`,
+  `DestinationsSection`, `HomePage`, `PlanningFlow`) foram mantidos porque têm consumidores.
+- **Preservado, sem alteração**: motor de geração, validação (`validatePlanningInput`, agora
+  chamada só pelo adaptador), persistência, salvar, listar/abrir, excluir, exportar e importar JSON.
+  A exclusão mantém o comportamento existente: vinculada ao conteúdo lido e confirmada por releitura
+  (não há diálogo prévio de confirmação).
+- **Testes**: os que preenchiam o formulário passaram a usar o fluxo (`helpers/wizardDriver.ts`)
+  ou foram trocados por verificações de que o formulário não existe mais.
+
+**Pendências e limitações** (nenhuma delas implementada):
+- Orçamento ausente **bloqueia a geração** (o motor exige valor por pessoa > 0).
+- O **ritmo** não influencia o roteiro.
+- Datas exatas, viajantes (exceto no orçamento por pessoa), transporte, perfil e acessibilidade
+  **não influenciam o roteiro e não são persistidos** (exigiria mudar motor e esquema).
+- **Fotografias dinâmicas** (rodízio na Home e fundo por destino): decisão futura aprovada (D33).
+- **Imagens das atrações**: apenas as fotografias de hero e dos três destinos existem.
+- **Mapas e rotas**: não existem; sem cálculo de distâncias ou tempos.
+- Após gerar um roteiro, "Novo planejamento" volta à home e o rascunho da sessão é mantido.

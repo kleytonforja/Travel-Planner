@@ -48,7 +48,6 @@ describe('Etapa 3 — Viajantes', () => {
     expect(summary()).toHaveTextContent('Viajantes: 1 adulto')
     // A etapa 4 existe: o avanço é "Continuar para Transporte"; o fallback só aparece na última etapa disponível.
     expect(screen.getByRole('button', { name: 'Continuar para Transporte' })).toBeEnabled()
-    expect(screen.queryByRole('button', { name: 'Continuar com o formulário tradicional' })).toBeNull()
     expect(screen.getByText(/ainda não\s+personalizam atrações nem custos/)).toBeInTheDocument()
   })
 
@@ -219,7 +218,7 @@ describe('Etapa 3 — Viajantes', () => {
     expect(summary()).toHaveTextContent('Viajantes: 1 adulto')
   })
 
-  it('o formulário tradicional mantém destino e duração e nada vai ao armazenamento', async () => {
+  it('o grupo e o restante do planejamento chegam à revisão e nada vai ao armazenamento', async () => {
     const setItem = vi.spyOn(Storage.prototype, 'setItem')
     const user = userEvent.setup()
     await toTravelers(user, 'Rio de Janeiro')
@@ -229,10 +228,11 @@ describe('Etapa 3 — Viajantes', () => {
     await user.click(screen.getByRole('button', { name: /^Cultura/ }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
-    await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
-    expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
-    expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('7')
+    expect(screen.getByRole('region', { name: 'Viajantes' })).toHaveTextContent('2 adultos')
+    expect(screen.getByRole('region', { name: 'Destino' })).toHaveTextContent('Rio de Janeiro')
+    expect(screen.getByRole('region', { name: 'Datas e duração' })).toHaveTextContent('7 dias')
     expect(setItem).not.toHaveBeenCalled()
     expect(localStorage.length).toBe(0)
   })
+
 })

@@ -23,8 +23,6 @@ import { STEP_COMPLETION, STEP_HINTS, STEP_REGISTRY } from './stepRegistry'
 interface PlanningFlowProps {
   draft: PlanningDraft
   onDraftChange: (patch: Partial<PlanningDraft>) => void
-  /** Abre o formulário tradicional (mantido até todas as etapas existirem). */
-  onUseLegacyForm: () => void
   /** Chamado quando a revisão gera o roteiro. */
   onItineraryGenerated?: (itinerary: Itinerary) => void
   /** Etapas disponíveis; por padrão, as implementadas em `stepRegistry`. */
@@ -36,13 +34,12 @@ interface PlanningFlowProps {
  * resumo das escolhas e navegação entre etapas. "Continuar" só aparece quando
  * a próxima etapa existe e só habilita com a etapa atual completa; "Voltar"
  * preserva tudo o que já foi escolhido (o rascunho vive fora das etapas).
- * Enquanto a próxima etapa não existir, o caminho continua pelo formulário
- * tradicional, já preenchido.
+ * A última etapa (revisão) gera o roteiro. Etapas ainda não registradas são
+ * apenas listadas, sem controles.
  */
 export function PlanningFlow({
   draft,
   onDraftChange,
-  onUseLegacyForm,
   onItineraryGenerated,
   registry = STEP_REGISTRY,
 }: PlanningFlowProps) {
@@ -86,8 +83,6 @@ export function PlanningFlow({
   const isComplete = (id: (typeof PLANNING_STEPS)[number]['id']) =>
     (STEP_COMPLETION[id] ?? (() => true))(draft)
   const currentComplete = isComplete(step.id)
-  // Tudo o que existe até a etapa atual precisa estar completo para seguir.
-  const progressComplete = PLANNING_STEPS.slice(0, stepIndex + 1).every((item) => isComplete(item.id))
   const pendingLabels = PLANNING_STEPS.slice(stepIndex + 1)
     .filter((item) => !isStepImplemented(item.id, registry))
     .map((item) => item.label)
@@ -189,36 +184,14 @@ export function PlanningFlow({
         </p>
       )}
 
-      {!nextAvailable && (
+      {!nextAvailable && pendingLabels.length > 0 && (
         <aside
           aria-label="Próximas etapas"
-          className="mt-6 rounded-card-lg border border-white/15 bg-night-950/60 p-5 text-night-ink"
+          className="mt-6 rounded-card-lg border border-white/15 bg-night-950/60 p-5 text-sm text-night-ink-muted"
         >
-          <p className="text-sm text-night-ink-muted">
-            {pendingLabels.length > 0
-              ? pendingLabels.length === 1
-                ? `A etapa ${pendingLabels[0]} ainda está em desenvolvimento. `
-                : `As etapas ${pendingLabels.join(', ')} ainda estão em desenvolvimento. `
-              : ''}
-            {pendingLabels.length > 0
-              ? 'Enquanto isso, você pode continuar pelo formulário tradicional, que já vem com as escolhas feitas até aqui.'
-              : 'O formulário tradicional continua disponível por enquanto e já vem com as escolhas feitas até aqui.'}
-          </p>
-          <div className="mt-4">
-            <Button
-              variant="primary"
-              onClick={onUseLegacyForm}
-              disabled={!progressComplete}
-              aria-describedby={progressComplete ? undefined : 'ajuda-formulario-tradicional'}
-            >
-              Continuar com o formulário tradicional
-            </Button>
-            {!progressComplete && hint && (
-              <p id="ajuda-formulario-tradicional" className="mt-2 text-sm text-night-ink-muted">
-                {hint}
-              </p>
-            )}
-          </div>
+          {pendingLabels.length === 1
+            ? `A etapa ${pendingLabels[0]} ainda está em desenvolvimento.`
+            : `As etapas ${pendingLabels.join(', ')} ainda estão em desenvolvimento.`}
         </aside>
       )}
     </div>

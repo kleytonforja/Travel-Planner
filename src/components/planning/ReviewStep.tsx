@@ -56,7 +56,7 @@ function ReviewCard({ title, step, onEdit, children }: ReviewCardProps) {
 /**
  * Etapa 7 do planejamento progressivo: "Sua viagem está quase pronta!".
  * Revisa as escolhas, permite editar cada seção e gera o roteiro com o mesmo
- * gerador do formulário tradicional, via `buildPlanningInput`. Somente destino,
+ * gerador do motor, via `buildPlanningInput`. Somente destino,
  * duração, interesses, estilo e orçamento por pessoa são considerados pelo
  * motor; o restante é preferência guardada na sessão, não salva no roteiro.
  */

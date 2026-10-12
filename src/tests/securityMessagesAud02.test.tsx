@@ -9,6 +9,7 @@ import {
   STORAGE_KEY,
 } from '../services/itineraryStorage'
 import { buildHistoricalValidRecord } from './fixtures/savedItineraries'
+import { driveWizardToReview } from './helpers/wizardDriver'
 import {
   installWebLocksMock,
   uninstallWebLocksMock,
@@ -32,11 +33,9 @@ import {
 const ABSOLUTE_PRESERVATION_CLAIM = 'Nenhum dado foi alterado.'
 
 function renderHome() {
-  const onItineraryGenerated = vi.fn()
   const onOpenSaved = vi.fn()
   render(
     <HomePage
-      onItineraryGenerated={onItineraryGenerated}
       onOpenSaved={onOpenSaved}
     />,
   )
@@ -119,7 +118,8 @@ describe('AUD-02 — mensagens correspondentes ao estado real', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('não afirma preservação ao voltar para HomePage após salvamento incerto pela App', async () => {
+  // Percorre as sete etapas do planejamento antes de salvar; o limite padrão de 5 s é curto sob carga.
+  it('não afirma preservação ao voltar para HomePage após salvamento incerto pela App', { timeout: 20000 }, async () => {
     const user = userEvent.setup()
     const copyBefore = 'cópia anterior preservada'
     localStorage.setItem(STORAGE_KEY, '[]')
@@ -127,11 +127,13 @@ describe('AUD-02 — mensagens correspondentes ao estado real', () => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
     render(<App />)
 
-    await user.selectOptions(screen.getByLabelText('Destino'), 'florianopolis')
-    await user.type(screen.getByLabelText(/Duração/), '1')
-    await user.click(screen.getByRole('checkbox', { name: 'Cultura' }))
-    await user.click(screen.getByRole('radio', { name: /Econômico/ }))
-    await user.type(screen.getByLabelText('Orçamento total por pessoa'), '100')
+    await driveWizardToReview(user, {
+      destination: 'Florianópolis',
+      days: 1,
+      interests: ['Cultura'],
+      style: 'Econômico',
+      budgetPerPerson: '100',
+    })
     await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
 
     // A escrita real ocorre; apenas a confirmação e as leituras seguintes falham.

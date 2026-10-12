@@ -32,10 +32,6 @@ const basis = () => within(screen.getByRole('group', { name: 'Como você quer in
 const pressed = (el: HTMLElement) => el.getAttribute('aria-pressed') === 'true'
 const summary = () => screen.getByRole('region', { name: 'Resumo do planejamento' })
 const legacy = () => screen.getByRole('button', { name: 'Continuar para Revisão' })
-const openLegacyForm = async (user: User) => {
-  await user.click(legacy())
-  await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
-}
 const field = () => screen.getByLabelText(/^Valor (total da viagem|por pessoa)/) as HTMLInputElement
 
 describe('Etapa 6 — Orçamento', () => {
@@ -58,7 +54,6 @@ describe('Etapa 6 — Orçamento', () => {
     expect(summary()).toHaveTextContent('Orçamento: Equilibrado; valor não definido')
     // Opcional: segue sem valor para a revisão.
     expect(legacy()).toBeEnabled()
-    expect(screen.queryByRole('button', { name: 'Continuar com o formulário tradicional' })).toBeNull()
     expect(screen.getByText(/estimativas ilustrativas/)).toBeInTheDocument()
     expect(screen.getByText(/não representa dinheiro disponível/)).toBeInTheDocument()
     expect(screen.getByText(/hospedagem, alimentação e transporte não são calculados/)).toBeInTheDocument()
@@ -203,40 +198,31 @@ describe('Etapa 6 — Orçamento', () => {
     expect(field()).toHaveValue('800,5')
   })
 
-  it('o formulário tradicional recebe estilo, destino, duração, interesses e valor por pessoa; nada vai ao armazenamento', async () => {
+  it('estilo e orçamento chegam à revisão já convertidos em valor por pessoa; nada vai ao armazenamento', async () => {
     const setItem = vi.spyOn(Storage.prototype, 'setItem')
     const user = userEvent.setup()
     await toBudget(user, 'Rio de Janeiro', 3)
     await user.click(styles().getByRole('button', { name: /^Econômico/ }))
     await user.click(amountMode().getByRole('button', { name: /^Informar um valor/ }))
     await user.type(field(), '1000')
-    await openLegacyForm(user)
+    await user.click(legacy())
 
-    expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
-    expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('7')
-    expect((document.getElementById('orcamento') as HTMLInputElement).value).toBe('333.33')
-    expect(within(screen.getByRole('group', { name: 'Estilo de viagem' })).getByRole('radio', { name: /Econômico/ })).toBeChecked()
-    expect(within(screen.getByRole('group', { name: 'Interesses' })).getByRole('checkbox', { name: 'Cultura' })).toBeChecked()
+    const card = screen.getByRole('region', { name: 'Estilo e orçamento' })
+    expect(card).toHaveTextContent('Econômico')
+    expect(card).toHaveTextContent(/cerca de .*333,33.* por pessoa/)
+    expect(screen.getByRole('region', { name: 'Datas e duração' })).toHaveTextContent('7 dias')
     expect(setItem).not.toHaveBeenCalled()
-
     await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
     expect(await screen.findByRole('button', { name: 'Salvar roteiro' })).toBeInTheDocument()
   })
 
-  it('sem orçamento definido, o formulário tradicional pede o valor', async () => {
+  it('sem orçamento definido a revisão bloqueia a geração e pede o valor', async () => {
     const user = userEvent.setup()
     await toBudget(user)
-    await openLegacyForm(user)
-    expect((document.getElementById('orcamento') as HTMLInputElement).value).toBe('')
-    expect(within(screen.getByRole('group', { name: 'Estilo de viagem' })).getByRole('radio', { name: /Equilibrado/ })).toBeChecked()
+    await user.click(legacy())
+    expect(screen.getByRole('button', { name: 'Gerar roteiro' })).toBeDisabled()
+    expect(screen.getByRole('alert')).toHaveTextContent('Informe um orçamento')
+    expect(screen.getByRole('region', { name: 'Estilo e orçamento' })).toHaveTextContent('Equilibrado')
   })
-})
 
-describe('formulário tradicional direto da home', () => {
-  it('continua sem estilo nem orçamento preenchidos quando não vem do planejamento progressivo', () => {
-    render(<App />)
-    expect((document.getElementById('orcamento') as HTMLInputElement).value).toBe('')
-    const radios = within(screen.getByRole('group', { name: 'Estilo de viagem' })).getAllByRole('radio')
-    radios.forEach((radio) => expect(radio).not.toBeChecked())
-  })
 })

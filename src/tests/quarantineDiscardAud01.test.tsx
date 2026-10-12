@@ -33,11 +33,9 @@ import {
  */
 
 function renderHome() {
-  const onItineraryGenerated = vi.fn()
   const onOpenSaved = vi.fn()
   render(
     <HomePage
-      onItineraryGenerated={onItineraryGenerated}
       onOpenSaved={onOpenSaved}
     />,
   )

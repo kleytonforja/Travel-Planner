@@ -71,7 +71,7 @@ function seedMain(records: unknown[]): string {
 }
 
 function renderHome() {
-  render(<HomePage onItineraryGenerated={vi.fn()} onOpenSaved={vi.fn()} />)
+  render(<HomePage onOpenSaved={vi.fn()} />)
 }
 
 const importSection = () => screen.getByRole('region', { name: 'Importar roteiro' })

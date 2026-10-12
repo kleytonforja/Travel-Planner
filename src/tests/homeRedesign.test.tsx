@@ -24,8 +24,9 @@ const BASE = import.meta.env.BASE_URL
 
 function renderHome() {
   const onOpenSaved = vi.fn()
-  render(<HomePage onItineraryGenerated={vi.fn()} onOpenSaved={onOpenSaved} />)
-  return { onOpenSaved }
+  const onStartPlanning = vi.fn()
+  render(<HomePage onOpenSaved={onOpenSaved} onStartPlanning={onStartPlanning} />)
+  return { onOpenSaved, onStartPlanning }
 }
 
 describe('Nova home — estrutura e acessibilidade', () => {
@@ -179,20 +180,29 @@ describe('Nova home — ações preservadas', () => {
     vi.restoreAllMocks()
   })
 
-  it('selecionar um destino marca o card e preenche o formulário de planejamento', async () => {
+  it('escolher um destino marca o card e abre o planejamento progressivo', async () => {
     const user = userEvent.setup()
-    renderHome()
+    const { onStartPlanning } = renderHome()
     const section = screen.getByRole('region', { name: 'Destinos em destaque' })
 
-    await user.click(within(section).getAllByRole('button', { name: 'Selecionar destino' })[2])
+    await user.click(within(section).getAllByRole('button', { name: 'Planejar este destino' })[2])
 
+    expect(onStartPlanning).toHaveBeenCalledTimes(1)
     expect(within(section).getByRole('button', { name: 'Destino selecionado' })).toBeInTheDocument()
-    expect(within(section).getAllByRole('button', { name: 'Selecionar destino' })).toHaveLength(
+    expect(within(section).getAllByRole('button', { name: 'Planejar este destino' })).toHaveLength(
       destinations.length - 1,
     )
-    expect((screen.getByLabelText(/Destino/, { selector: 'select' }) as HTMLSelectElement).value).toBe(
-      destinations[2].id,
-    )
+  })
+
+  it('a seção "Planeje sua viagem" substitui o formulário e inicia o planejamento', async () => {
+    const user = userEvent.setup()
+    const { onStartPlanning } = renderHome()
+    const section = document.getElementById('planejar') as HTMLElement
+    expect(within(section).getByRole('heading', { name: 'Planeje sua viagem' })).toBeInTheDocument()
+    expect(document.getElementById('destino')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Gerar roteiro' })).toBeNull()
+    await user.click(within(section).getByRole('button', { name: 'Começar o planejamento' }))
+    expect(onStartPlanning).toHaveBeenCalledTimes(1)
   })
 
   it('os botões de destino são alcançáveis pelo teclado e acionáveis com Enter', async () => {
@@ -200,7 +210,7 @@ describe('Nova home — ações preservadas', () => {
     renderHome()
     const first = within(screen.getByRole('region', { name: 'Destinos em destaque' })).getAllByRole(
       'button',
-      { name: 'Selecionar destino' },
+      { name: 'Planejar este destino' },
     )[0]
     first.focus()
     expect(first).toHaveFocus()

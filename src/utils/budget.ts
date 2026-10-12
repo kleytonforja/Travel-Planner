@@ -113,21 +113,11 @@ export function centsToMoney(cents: number, currency: Currency): string {
   return formatCurrency(cents / 100, currency)
 }
 
-/** Texto em formato aceito pelo campo numérico do formulário tradicional ("333.33"). */
+/** Texto decimal com ponto e 2 casas ("333.33") a partir de centavos inteiros. */
 export function centsToInputValue(cents: number): string {
   const whole = Math.floor(cents / 100)
   const fraction = String(cents % 100).padStart(2, '0')
   return `${whole}.${fraction}`
-}
-
-/**
- * Orçamento por pessoa no formato do motor (`PlanningInput.budget`), em texto
- * para o formulário tradicional; `''` quando não há valor utilizável (o motor
- * exige > 0, então o formulário pedirá o valor).
- */
-export function engineBudgetInput(budget: BudgetDraft, travelers: number): string {
-  const figures = computeBudget(budget, travelers)
-  return figures !== null && figures.perPersonCents > 0 ? centsToInputValue(figures.perPersonCents) : ''
 }
 
 export function describeBudget(budget: BudgetDraft, travelers: number, currency: Currency | null): string {

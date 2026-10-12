@@ -12,16 +12,14 @@ interface PlanningPageProps {
   draft: PlanningDraft
   onDraftChange: (patch: Partial<PlanningDraft>) => void
   onBackHome: () => void
-  onUseLegacyForm: () => void
   onItineraryGenerated: (itinerary: Itinerary) => void
 }
 
-/** Página do planejamento progressivo (V1-T3): hoje, apenas a etapa de destino. */
+/** Página do planejamento progressivo: as sete etapas, da escolha do destino à geração do roteiro. */
 export function PlanningPage({
   draft,
   onDraftChange,
   onBackHome,
-  onUseLegacyForm,
   onItineraryGenerated,
 }: PlanningPageProps) {
   useEffect(() => {
@@ -49,7 +47,6 @@ export function PlanningPage({
           <PlanningFlow
             draft={draft}
             onDraftChange={onDraftChange}
-            onUseLegacyForm={onUseLegacyForm}
             onItineraryGenerated={onItineraryGenerated}
           />
         </div>

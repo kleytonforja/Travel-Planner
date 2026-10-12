@@ -139,24 +139,29 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
-- [~] **V1-T3.7 — etapa 7, revisão e geração direta (parcial)** (D38): cards de
+- [x] **V1-T3.8 — planejamento progressivo concluído; formulário tradicional removido** (D39):
+      o fluxo de sete etapas é a única forma de criar roteiros; a home tem a seção "Planeje
+      sua viagem" e os cards de destino abrem o planejamento. Pendências: orçamento ausente
+      bloqueia a geração; ritmo, viajantes, transporte, perfil e acessibilidade não influenciam
+      nem são persistidos no roteiro; fotografias dinâmicas, imagens das atrações, mapas e
+      rotas **não implementados**. Validada localmente; sem commit.
+- [x] **V1-T3.7 — etapa 7, revisão e geração direta** (D38): cards de
       revisão com "Editar" por seção e geração do roteiro pelo fluxo progressivo
       (adaptador para o contrato do motor, mesma função de geração, página de
       resultado atual). Só destino, duração, interesses, estilo e orçamento por
       pessoa influenciam o roteiro; viajantes, transporte, ritmo, perfil e
       acessibilidade não, e não são salvos. Sem orçamento a geração é bloqueada.
-      Formulário tradicional **mantido até o V1-T3.8**. Validada localmente; sem commit.
+      Validada localmente; commit `a7ba23f`.
 - [x] V1-T3.6 — etapa 6, orçamento (D37, commit `0d6bcc5`): estilo financeiro (mesmos
       valores do motor, padrão Equilibrado) e orçamento opcional em valor total ou
       por pessoa, em centavos, na moeda do destino, sem câmbio nem descontos
-      presumidos; o formulário tradicional abre com estilo e valor por pessoa.
+      presumidos; a revisão converte o orçamento em valor por pessoa para o motor.
       Hospedagem, alimentação e transporte **não** são calculados. Geração do
-      roteiro pelo fluxo e etapa 7 (Revisão) **pendentes**; formulário tradicional
-      mantido. Validada localmente; sem commit.
+      roteiro pelo fluxo e etapa 7 (Revisão) entregues no V1-T3.7. Validada localmente; sem commit.
 - [x] V1-T3.5 — etapa 5, interesses e ritmo (D36, commit `b8ccfe8`): sete
       interesses do catálogo (múltipla escolha, ao menos um) e ritmo
       (Tranquilo/Equilibrado/Intenso, padrão Equilibrado). Os interesses chegam ao
-      formulário tradicional e ao motor; o **ritmo não é usado pelo motor**
+      roteiro gerado; o **ritmo não é usado pelo motor**
       (V1-T3.7). Fotografias temáticas licenciadas **pendentes** (visual com
       ícones por ora). Próxima etapa: Orçamento. Validada localmente; sem commit.
 - [x] V1-T3.4 — etapa 4, transporte e `SelectableCard` (D35, commit `6518f12`): chegada ao destino

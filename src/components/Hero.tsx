@@ -28,7 +28,7 @@ const HIGHLIGHTS = [
 ] as const
 
 interface HeroProps {
-  /** Abre o planejamento progressivo; sem ele, o botão leva ao formulário tradicional. */
+  /** Abre o planejamento progressivo; sem ele, o link leva à seção "Planeje sua viagem". */
   onStartPlanning?: () => void
 }
 

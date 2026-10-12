@@ -166,7 +166,7 @@ describe('Etapa 5 — Interesses e ritmo', () => {
     expect(summary()).toHaveTextContent('Interesses: Aventura, Compras; ritmo tranquilo')
   })
 
-  it('o formulário tradicional já vem com os interesses escolhidos e gera o roteiro', async () => {
+  it('os interesses escolhidos chegam à revisão, na ordem do catálogo, e nada vai ao armazenamento', async () => {
     const setItem = vi.spyOn(Storage.prototype, 'setItem')
     const user = userEvent.setup()
     await toInterests(user, 'Rio de Janeiro')
@@ -174,19 +174,9 @@ describe('Etapa 5 — Interesses e ritmo', () => {
     await user.click(interests().getByRole('button', { name: /^Gastronomia/ }))
     await user.click(next())
     await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
-    await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
-
-    const legacy = within(screen.getByRole('group', { name: 'Interesses' }))
-    expect(legacy.getByRole('checkbox', { name: 'Cultura' })).toBeChecked()
-    expect(legacy.getByRole('checkbox', { name: 'Gastronomia' })).toBeChecked()
-    expect(legacy.getByRole('checkbox', { name: 'Natureza' })).not.toBeChecked()
-    expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
-    expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('7')
+    expect(screen.getByRole('region', { name: 'Interesses' })).toHaveTextContent('Gastronomia, Cultura')
+    expect(screen.getByRole('region', { name: 'Ritmo da viagem' })).toHaveTextContent('Equilibrado')
     expect(setItem).not.toHaveBeenCalled()
-
-    await user.click(within(screen.getByRole('group', { name: 'Estilo de viagem' })).getByText('Equilibrado'))
-    await user.type(document.getElementById('orcamento') as HTMLInputElement, '900')
-    await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
-    expect(await screen.findByRole('button', { name: 'Salvar roteiro' })).toBeInTheDocument()
   })
+
 })
