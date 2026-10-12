@@ -28,7 +28,7 @@ const startInput = () => screen.getByLabelText('Data de início') as HTMLInputEl
 const endInput = () => screen.getByLabelText('Data de término') as HTMLInputElement
 const customInput = () => screen.getByLabelText('Outra duração (dias)') as HTMLInputElement
 const summary = () => screen.getByRole('region', { name: 'Resumo do planejamento' })
-const legacyButton = () => screen.getByRole('button', { name: 'Continuar com o formulário tradicional' })
+const legacyButton = () => screen.getByRole('button', { name: 'Continuar para Viajantes' })
 
 function setDates(start: string, end: string) {
   fireEvent.change(startInput(), { target: { value: start } })
@@ -64,8 +64,8 @@ describe('Etapa 2 — Datas e duração', () => {
     expect(a).not.toBeChecked()
     expect(b).not.toBeChecked()
     expect(screen.queryByLabelText('Data de início')).toBeNull()
-    // A etapa 3 não existe: nada de "Continuar para Viajantes"; só o formulário tradicional, desabilitado.
-    expect(screen.queryByRole('button', { name: /^Continuar para/ })).toBeNull()
+    // A etapa 3 existe, mas só libera com a duração válida; a etapa 4 não existe.
+    expect(screen.queryByRole('button', { name: 'Continuar com o formulário tradicional' })).toBeNull()
     expect(legacyButton()).toBeDisabled()
     expect(screen.getByText('Informe uma duração válida (de 1 a 14 dias) para continuar.')).toBeInTheDocument()
   })
@@ -306,6 +306,7 @@ describe('Etapa 2 — Datas e duração', () => {
     await user.click(radio(/Já tenho as datas/))
     setDates('2026-10-20', '2026-10-22')
     await user.click(legacyButton())
+    await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
 
     expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('3')
     expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
@@ -328,7 +329,7 @@ describe('Etapa 2 — Datas e duração', () => {
 
     expect(setItem).not.toHaveBeenCalled()
     expect(localStorage.length).toBe(0)
-    expect(screen.queryByRole('button', { name: /Viajantes|Transporte|Interesses|Orçamento|Revisão/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Transporte|Interesses|Orçamento|Revisão/ })).toBeNull()
     const progress = screen.getByRole('list', { name: 'Progresso do planejamento' })
     expect(within(progress).queryByRole('button')).toBeNull()
     expect(within(progress).queryByRole('link')).toBeNull()

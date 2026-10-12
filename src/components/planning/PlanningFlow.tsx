@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { destinations } from '../../data/destinations'
+import { describeTravelers } from '../../utils/travelers'
 import { formatShortDate } from '../../utils/tripDates'
 import { Button } from '../ui/Button'
 import { ProgressSteps } from '../ui/ProgressSteps'
@@ -38,6 +39,9 @@ export function PlanningFlow({
   registry = STEP_REGISTRY,
 }: PlanningFlowProps) {
   const [stepIndex, setStepIndex] = useState(0)
+  // Maior etapa já visitada: o resumo só mostra o grupo depois que a etapa foi vista.
+  const [reached, setReached] = useState(0)
+  if (stepIndex > reached) setReached(stepIndex)
   const stepArea = useRef<HTMLDivElement>(null)
   const mounted = useRef(false)
 
@@ -109,6 +113,9 @@ export function PlanningFlow({
               ? ` (${formatShortDate(draft.startDate)} a ${formatShortDate(draft.endDate)})`
               : ''}
           </p>
+        )}
+        {reached >= PLANNING_STEPS.findIndex((item) => item.id === 'viajantes') && (
+          <p className="mt-1 text-sm">Viajantes: {describeTravelers(draft.travelers)}</p>
         )}
       </section>
 

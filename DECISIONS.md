@@ -855,3 +855,34 @@ transições suaves. Aprovada para fase futura, sem tarefa aberta; deverá respe
 `prefers-reduced-motion`, contraste e os créditos em `docs/IMAGE_CREDITS.md`.
 
 **Consequências**: etapas 3 a 7 pendentes; apenas Chromium verificado.
+
+## D34 — Planejamento progressivo: etapa de viajantes (V1-T3.3)
+
+**Decisão**: a etapa 3 ("Quem vai viajar com você?") coleta apenas dados
+agregados no rascunho em memória (`PlanningDraft.travelers`): adultos
+(padrão 1), crianças, bebês, quantidade de crianças por faixa etária (3–5,
+6–11, 12–17; opcional), perfil opcional (Individual, Casal, Família, Amigos) e
+necessidades de acessibilidade opcionais (mobilidade, escadas/caminhadas,
+visual, auditiva). Não há nomes, documentos, datas de nascimento nem cadastro
+individual. Regras em `src/utils/travelers.ts`:
+- mínimo de 1 adulto; sem negativos nem decimais;
+- **máximo de 20 viajantes no total**: evita valores absurdos e mantém o
+  planejamento no porte que o produto ilustra; é uma constante (`MAX_TRAVELERS`)
+  fácil de revisar;
+- **sem regra de um adulto por bebê** (revisão da consolidação): basta haver
+  pelo menos 1 adulto; o grupo pode ter mais bebês que adultos, respeitando o
+  limite total de 20. A regra anterior (bebês ≤ adultos) foi removida por decisão
+  do responsável do projeto; regras de companhia de bebês de companhias aéreas
+  ou hospedagens não são validadas aqui. As faixas etárias nunca somam mais que o
+  número de crianças e se ajustam ao reduzir crianças;
+- o perfil **nunca é inferido** da composição; clicar no perfil escolhido o remove.
+
+**Limitação (registrada para o V1-T3.7)**: o motor de roteiros **não usa**
+composição do grupo, faixas etárias, perfil nem acessibilidade; nenhum custo ou
+atração é personalizado por viajante, e a tela informa isso. A integração com o
+motor é tarefa futura (V1-T3.7). Nada é persistido (apenas sessão).
+
+**Navegação**: "Voltar para Datas"; não existe "Continuar" porque a etapa 4
+(Transporte) não está implementada; o formulário tradicional continua como
+fallback, com destino e duração. A etapa 3 está sempre completa (1 adulto é o
+padrão válido).

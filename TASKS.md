@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **V1-T3.2** — planejamento progressivo, etapa 2 (datas e duração). Anteriores: V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **V1-T3.3** — planejamento progressivo, etapa 3 (viajantes). Anteriores: V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | 🚧 **parcial por desenho**: etapa 2 implementada e validada localmente em 2026-10-12 (ver "Relatório do V1-T3.2"); etapas 3 a 7 pendentes; **sem commit** (aguarda autorização) |
-| Próximo checkpoint  | Revisão/commit do V1-T3.2 e definição da etapa 3 (viajantes), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | 🚧 **parcial por desenho**: etapa 3 implementada e validada localmente em 2026-10-12 (ver "Relatório do V1-T3.3"); etapas 4 a 7 pendentes; **sem commit** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do V1-T3.3 e definição da etapa 4 (transporte), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -1706,3 +1706,32 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   sem movimento. O critério do script (0 s exato) foi corrigido para "<= 1 ms".
 - **Riscos**: apenas Chromium; o seletor nativo de data varia por navegador; o
   fluxo ainda termina no formulário tradicional.
+
+## Relatório do V1-T3.3 — planejamento progressivo: viajantes (2026-10-12)
+
+- **Status**: implementado e validado localmente; **sem commit, push ou deploy**.
+  Etapas 4 a 7 pendentes. Próxima etapa: Transporte.
+- **Funcionalidade**: etapa 3 "Quem vai viajar com você?" com contadores
+  (−/+, alvos de 44 px) de adultos (padrão 1), crianças e bebês; faixas etárias
+  opcionais das crianças; perfil opcional (Individual/Casal/Família/Amigos),
+  nunca inferido; necessidades de acessibilidade opcionais; resumo "Viajantes: …"
+  no planejamento; dados preservados ao avançar, voltar e alterar datas ou
+  destino. Regras e limites justificados em D34.
+- **Dados coletados** (só em memória): adultos, crianças, bebês, crianças por
+  faixa etária, perfil, necessidades de acessibilidade. Sem nomes, documentos ou
+  datas de nascimento.
+- **Consolidação**: regra "um adulto por bebê" removida; exige-se apenas 1
+  adulto e o limite provisório de 20 viajantes (mantido). Ver D34.
+- **Limitações**: o motor **não utiliza** a composição do grupo; nenhuma atração
+  ou custo é personalizado por viajante (a tela avisa). Integração prevista no
+  **V1-T3.7**. A etapa não tem "Continuar" até a etapa Transporte existir; o
+  formulário tradicional segue como fallback com destino e duração.
+- **Arquivos**: novos `src/utils/travelers.ts`, `src/components/planning/TravelersStep.tsx`,
+  `src/tests/travelers.test.ts`, `src/tests/travelersStep.test.tsx`; alterados
+  `planningSteps.ts`, `stepRegistry.ts`, `PlanningFlow.tsx`,
+  `src/tests/planningFlow.test.tsx`, `src/tests/datesStep.test.tsx`, `DECISIONS.md` (D34),
+  `ROADMAP.md`, `PROJECT.md`, `TASKS.md`. Motor, persistência e importação/exportação intocados.
+- **Chromium**: 20 de 20 verificações aprovadas (quantidades, limites,
+  perfis, acessibilidade, teclado, preservação, navegação, formulário
+  tradicional); sem rolagem horizontal e alvos ≥ 44 px em 375, 768, 1366 e 1920 px.
+- **Riscos**: apenas Chromium; os dados ainda não afetam o roteiro.

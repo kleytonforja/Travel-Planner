@@ -139,7 +139,12 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
-- [~] **V1-T3.2 — etapa 2, datas e duração (parcial)** (D33): duas opções
+- [~] **V1-T3.3 — etapa 3, viajantes (parcial)** (D34): quantidades de adultos
+      (padrão 1), crianças e bebês, faixas etárias opcionais, perfil e
+      acessibilidade opcionais, tudo preservado entre etapas. **Não personaliza
+      o roteiro**: o motor ainda ignora o grupo (integração em V1-T3.7). Próxima
+      etapa: Transporte. Validada localmente; sem commit.
+- [x] V1-T3.2 — etapa 2, datas e duração (D33, commit `3f5d9e2`): duas opções
       (já tenho as datas / ainda não defini), duração calculada sem erro de fuso,
       validação de datas, atalhos e duração personalizada de 1 a 14 dias,
       navegação voltar/continuar com escolhas preservadas. Etapas 3 a 7
