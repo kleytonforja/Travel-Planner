@@ -1126,3 +1126,33 @@ pelo adaptador (M3). Portanto o esquema v2 **não** está totalmente implementad
 **Riscos registrados**: (1) **downgrade** — um app anterior que leia registro sem orçamento tratará a coleção
 como corrompida e bloqueará escritas (sem apagar; a recuperação guarda o bruto na quarentena), como previsto
 no M2.1; (2) o validador agora aceita registros sem orçamento, mas nenhum fluxo da interface os cria ainda.
+
+## D42 — Esquema v2: exportação e importação JSON v2 (M2.4) — parcial
+
+**Decisão**: o arquivo exportado passa a `schemaVersion: 2`; a importação aceita as versões **1 e 2**.
+- **Orçamento ausente** (v2): omitem-se `resumo.orcamentoInformado`, `resumoFinanceiro.orcamentoInformado` e
+  `resumoFinanceiro.saldoNaoAlocado` (nunca `null`, 0 ou outro valor); `custoEstimadoAtividades` e
+  `custoMedioAtividadesPorDia` permanecem. Com orçamento, valores, ordem das chaves e consistência são os de antes
+  (inclusive a precisão decimal, ex.: 333,33).
+- **Ritmo**: `resumo.ritmo` (`tranquilo`/`equilibrado`/`intenso`) só aparece quando o roteiro tem ritmo válido; um
+  ritmo inválido em memória não é exportado.
+- **Importação v1**: inalterada. Orçamento (nos dois resumos) e saldo continuam **obrigatórios**; a ausência nunca é
+  reinterpretada como opcional (um arquivo sem orçamento rotulado como v1 é rejeitado); `ritmo` é ignorado.
+- **Importação v2**: aceita orçamento ausente **somente** quando ambos os resumos o omitem e o saldo também está
+  ausente. Rejeita: orçamento em apenas um resumo ou divergente (`validation-failed`), saldo sem orçamento
+  (`validation-failed`), orçamento sem saldo ou valor presente não numérico/`null` (`invalid-structure`),
+  orçamento ≤ 0 e custo acima do orçamento (`validation-failed`) e ritmo desconhecido ou `null`
+  (`invalid-structure`). Custo e média continuam validados contra as atividades mesmo sem orçamento.
+- **Preservados**: limite de 256 KB, leitura só de propriedades próprias, descarte de campos extras e proteção
+  contra poluição de protótipo, reconstrução das atividades pelo catálogo e rejeição de divergências, códigos de
+  erro existentes e confirmação de substituição. A mensagem de versão passa a dizer "versões 1 e 2"; qualquer
+  outra versão (3, 0, texto, nulo, ausente) dá `unsupported-version`. A leitura continua delegando ao validador do
+  armazenamento (D41).
+
+**Ainda NÃO feito**: a **geração sem orçamento** (M2.5) e a aplicação do **ritmo** no motor (M3). O esquema v2 não
+está totalmente implementado.
+
+**Riscos conhecidos**: (1) **downgrade** — um app anterior recusa arquivos v2 com `unsupported-version` (seguro) e,
+se ler do armazenamento um registro sem orçamento, trata a coleção como corrompida e bloqueia escritas, sem apagar
+dados (a recuperação guarda o bruto na quarentena); (2) arquivos exportados agora **só** abrem em versões que
+conheçam a v2.

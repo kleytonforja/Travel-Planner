@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **M2.3** — persistência e compatibilidade do esquema v2 (parcial). Anteriores: M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **M2.4** — importação e exportação JSON v2 (parcial). Anteriores: M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | 🚧 **M2.3 implementada e validada localmente** em 2026-10-12 (ver "Relatório do M2.3"); esquema v2 **não** concluído (M2.4 a M2.6 pendentes); **sem commit do M2.3** (aguarda autorização) |
-| Próximo checkpoint  | Revisão/commit do M2.3 e início do M2.4 (importação/exportação v2), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | 🚧 **M2.4 implementada e validada localmente** em 2026-10-12 (ver "Relatório do M2.4"); esquema v2 **não** concluído (M2.5 e M2.6 pendentes; ritmo no motor é M3); **sem commit do M2.4** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do M2.4 e início do M2.5 (geração sem orçamento e interface), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -1964,3 +1964,23 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   Total: 727 testes em 39 arquivos.
 - **Riscos**: downgrade (coleção vista como corrompida por app antigo, sem perda de dados); validador aceita
   registros sem orçamento que nenhum fluxo cria ainda.
+
+## Relatório do M2.4 — importação e exportação JSON v2 (2026-10-12)
+
+- **Consolidação do M2.3**: validado (typecheck, lint, build, 727 testes, 36 do armazenamento v2, diff --check) e
+  commitado localmente (`7ed1ef0`); árvore limpa antes do M2.4.
+- **Investigação de `itineraryImportInteraction`**: reexecutado 8 vezes isolado (29/29 em todas) e 4 vezes na suíte
+  completa, sem nenhuma falha; nenhuma regressão real encontrada; timeouts **não** alterados. A falha rara anterior
+  segue sem reprodução.
+- **Implementado** (D42): exportação `schemaVersion: 2` com campos financeiros e ritmo opcionais; importação das
+  versões 1 e 2 (`SUPPORTED_IMPORT_VERSIONS`), v1 inalterada, v2 com orçamento/saldo/ritmo opcionais e validação
+  de coerência; mensagem "versões 1 e 2".
+- **Não alterado**: motor, geração (ainda exige orçamento), chaves do LocalStorage, quarentena, interface.
+- **Testes**: `itineraryJsonV2.test.ts` (43 casos: exportação com/sem orçamento e com ritmo; v1 histórico e
+  estrita; v2 ida e volta; orçamento divergente, saldo sem orçamento, orçamento sem saldo, `null`/texto/NaN/
+  Infinity/1e999/zero/negativo, ritmo inválido, versão 3, 256 KB, catálogo, propriedades herdadas, `__proto__`,
+  deduplicação com legados). Ajustes: testes de campos obrigatórios passaram a usar um arquivo v1 explícito, a
+  versão "incompatível" mudou de 2 para 3. Verificação por mutação (opcionalidade na v1 e leitura de ritmo na v1)
+  derrubou os testes esperados. Total: 770 testes em 40 arquivos.
+- **Riscos**: downgrade e arquivos v2 ilegíveis por versões anteriores (recusa segura); nenhum fluxo da interface cria
+  ainda roteiros sem orçamento ou com ritmo.

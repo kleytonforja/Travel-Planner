@@ -139,7 +139,11 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
-- [~] **M2.3 — persistência compatível com o esquema v2 (parcial)** (D41): o armazenamento aceita orçamento e
+- [~] **M2.4 — exportação e importação JSON v2 (parcial)** (D42): `schemaVersion: 2` com orçamento, saldo e ritmo
+      opcionais (omitidos quando ausentes); importação de arquivos v1 (inalterada) e v2 com validação estrita.
+      Geração sem orçamento (M2.5), ritmo no motor (M3) e validação integrada (M2.6) **pendentes**. Validada
+      localmente; sem commit.
+- [x] M2.3 — persistência compatível com o esquema v2 (D41, commit `7ed1ef0`): o armazenamento aceita orçamento e
       saldo ausentes e ritmo opcional, rejeita `null`/0/negativos/não finitos, saldo sem orçamento e orçamento
       sem saldo, e a equivalência considera ritmo e orçamento. Geração sem orçamento (M2.5) e import/export v2
       (M2.4) **pendentes**. Validada localmente; sem commit.

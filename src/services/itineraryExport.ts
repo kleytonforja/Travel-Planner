@@ -1,5 +1,6 @@
 import type { Destination, SavedItinerary } from '../types'
 import { formatMinutesToTime } from '../utils/format'
+import { isValidPace } from './planningValidation'
 
 /**
  * Exportação de roteiros em JSON.
@@ -8,7 +9,16 @@ import { formatMinutesToTime } from '../utils/format'
  * que os valores são ilustrativos e nenhum dado sensível do usuário.
  */
 
-export const EXPORT_SCHEMA_VERSION = 1
+/**
+ * Versão do arquivo exportado. v2 (M2.4): `orcamentoInformado` (em `resumo` e em
+ * `resumoFinanceiro`) e `saldoNaoAlocado` são OMITIDOS quando o roteiro não tem
+ * orçamento (nunca null, 0 ou outro valor), e `resumo.ritmo` aparece só com ritmo
+ * válido. A versão 1 (orçamento e saldo sempre presentes) continua importável.
+ */
+export const EXPORT_SCHEMA_VERSION = 2
+
+/** Versões de arquivo que a importação aceita. */
+export const SUPPORTED_IMPORT_VERSIONS: readonly number[] = [1, 2]
 
 export const EXPORT_DISCLAIMER =
   'Custos, durações e horários são valores ilustrativos para fins de planejamento e não representam cotações, horários oficiais ou disponibilidade real de serviços. O resumo financeiro considera apenas as atividades e não inclui hospedagem, transporte ou alimentação.'
@@ -22,6 +32,8 @@ export function buildItineraryExport(
   destination: Destination,
 ) {
   const { itinerary } = saved
+  const { budget, pace } = itinerary.input
+  const { unallocatedBudget } = itinerary.totals
 
   return {
     schemaVersion: EXPORT_SCHEMA_VERSION,
@@ -35,7 +47,8 @@ export function buildItineraryExport(
       dias: itinerary.input.days,
       estilo: itinerary.input.style,
       interesses: itinerary.input.interests,
-      orcamentoInformado: itinerary.input.budget,
+      ...(budget === undefined ? {} : { orcamentoInformado: budget }),
+      ...(isValidPace(pace) ? { ritmo: pace } : {}),
     },
     roteiro: itinerary.days.map((day) => ({
       dia: day.dayNumber,
@@ -49,9 +62,9 @@ export function buildItineraryExport(
       })),
     })),
     resumoFinanceiro: {
-      orcamentoInformado: itinerary.input.budget,
+      ...(budget === undefined ? {} : { orcamentoInformado: budget }),
       custoEstimadoAtividades: itinerary.totals.estimatedActivitiesCost,
-      saldoNaoAlocado: itinerary.totals.unallocatedBudget,
+      ...(unallocatedBudget === undefined ? {} : { saldoNaoAlocado: unallocatedBudget }),
       custoMedioAtividadesPorDia: itinerary.totals.averageCostPerDay,
     },
     avisos: itinerary.warnings,

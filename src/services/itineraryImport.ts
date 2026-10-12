@@ -8,9 +8,11 @@ import type {
   ScheduledActivity,
   ScheduledPeriod,
   TravelStyle,
+  TripPace,
 } from '../types'
-import { EXPORT_SCHEMA_VERSION, RECOVERY_EXPORT_FORMAT } from './itineraryExport'
+import { RECOVERY_EXPORT_FORMAT, SUPPORTED_IMPORT_VERSIONS } from './itineraryExport'
 import { validateSavedItinerary } from './itineraryStorage'
+import { isValidPace } from './planningValidation'
 
 /**
  * Importação de roteiros JSON exportados pelo Travel Planner (somente
@@ -73,7 +75,7 @@ const FAILURE_MESSAGES: Record<ImportFailureCode, string> = {
     'O arquivo não parece ser um roteiro exportado pelo Travel Planner.',
   'recovery-envelope':
     'Este arquivo é uma cópia de segurança de recuperação do armazenamento, não um roteiro exportado. Ele não pode ser importado aqui; use as opções de recuperação da página inicial.',
-  'unsupported-version': `A versão do arquivo não é suportada. Esta versão do Travel Planner importa apenas arquivos da versão ${EXPORT_SCHEMA_VERSION}.`,
+  'unsupported-version': `A versão do arquivo não é suportada. Esta versão do Travel Planner importa arquivos das versões ${SUPPORTED_IMPORT_VERSIONS.join(' e ')}.`,
   'invalid-structure':
     'O arquivo está incompleto ou fora do formato esperado de um roteiro exportado.',
   'unknown-destination':
@@ -294,7 +296,36 @@ function readScheduledActivity(
   }
 }
 
-function readItinerary(root: PlainObject): Itinerary {
+/**
+ * Lê o orçamento. Obrigatório (número finito) quando `optional` é falso (v1).
+ * Na v2, a ausência (propriedade omitida) é aceita; qualquer valor presente — inclusive
+ * null — precisa ser um número finito (o validador rejeita 0 e negativos).
+ */
+function readBudget(
+  parent: PlainObject,
+  key: string,
+  path: string,
+  optional: boolean,
+): number | undefined {
+  if (optional && own(parent, key) === undefined) return undefined
+  return requireNumber(parent, key, path)
+}
+
+/** Lê o saldo: obrigatório quando `required`; do contrário, omitido ou número finito. */
+function readBalance(parent: PlainObject, required: boolean): number | undefined {
+  const key = 'saldoNaoAlocado'
+  if (!required && own(parent, key) === undefined) return undefined
+  return requireNumber(parent, key, 'resumoFinanceiro.saldoNaoAlocado')
+}
+
+/** Lê o ritmo (v2): omitido ou um dos três valores conhecidos. */
+function readPace(summary: PlainObject): TripPace | undefined {
+  const value = own(summary, 'ritmo')
+  if (value === undefined) return undefined
+  return isValidPace(value) ? value : invalidField('resumo.ritmo')
+}
+
+function readItinerary(root: PlainObject, version: number): Itinerary {
   const summary = requireObject(root, 'resumo', 'resumo')
   const destinationName = requireString(summary, 'destino', 'resumo.destino')
   const country = requireString(summary, 'pais', 'resumo.pais')
@@ -302,25 +333,26 @@ function readItinerary(root: PlainObject): Itinerary {
   const tripDays = requireInteger(summary, 'dias', 'resumo.dias')
   const style = requireString(summary, 'estilo', 'resumo.estilo')
   const interests = requireStringArray(summary, 'interesses', 'resumo.interesses')
-  const budget = requireNumber(summary, 'orcamentoInformado', 'resumo.orcamentoInformado')
+  // v1: orçamento e saldo SEMPRE obrigatórios (ausência nunca é reinterpretada como
+  // opcional). v2: ausência = propriedade omitida, aceita só de forma coerente.
+  const optional = version >= 2
+  const budget = readBudget(summary, 'orcamentoInformado', 'resumo.orcamentoInformado', optional)
+  const pace = optional ? readPace(summary) : undefined
 
   const schedule = requireArray(root, 'roteiro', 'roteiro')
   const financial = requireObject(root, 'resumoFinanceiro', 'resumoFinanceiro')
-  const financialBudget = requireNumber(
+  const financialBudget = readBudget(
     financial,
     'orcamentoInformado',
     'resumoFinanceiro.orcamentoInformado',
+    optional,
   )
   const estimatedCost = requireNumber(
     financial,
     'custoEstimadoAtividades',
     'resumoFinanceiro.custoEstimadoAtividades',
   )
-  const unallocated = requireNumber(
-    financial,
-    'saldoNaoAlocado',
-    'resumoFinanceiro.saldoNaoAlocado',
-  )
+  const unallocated = readBalance(financial, budget !== undefined || !optional)
   const averageCost = requireNumber(
     financial,
     'custoMedioAtividadesPorDia',
@@ -337,8 +369,13 @@ function readItinerary(root: PlainObject): Itinerary {
   }
   if (financialBudget !== budget) {
     reject('validation-failed', [
-      'O orçamento do resumo difere do orçamento do resumo financeiro.',
+      budget === undefined || financialBudget === undefined
+        ? 'O orçamento aparece em apenas um dos resumos.'
+        : 'O orçamento do resumo difere do orçamento do resumo financeiro.',
     ])
+  }
+  if (budget === undefined && unallocated !== undefined) {
+    reject('validation-failed', ['Saldo não alocado informado sem orçamento.'])
   }
 
   const destination = findDestination(destinationName)
@@ -373,12 +410,13 @@ function readItinerary(root: PlainObject): Itinerary {
       days: tripDays,
       interests: [...interests] as InterestCategory[],
       style: style as TravelStyle,
-      budget,
+      ...(budget === undefined ? {} : { budget }),
+      ...(pace === undefined ? {} : { pace }),
     },
     days,
     totals: {
       estimatedActivitiesCost: estimatedCost,
-      unallocatedBudget: unallocated,
+      ...(unallocated === undefined ? {} : { unallocatedBudget: unallocated }),
       averageCostPerDay: averageCost,
     },
     warnings,
@@ -425,11 +463,12 @@ export function parseItineraryImport(input: string): ItineraryImportResult {
     if (!isPlainObject(parsed)) reject('not-an-export')
     if (own(parsed, 'formato') === RECOVERY_EXPORT_FORMAT) reject('recovery-envelope')
     if (own(parsed, 'app') !== EXPORT_APP_NAME) reject('not-an-export')
-    if (own(parsed, 'schemaVersion') !== EXPORT_SCHEMA_VERSION) {
+    const version = own(parsed, 'schemaVersion')
+    if (typeof version !== 'number' || !SUPPORTED_IMPORT_VERSIONS.includes(version)) {
       reject('unsupported-version')
     }
 
-    const itinerary = readItinerary(parsed)
+    const itinerary = readItinerary(parsed, version)
 
     const validation = validateSavedItinerary({
       id: VALIDATION_PLACEHOLDER_ID,

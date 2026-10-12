@@ -65,6 +65,13 @@ function sample(): { doc: Doc; itinerary: Itinerary; destination: Destination } 
   return { ...built, doc: exportDoc(built.itinerary, built.destination) }
 }
 
+/** Mesma exportação, mas como arquivo da versão 1 (orçamento e saldo sempre obrigatórios). */
+function sampleV1(): { doc: Doc; itinerary: Itinerary; destination: Destination } {
+  const built = sample()
+  built.doc.schemaVersion = 1
+  return built
+}
+
 function text(doc: Doc): string {
   return JSON.stringify(doc)
 }
@@ -269,7 +276,9 @@ describe('parseItineraryImport — texto inválido e identificação do arquivo'
 
   it('rejeita versões de esquema incompatíveis', () => {
     const { doc } = sample()
-    expectRejected(text({ ...doc, schemaVersion: 2 }), 'unsupported-version')
+    expectRejected(text({ ...doc, schemaVersion: 3 }), 'unsupported-version')
+    expectRejected(text({ ...doc, schemaVersion: 2.5 }), 'unsupported-version')
+    expectRejected(text({ ...doc, schemaVersion: '2' }), 'unsupported-version')
     expectRejected(text({ ...doc, schemaVersion: 0 }), 'unsupported-version')
     expectRejected(text({ ...doc, schemaVersion: '1' }), 'unsupported-version')
     expectRejected(text({ ...doc, schemaVersion: null }), 'unsupported-version')
@@ -338,7 +347,7 @@ describe('parseItineraryImport — campos obrigatórios e tipos', () => {
   ]
 
   it.each(caminhos)('rejeita arquivo sem %s', (_caminho, remover) => {
-    const { doc } = sample()
+    const { doc } = sampleV1()
     expect(doc.roteiro[0].atividades.length).toBeGreaterThan(0)
     remover(doc)
     const result = expectRejected(text(doc), 'invalid-structure')
@@ -362,7 +371,7 @@ describe('parseItineraryImport — campos obrigatórios e tipos', () => {
     ['custo total como texto', (doc: Doc) => (doc.resumoFinanceiro.custoEstimadoAtividades = '1')],
     ['saldo nulo', (doc: Doc) => (doc.resumoFinanceiro.saldoNaoAlocado = null)],
   ])('rejeita tipo inválido: %s', (_label, alterar) => {
-    const { doc } = sample()
+    const { doc } = sampleV1()
     alterar(doc)
     expectRejected(text(doc), 'invalid-structure')
   })

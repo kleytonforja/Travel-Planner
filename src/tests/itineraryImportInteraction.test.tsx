@@ -292,8 +292,8 @@ describe('ImportItinerary — arquivos rejeitados', () => {
 
   it('versão de esquema incompatível', async () => {
     await expectRejection(
-      JSON.stringify({ ...exportDoc(), schemaVersion: 2 }),
-      /versão do arquivo não é suportada/,
+      JSON.stringify({ ...exportDoc(), schemaVersion: 3 }),
+      /versão do arquivo não é suportada.*versões 1 e 2/,
     )
   })
 
