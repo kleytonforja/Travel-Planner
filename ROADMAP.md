@@ -139,7 +139,11 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
-- [~] **M2.4 — exportação e importação JSON v2 (parcial)** (D42): `schemaVersion: 2` com orçamento, saldo e ritmo
+- [~] **M2.5 — geração sem orçamento e integração financeira (parcial)** (D43): o orçamento é opcional na geração
+      (sem teto, sem saldo, sem valor fictício), com a revisão, o resultado e a importação mostrando "Orçamento não
+      informado"; com orçamento o resultado é idêntico ao anterior (432 cenários). Ritmo no motor (M3) e validação
+      integrada/publicação (M2.6) **pendentes**. Validada localmente; sem commit.
+- [x] M2.4 — exportação e importação JSON v2 (D42, commit `0338fe8`): `schemaVersion: 2` com orçamento, saldo e ritmo
       opcionais (omitidos quando ausentes); importação de arquivos v1 (inalterada) e v2 com validação estrita.
       Geração sem orçamento (M2.5), ritmo no motor (M3) e validação integrada (M2.6) **pendentes**. Validada
       localmente; sem commit.

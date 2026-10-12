@@ -297,7 +297,8 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     expect(screen.queryByRole('button', { name: /^Continuar para/ })).toBeNull()
     expect(screen.queryByRole('complementary', { name: 'Próximas etapas' })).toBeNull()
     expect(screen.queryByText(/formulário tradicional/i)).toBeNull()
-    expect(screen.getByRole('button', { name: 'Gerar roteiro' })).toBeDisabled()
+    // Orçamento é opcional: com destino, duração e interesse, a geração já está liberada.
+    expect(screen.getByRole('button', { name: 'Gerar roteiro' })).toBeEnabled()
   })
 
   it('preserva a seleção ao voltar para a home e ao retornar ao planejamento', async () => {

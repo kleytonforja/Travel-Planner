@@ -1156,3 +1156,35 @@ está totalmente implementado.
 se ler do armazenamento um registro sem orçamento, trata a coleção como corrompida e bloqueia escritas, sem apagar
 dados (a recuperação guarda o bruto na quarentena); (2) arquivos exportados agora **só** abrem em versões que
 conheçam a v2.
+
+## D43 — Esquema v2: geração sem orçamento e integração financeira (M2.5)
+
+**Decisão**: o orçamento passa a ser realmente opcional na geração.
+- **Motor**: `budget` ausente (propriedade omitida) = **sem teto financeiro informado**. Nenhuma atividade elegível
+  é descartada por custo; não há valor fictício nem `Infinity`; nenhum aviso de orçamento (limite ou insuficiência)
+  é emitido. Continuam calculados `estimatedActivitiesCost` e `averageCostPerDay`; `unallocatedBudget` é omitido
+  (nunca 0). Orçamento **presente** deve ser finito e > 0; `null`, 0, negativo, `NaN`, `Infinity` ou texto são
+  recusados pelo motor com a mensagem "O orçamento informado é inválido…" (antes, o motor não validava esse caso;
+  a validação de entrada já o impedia). Sem orçamento, o resultado é idêntico ao de um orçamento maior que o custo
+  de todas as atividades, exceto pela ausência do saldo.
+- **Com orçamento, nada mudou**: seleção, ordem, custos, saldo, avisos e mensagens são idênticos. Comprovado por 432
+  cenários (3 destinos × 3 estilos × 4 durações × 3 conjuntos de interesses × 4 orçamentos) gravados **antes** da
+  alteração (`tests/fixtures/goldenItineraries.json`, resumos djb2 do resultado completo).
+- **Adaptador** (`planningAdapter`): "Ainda não defini" ou campo vazio ⇒ `budget` omitido; valor válido ⇒
+  conversão por pessoa em centavos (como antes); texto inválido ou valor pequeno demais para dividir ⇒ não gera,
+  com atalho para a etapa 6. O ritmo **não** é repassado ao motor (M3). `validatePlanningInput` aceita a ausência.
+- **Interface**: a revisão permite gerar sem orçamento ("Orçamento não informado", sem saldo, texto "o roteiro não
+  tem teto de custo"); o resultado, o resumo financeiro e a pré-visualização da importação mostram "Orçamento não
+  informado" e ocultam o saldo; custo estimado e média por dia permanecem; nenhuma expressão de "orçamento
+  ilimitado". A frase de gastos não contemplados deixa de citar o saldo quando ele não existe.
+- **Compatibilidade v1/v2**: inalterada em relação ao D41/D42 (armazenamento e JSON); roteiros antigos continuam
+  apresentáveis com orçamento e saldo.
+
+**Limitações restantes**: ritmo não aplicado nem gravado (M3); viajantes, transporte, perfil e acessibilidade não
+influenciam o roteiro; sem orçamento o roteiro tende a incluir mais atividades (todas as elegíveis que couberem),
+ainda limitado pelo catálogo (4 a 10 atividades por estilo) e pela agenda; hospedagem, alimentação e transporte não
+são calculados; risco de downgrade (D41/D42) agora **alcançável** pela interface, pois roteiros sem orçamento passam a
+ser criados.
+
+**Pendências do M3**: aplicar o ritmo como limite de atividades por dia, passar `pace` do adaptador ao motor e gravá-lo
+no roteiro (com aviso das atividades deixadas de fora pelo ritmo), mantendo roteiros sem ritmo como "sem limite".

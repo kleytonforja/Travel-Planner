@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **M2.4** — importação e exportação JSON v2 (parcial). Anteriores: M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **M2.5** — geração sem orçamento e integração financeira (parcial). Anteriores: M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | 🚧 **M2.4 implementada e validada localmente** em 2026-10-12 (ver "Relatório do M2.4"); esquema v2 **não** concluído (M2.5 e M2.6 pendentes; ritmo no motor é M3); **sem commit do M2.4** (aguarda autorização) |
-| Próximo checkpoint  | Revisão/commit do M2.4 e início do M2.5 (geração sem orçamento e interface), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | 🚧 **M2.5 implementada e validada localmente** em 2026-10-12 (ver "Relatório do M2.5"); falta a validação integrada M2.6; ritmo no motor é M3; **sem commit do M2.5** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do M2.5 e início do M2.6 (validação integrada), mediante autorização; depois M3 (ritmo). Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -1984,3 +1984,25 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   derrubou os testes esperados. Total: 770 testes em 40 arquivos.
 - **Riscos**: downgrade e arquivos v2 ilegíveis por versões anteriores (recusa segura); nenhum fluxo da interface cria
   ainda roteiros sem orçamento ou com ritmo.
+
+## Relatório do M2.5 — geração sem orçamento e integração financeira (2026-10-12)
+
+- **Consolidação do M2.4**: validado (typecheck, lint, build, 770 testes, diff --check) e commitado localmente
+  (`0338fe8`); árvore limpa antes do M2.5.
+- **Implementado** (D43): motor sem teto quando `budget` está ausente (sem Infinity, sem valor fictício, sem aviso de
+  orçamento, sem saldo); recusa de orçamento presente inválido no motor; adaptador que omite o orçamento quando não
+  informado; `validatePlanningInput` aceitando a ausência; revisão liberada sem orçamento; "Orçamento não informado" no
+  resultado, no resumo financeiro e na pré-visualização do import; saldo oculto; frase de gastos não contemplados sem
+  citar saldo inexistente.
+- **Regressão**: 432 cenários com orçamento gerados antes da alteração (golden) produzem exatamente o mesmo resultado;
+  verificação por mutação (`<=` → `<` na seleção) derrubou o teste.
+- **Testes**: `budgetlessGeneration.test.ts` (17: motor, regressão, adaptador, persistência e JSON v2 de ida e volta,
+  v1 histórico) e `budgetlessFlow.test.tsx` (3: fluxo sem orçamento até salvar e reabrir, com orçamento inalterado,
+  roteiro antigo apresentável); ajustes nos testes de revisão, etapa 6, adaptador, contrato v2 e fluxo (o bloqueio sem
+  orçamento deixou de existir). Total: 792 testes em 42 arquivos, 3 execuções completas sem falha.
+- **Chromium (18/18)**: com orçamento (resultado com saldo, salvo 500/pessoa); sem orçamento (revisão liberada, resultado
+  sem saldo, salvo sem budget/saldo, exportação v2 sem os campos); reabrir os dois roteiros; importar v2 sem orçamento
+  (pré-visualização e gravação) e v1 com orçamento; sem erros de console; sem overflow em 375, 768, 1366 e 1920 px.
+  Nota de método: `innerText` sofre o `uppercase` do CSS; as verificações usam `textContent`.
+- **Limitações restantes e pendências do M3**: ver D43 (ritmo, preferências não usadas, catálogo, downgrade alcançável).
+- **Riscos**: o downgrade registrado em D41/D42 passa a ser alcançável; apenas Chromium.

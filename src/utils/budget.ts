@@ -123,7 +123,7 @@ export function centsToInputValue(cents: number): string {
 export function describeBudget(budget: BudgetDraft, travelers: number, currency: Currency | null): string {
   const style = STYLE_LABELS[budget.style]
   const figures = currency ? computeBudget(budget, travelers) : null
-  if (!figures || !currency) return `${style}; valor não definido`
+  if (!figures || !currency) return `${style}; orçamento não informado`
   const per = centsToMoney(figures.perPersonCents, currency)
   const total = centsToMoney(figures.totalCents, currency)
   return budget.basis === 'total'

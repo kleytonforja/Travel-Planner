@@ -14,8 +14,8 @@ export interface WizardOptions {
   interests?: string[]
   /** Rótulo do estilo (ex.: 'Econômico'); o padrão do fluxo é Equilibrado. */
   style?: string
-  /** Orçamento por pessoa, em texto (ex.: '100'). */
-  budgetPerPerson?: string
+  /** Orçamento por pessoa, em texto (ex.: '100'); `null` = não informar orçamento. */
+  budgetPerPerson?: string | null
 }
 
 export async function driveWizardToReview(
@@ -36,9 +36,11 @@ export async function driveWizardToReview(
   }
   await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
   if (style) await user.click(screen.getByRole('button', { name: new RegExp(`^${style}`) }))
-  await user.click(screen.getByRole('button', { name: /^Informar um valor/ }))
-  await user.click(screen.getByRole('button', { name: /^Valor por pessoa/ }))
-  await user.type(screen.getByLabelText(/^Valor por pessoa/), budgetPerPerson)
+  if (budgetPerPerson !== null) {
+    await user.click(screen.getByRole('button', { name: /^Informar um valor/ }))
+    await user.click(screen.getByRole('button', { name: /^Valor por pessoa/ }))
+    await user.type(screen.getByLabelText(/^Valor por pessoa/), budgetPerPerson)
+  }
   await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
   await screen.findByRole('heading', { name: 'Sua viagem está quase pronta!' })
 }

@@ -51,12 +51,12 @@ describe('Etapa 6 — Orçamento', () => {
     expect(styles().getAllByRole('button').filter(pressed)).toHaveLength(1)
     expect(pressed(amountMode().getByRole('button', { name: /^Ainda não defini/ }))).toBe(true)
     expect(screen.queryByLabelText(/^Valor/)).toBeNull()
-    expect(summary()).toHaveTextContent('Orçamento: Equilibrado; valor não definido')
+    expect(summary()).toHaveTextContent('Orçamento: Equilibrado; orçamento não informado')
     // Opcional: segue sem valor para a revisão.
     expect(legacy()).toBeEnabled()
     expect(screen.getByText(/estimativas ilustrativas/)).toBeInTheDocument()
     expect(screen.getByText(/não representa dinheiro disponível/)).toBeInTheDocument()
-    expect(screen.getByText(/hospedagem, alimentação e transporte não são calculados/)).toBeInTheDocument()
+    expect(screen.getByText(/hospedagem, alimentação e transporte\s+não são calculados/i)).toBeInTheDocument()
   })
 
   it('estilo é escolha única', async () => {
@@ -216,12 +216,13 @@ describe('Etapa 6 — Orçamento', () => {
     expect(await screen.findByRole('button', { name: 'Salvar roteiro' })).toBeInTheDocument()
   })
 
-  it('sem orçamento definido a revisão bloqueia a geração e pede o valor', async () => {
+  it('sem orçamento definido a revisão permite gerar, sem alerta e sem saldo', async () => {
     const user = userEvent.setup()
     await toBudget(user)
     await user.click(legacy())
-    expect(screen.getByRole('button', { name: 'Gerar roteiro' })).toBeDisabled()
-    expect(screen.getByRole('alert')).toHaveTextContent('Informe um orçamento')
+    expect(screen.getByRole('button', { name: 'Gerar roteiro' })).toBeEnabled()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getByRole('region', { name: 'Estilo e orçamento' })).toHaveTextContent('Orçamento não informado')
     expect(screen.getByRole('region', { name: 'Estilo e orçamento' })).toHaveTextContent('Equilibrado')
   })
 

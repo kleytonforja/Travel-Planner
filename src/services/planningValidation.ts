@@ -77,10 +77,10 @@ export function validatePlanningInput(
     errors.style = 'Selecione um estilo de viagem.'
   }
 
-  // A geração ainda exige o orçamento (a ausência só é aceita no contrato de
-  // dados, não na geração): sem valor fictício e sem aceitar inválidos.
-  if (!isValidBudgetValue(input.budget)) {
-    errors.budget = 'Informe um orçamento numérico maior que zero.'
+  // Orçamento opcional (v2): a ausência (propriedade omitida) é válida e significa "sem teto
+  // financeiro". Quando presente — inclusive null, 0 ou negativo — precisa ser finito e > 0.
+  if (input.budget !== undefined && !isValidBudgetValue(input.budget)) {
+    errors.budget = 'Informe um orçamento numérico maior que zero ou deixe o orçamento em branco.'
   }
 
   // `pace` é opcional, mas, se presente, precisa ser conhecido (inclusive `null`).

@@ -171,7 +171,7 @@ export function ReviewStep({ draft, goToStep, onItineraryGenerated }: StepProps)
           <p>
             {figures && currency
               ? describeBudget(draft.budget, totalTravelers(travelers), currency)
-              : 'Orçamento não definido.'}
+              : 'Orçamento não informado.'}
           </p>
         </ReviewCard>
       </div>
@@ -182,11 +182,13 @@ export function ReviewStep({ draft, goToStep, onItineraryGenerated }: StepProps)
       >
         <p className="font-semibold text-white">O que será usado na geração do roteiro</p>
         <p className="mt-1">
-          Destino, duração em dias, interesses, estilo e orçamento por pessoa
-          {adapted.ok && currency && adapted.input.budget !== undefined
-            ? ` (${centsToMoney(Math.round(adapted.input.budget * 100), currency)}${draft.budget.basis === 'total' ? ', do valor total dividido igualmente entre os viajantes e arredondado para baixo' : ''})`
-            : ''}
-          .
+          {adapted.ok && adapted.input.budget === undefined
+            ? 'Destino, duração em dias, interesses e estilo. Sem orçamento informado, o roteiro não tem teto de custo: inclui as atividades compatíveis que couberem na agenda, com seus custos ilustrativos, sem saldo.'
+            : `Destino, duração em dias, interesses, estilo e orçamento por pessoa${
+                adapted.ok && currency && adapted.input.budget !== undefined
+                  ? ` (${centsToMoney(Math.round(adapted.input.budget * 100), currency)}${draft.budget.basis === 'total' ? ', do valor total dividido igualmente entre os viajantes e arredondado para baixo' : ''})`
+                  : ''
+              }.`}
         </p>
         <p className="mt-2">
           Ainda não influenciam o roteiro: datas exatas, composição dos viajantes, perfil,

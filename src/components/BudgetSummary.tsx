@@ -32,16 +32,20 @@ const NON_CONTEMPLATED_EXPENSES = [
  */
 export function BudgetSummary({ totals, budget, currency }: BudgetSummaryProps) {
   const items = [
-    ...(budget === undefined
-      ? []
-      : [
-          {
-            label: 'Orçamento informado',
-            description: 'Valor total por pessoa definido por você no planejamento.',
-            value: formatCurrency(budget, currency),
-            tone: 'text-slate-900',
-          },
-        ]),
+    budget === undefined
+      ? {
+          label: 'Situação do orçamento',
+          description:
+            'Sem orçamento informado, o roteiro não tem teto de custo e não há saldo a calcular.',
+          value: 'Orçamento não informado',
+          tone: 'text-slate-900',
+        }
+      : {
+          label: 'Orçamento informado',
+          description: 'Valor total por pessoa definido por você no planejamento.',
+          value: formatCurrency(budget, currency),
+          tone: 'text-slate-900',
+        },
     {
       label: 'Custo estimado das atividades',
       description: 'Soma dos custos ilustrativos das atividades sugeridas.',
@@ -116,8 +120,10 @@ export function BudgetSummary({ totals, budget, currency }: BudgetSummaryProps) 
           ))}
         </ul>
         <p className="mt-3 text-xs text-slate-500">
-          O Travel Planner não estima esses valores nesta versão. Reserve
-          parte do saldo não alocado para cobri-los por conta própria.
+          O Travel Planner não estima esses valores nesta versão.{' '}
+          {totals.unallocatedBudget === undefined
+            ? 'Considere reservar um valor à parte para cobri-los por conta própria.'
+            : 'Reserve parte do saldo não alocado para cobri-los por conta própria.'}
         </p>
       </div>
 

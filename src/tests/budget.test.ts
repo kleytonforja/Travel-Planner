@@ -127,7 +127,7 @@ describe('opcionalidade e descrição', () => {
   })
 
   it('descreve o orçamento deixando clara a modalidade', () => {
-    expect(describeBudget(DEFAULT_BUDGET, 2, BRL)).toBe('Equilibrado; valor não definido')
+    expect(describeBudget(DEFAULT_BUDGET, 2, BRL)).toBe('Equilibrado; orçamento não informado')
     expect(describeBudget(value('3000'), 3, BRL)).toMatch(/^Equilibrado; total de .*3\.000,00.* \(.*1\.000,00.* por pessoa\)$/)
     expect(describeBudget(value('1000'), 3, BRL)).toContain('cerca de')
     expect(describeBudget({ ...value('500', 'perPerson'), style: 'economico' }, 2, BRL)).toMatch(/^Econômico; .*500,00.* por pessoa \(total de .*1\.000,00.*\)$/)

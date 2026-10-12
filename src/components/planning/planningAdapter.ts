@@ -1,7 +1,7 @@
 import { destinations } from '../../data/destinations'
 import { validatePlanningInput } from '../../services/planningValidation'
 import type { Destination, PlanningInput } from '../../types'
-import { centsToInputValue, computeBudget } from '../../utils/budget'
+import { centsToInputValue, computeBudget, parseAmount, type AmountParse } from '../../utils/budget'
 import { totalTravelers } from '../../utils/travelers'
 import { resolveTripDays, type PlanningDraft, type PlanningStepId } from './planningSteps'
 
@@ -13,7 +13,7 @@ import { resolveTripDays, type PlanningDraft, type PlanningStepId } from './plan
  * - Suportados diretamente: destino, interesses, estilo financeiro.
  * - Conversíveis sem perda de significado: duração (datas ou dias → `days`) e
  *   orçamento (valor total ou por pessoa → `budget` por pessoa, em centavos,
- *   arredondando para baixo; nunca inventa valor).
+ *   arredondando para baixo; sem orçamento, `budget` fica omitido; nunca inventa valor).
  * - Não suportados pelo motor: datas exatas, composição dos viajantes (só entra
  *   no cálculo do orçamento por pessoa), transporte, ritmo, perfil e acessibilidade.
  */
@@ -37,39 +37,53 @@ const FIELD_STEP: Record<string, PlanningStepId> = {
 }
 
 /**
- * Monta o `PlanningInput` do motor a partir do rascunho. Sem orçamento (o motor
- * exige valor > 0), a geração é bloqueada em vez de assumir um valor.
+ * Monta o `PlanningInput` do motor a partir do rascunho.
+ *
+ * Orçamento: sem valor informado ("Ainda não defini" ou campo vazio), a propriedade
+ * `budget` é OMITIDA (sem teto financeiro): nenhum valor é inventado. Com valor válido,
+ * converte-se para valor por pessoa em centavos, arredondando para baixo. Texto inválido,
+ * ou valor pequeno demais para dividir entre os viajantes, impede a geração.
+ * O ritmo NÃO é repassado ao motor (aplicação prevista no M3).
  */
 export function buildPlanningInput(draft: PlanningDraft): PlanningAdapterResult {
   const destination = destinations.find((item) => item.id === draft.destinationId)
-  const figures = computeBudget(draft.budget, totalTravelers(draft.travelers))
-  const perPerson = figures !== null && figures.perPersonCents > 0 ? Number(centsToInputValue(figures.perPersonCents)) : NaN
+  const travelers = totalTravelers(draft.travelers)
+  const parsed: AmountParse =
+    draft.budget.amountMode === 'value' ? parseAmount(draft.budget.amount) : { status: 'empty' }
+  const issues: PlanningIssue[] = []
+  let budgetField: { budget?: number } = {}
+
+  if (parsed.status === 'invalid') {
+    issues.push({ step: 'orcamento', message: 'Corrija o valor do orçamento ou escolha "Ainda não defini" para gerar o roteiro.' })
+  } else if (parsed.status === 'valid') {
+    const figures = computeBudget(draft.budget, travelers)
+    if (figures !== null && figures.perPersonCents > 0) {
+      budgetField = { budget: Number(centsToInputValue(figures.perPersonCents)) }
+    } else {
+      issues.push({
+        step: 'orcamento',
+        message: `O valor é pequeno demais para dividir entre ${travelers} viajantes: aumente o valor ou escolha "Ainda não defini".`,
+      })
+    }
+  }
 
   const input: PlanningInput = {
     destinationId: draft.destinationId,
     days: resolveTripDays(draft) ?? NaN,
     interests: draft.interests,
     style: draft.budget.style,
-    budget: perPerson,
+    ...budgetField,
   }
 
   const validation = validatePlanningInput(
     input,
     destinations.map((item) => item.id),
   )
-  const issues: PlanningIssue[] = Object.entries(validation.errors).map(([field, message]) => ({
-    step: FIELD_STEP[field] ?? 'revisao',
-    message: field === 'budget' ? budgetMessage(draft) : (message ?? ''),
-  }))
-  if (!validation.valid || !destination) {
+  for (const [field, message] of Object.entries(validation.errors)) {
+    issues.push({ step: FIELD_STEP[field] ?? 'revisao', message: message ?? '' })
+  }
+  if (issues.length > 0 || !destination) {
     return { ok: false, issues: issues.length > 0 ? issues : [{ step: 'destino', message: 'Selecione um destino.' }] }
   }
   return { ok: true, input, destination }
-}
-
-function budgetMessage(draft: PlanningDraft): string {
-  if (draft.budget.amountMode !== 'value' || draft.budget.amount.trim() === '') {
-    return 'Informe um orçamento para gerar o roteiro: o gerador precisa de um valor por pessoa.'
-  }
-  return 'Corrija o valor do orçamento: o gerador precisa de um valor por pessoa maior que zero.'
 }

@@ -8,6 +8,7 @@ import type {
   ScheduledActivity,
   ScheduledPeriod,
 } from '../types'
+import { isValidBudgetValue } from './planningValidation'
 
 /**
  * Gerador determinístico de roteiros (regra de negócio pura, fora da
@@ -196,6 +197,16 @@ export function generateItinerary(
   input: PlanningInput,
   destination: Destination,
 ): ItineraryGenerationResult {
+  // Orçamento presente precisa ser um número finito > 0 (contrato v2). A AUSÊNCIA
+  // (propriedade omitida) é válida e significa "sem teto financeiro informado".
+  const budget = input.budget
+  if (budget !== undefined && !isValidBudgetValue(budget)) {
+    return {
+      ok: false,
+      message: 'O orçamento informado é inválido: use um valor numérico maior que zero ou não informe orçamento.',
+    }
+  }
+
   const eligible = destination.activities.filter(
     (activity) =>
       activity.suitableStyles.includes(input.style) &&
@@ -210,25 +221,16 @@ export function generateItinerary(
     }
   }
 
-  // Contrato v2 prepara o orçamento opcional, mas a geração sem orçamento ainda
-  // não está ativada: recusa explícita, sem valor de orçamento fictício.
-  const budget = input.budget
-  if (budget === undefined) {
-    return {
-      ok: false,
-      message:
-        'Informe um orçamento por pessoa para gerar o roteiro: a geração sem orçamento ainda não está disponível.',
-    }
-  }
-
   const sorted = sortEligible(eligible, input.interests, input.style)
 
   // Seleção gananciosa respeitando o orçamento (atividades gratuitas sempre cabem).
+  // Sem orçamento informado não há teto: nenhuma atividade elegível é descartada por custo
+  // (nada de valor fictício nem Infinity como substituto).
   const selected: Activity[] = []
   let selectedCost = 0
   let skippedByBudget = 0
   for (const activity of sorted) {
-    if (selectedCost + activity.estimatedCost <= budget) {
+    if (budget === undefined || selectedCost + activity.estimatedCost <= budget) {
       selected.push(activity)
       selectedCost += activity.estimatedCost
     } else {
@@ -305,7 +307,8 @@ export function generateItinerary(
     days,
     totals: {
       estimatedActivitiesCost: scheduledCost,
-      unallocatedBudget: budget - scheduledCost,
+      // Sem orçamento não existe saldo: a propriedade é omitida (nunca 0).
+      ...(budget === undefined ? {} : { unallocatedBudget: budget - scheduledCost }),
       averageCostPerDay: scheduledCost / input.days,
     },
     warnings,

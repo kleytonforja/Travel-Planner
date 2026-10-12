@@ -49,13 +49,30 @@ describe('buildPlanningInput', () => {
     expect(result.ok && result.input.style).toBe('economico')
   })
 
-  it('sem orçamento bloqueia em vez de inventar valor', () => {
-    for (const budget of [DEFAULT_BUDGET, { ...DEFAULT_BUDGET, amountMode: 'value' as const, amount: '' }]) {
+  it('sem orçamento a entrada é válida e nenhum valor financeiro é inventado', () => {
+    for (const budget of [
+      DEFAULT_BUDGET,
+      { ...DEFAULT_BUDGET, amountMode: 'value' as const, amount: '' },
+      { ...DEFAULT_BUDGET, amountMode: 'undecided' as const, amount: '9999' }, // texto esquecido não vale
+    ]) {
       const result = buildPlanningInput(complete({ budget }))
-      expect(result.ok).toBe(false)
-      if (result.ok) return
-      expect(result.issues).toEqual([{ step: 'orcamento', message: expect.stringContaining('Informe um orçamento') }])
+      expect(result.ok).toBe(true)
+      if (!result.ok) return
+      expect(result.input).not.toHaveProperty('budget')
+      expect(Object.keys(result.input).sort()).toEqual(['days', 'destinationId', 'interests', 'style'])
     }
+  })
+
+  it('com orçamento a conversão atual é preservada (por pessoa direto; total ÷ viajantes para baixo)', () => {
+    const perPerson = buildPlanningInput(complete())
+    expect(perPerson.ok && perPerson.input.budget).toBe(1500)
+    const total = buildPlanningInput(
+      complete({
+        travelers: { ...DEFAULT_TRAVELERS, adults: 3 },
+        budget: { ...DEFAULT_BUDGET, amountMode: 'value', basis: 'total', amount: '1000' },
+      }),
+    )
+    expect(total.ok && total.input.budget).toBe(333.33)
   })
 
   it('orçamento inválido ou pequeno demais é apontado na etapa de orçamento', () => {
@@ -74,7 +91,8 @@ describe('buildPlanningInput', () => {
     const empty = buildPlanningInput(EMPTY_DRAFT)
     expect(empty.ok).toBe(false)
     if (empty.ok) return
-    expect(empty.issues.map((issue) => issue.step).sort()).toEqual(['datas', 'destino', 'interesses', 'orcamento'])
+    // O orçamento é opcional: não aparece entre as pendências.
+    expect(empty.issues.map((issue) => issue.step).sort()).toEqual(['datas', 'destino', 'interesses'])
 
     const noDays = buildPlanningInput(complete({ dateMode: 'dates', startDate: '', endDate: '' }))
     expect(!noDays.ok && noDays.issues.map((i) => i.step)).toEqual(['datas'])

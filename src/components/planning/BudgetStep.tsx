@@ -171,8 +171,9 @@ export function BudgetStep({ draft, onDraftChange }: StepProps) {
       <p className="mt-4 text-sm text-night-ink-muted">
         Valores de atrações são estimativas ilustrativas. O orçamento serve de teto para
         escolher atrações e não representa dinheiro disponível para outras despesas;
-        hospedagem, alimentação e transporte não são calculados. O estilo e o valor por pessoa
-        são usados na geração do roteiro, na revisão. Estas escolhas ficam guardadas apenas
+        sem orçamento, o roteiro não tem teto de custo. Hospedagem, alimentação e transporte
+        não são calculados. O estilo e o valor por pessoa (quando houver) são usados na geração
+        do roteiro, na revisão. Estas escolhas ficam guardadas apenas
         nesta sessão.
       </p>
     </section>

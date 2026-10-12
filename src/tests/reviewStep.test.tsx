@@ -141,21 +141,39 @@ describe('Etapa 7 — Revisão e geração', () => {
     expect(screen.getByRole('button', { name: /Exportar/ })).toBeInTheDocument()
   })
 
-  it('sem orçamento a geração é bloqueada, com explicação e atalho de correção', async () => {
+  it('sem orçamento a revisão permite gerar, mostra "Orçamento não informado" e não inventa saldo', async () => {
     const user = userEvent.setup()
     await toReview(user, { budget: null })
-    expect(card('Estilo e orçamento')).toHaveTextContent('Orçamento não definido')
-    expect(generate()).toBeDisabled()
-    const alert = screen.getByRole('alert')
-    expect(alert).toHaveTextContent('Informe um orçamento para gerar o roteiro')
-    await user.click(within(alert).getByRole('button', { name: 'Corrigir' }))
-    expect(await screen.findByRole('heading', { name: 'Quanto você pretende investir na viagem?' })).toBeInTheDocument()
+    expect(card('Estilo e orçamento')).toHaveTextContent('Orçamento não informado')
+    expect(card('Estilo e orçamento')).not.toHaveTextContent(/R\$|€|saldo/i)
+    expect(generate()).toBeEnabled()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getByRole('complementary', { name: 'O que o gerador utiliza' })).toHaveTextContent(/Sem orçamento informado, o roteiro não tem teto de custo/)
+    await user.click(generate())
+    expect(await screen.findByRole('button', { name: 'Salvar roteiro' })).toBeInTheDocument()
+    expect(screen.getAllByText('Orçamento não informado').length).toBeGreaterThanOrEqual(2) // resumo da viagem e resumo financeiro
+    expect(screen.queryByText('Saldo não alocado')).toBeNull()
+    expect(screen.getAllByText(/Custo estimado das atividades/).length).toBeGreaterThan(0)
+    expect(screen.queryByText(/ilimitado/i)).toBeNull()
+  })
+
+  it('orçamento digitado e inválido continua bloqueando a geração, com atalho de correção', async () => {
+    const user = userEvent.setup()
+    await toReview(user, { budget: null })
+    await user.click(screen.getByRole('button', { name: 'Editar Estilo e orçamento' }))
     await user.click(screen.getByRole('button', { name: /^Informar um valor/ }))
     await user.click(screen.getByRole('button', { name: /^Valor por pessoa/ }))
+    await user.type(screen.getByLabelText(/^Valor por pessoa/), '0')
+    // O próprio passo bloqueia o avanço, mas a revisão acessível por "Voltar para a revisão" também recusa.
+    await user.click(screen.getByRole('button', { name: 'Voltar para a revisão' }))
+    expect(generate()).toBeDisabled()
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveTextContent('Corrija o valor do orçamento')
+    await user.click(within(alert).getByRole('button', { name: 'Corrigir' }))
+    await user.clear(screen.getByLabelText(/^Valor por pessoa/))
     await user.type(screen.getByLabelText(/^Valor por pessoa/), '900')
     await user.click(screen.getByRole('button', { name: 'Voltar para a revisão' }))
     expect(generate()).toBeEnabled()
-    expect(screen.queryByRole('alert')).toBeNull()
   })
 
   it('volta pela navegação padrão e preserva tudo', async () => {

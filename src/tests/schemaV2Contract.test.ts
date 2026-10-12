@@ -13,9 +13,8 @@ import { buildHistoricalValidRecord, HISTORICAL_VALID_INPUT } from './fixtures/s
 
 /**
  * Contratos de dados do esquema v2 (M2.2): orçamento, ritmo e saldo opcionais.
- * Os tipos aceitam a ausência; a geração e a importação ainda exigem o orçamento
- * (M2.4 e M2.5). A persistência aceita a omissão completa (ver
- * `itineraryStorageV2.test.ts`, M2.3).
+ * Os tipos aceitam a ausência; a geração (M2.5), a persistência (M2.3) e a
+ * importação/exportação (M2.4) tratam a omissão completa (ver os testes de cada uma).
  */
 
 const KNOWN_IDS = destinations.map((destination) => destination.id)
@@ -47,13 +46,14 @@ describe('Contrato v2 — orçamento', () => {
     expect('budget' in input).toBe(false)
     // JSON não cria `budget` (nem null) quando a propriedade é omitida.
     expect(JSON.parse(JSON.stringify(input))).not.toHaveProperty('budget')
-    // A ausência não é um valor de orçamento válido…
+    // A ausência não é um VALOR de orçamento…
     expect(isValidBudgetValue(undefined)).toBe(false)
-    // …e a geração ainda a recusa, sem inventar valor (a ativação é da M2.5).
-    expect(validatePlanningInput(input, KNOWN_IDS).errors.budget).toBeTruthy()
+    // …mas é uma entrada válida (orçamento opcional, M2.5): gera sem teto e sem saldo.
+    expect(validatePlanningInput(input, KNOWN_IDS)).toEqual({ valid: true, errors: {} })
     const generation = generateItinerary(input, rio)
-    expect(generation.ok).toBe(false)
-    expect(generation.ok === false && generation.message).toMatch(/Informe um orçamento/)
+    expect(generation.ok).toBe(true)
+    expect(generation.ok && generation.itinerary.totals).not.toHaveProperty('unallocatedBudget')
+    expect(generation.ok && generation.itinerary.input).not.toHaveProperty('budget')
   })
 
   it.each([
