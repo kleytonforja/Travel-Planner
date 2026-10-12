@@ -19,6 +19,9 @@ export type InterestCategory =
 /** Estilos de viagem selecionáveis. */
 export type TravelStyle = 'economico' | 'equilibrado' | 'confortavel'
 
+/** Ritmo da viagem (contrato v2; ainda não aplicado pelo motor). */
+export type TripPace = 'tranquilo' | 'equilibrado' | 'intenso'
+
 /** Período do dia recomendado para uma atividade. */
 export type DayPeriod = 'manha' | 'tarde' | 'noite' | 'qualquer'
 
@@ -74,8 +77,17 @@ export interface PlanningInput {
   interests: InterestCategory[]
   /** Estilo de viagem. */
   style: TravelStyle
-  /** Orçamento total por pessoa, na moeda do destino (valor positivo). */
-  budget: number
+  /**
+   * Orçamento total por pessoa, na moeda do destino (valor positivo).
+   * Contrato v2: a ausência é representada pela propriedade OMITIDA (nunca
+   * `null`, 0 ou valor fictício). A geração ainda exige o orçamento.
+   */
+  budget?: number
+  /**
+   * Ritmo da viagem (contrato v2). Omitido = gerado sem limite por dia (semântica
+   * dos roteiros anteriores). Ainda não influencia a distribuição.
+   */
+  pace?: TripPace
 }
 
 /** Período efetivamente agendado (uma atividade sempre cai em um período concreto). */
@@ -104,8 +116,11 @@ export interface ItineraryDay {
 export interface ItineraryTotals {
   /** Soma dos custos estimados das atividades agendadas. */
   estimatedActivitiesCost: number
-  /** Diferença entre o orçamento informado e o custo estimado das atividades. */
-  unallocatedBudget: number
+  /**
+   * Diferença entre o orçamento informado e o custo estimado das atividades.
+   * Contrato v2: omitido quando não há orçamento (nunca 0).
+   */
+  unallocatedBudget?: number
   /** Custo médio estimado das atividades por dia de viagem. */
   averageCostPerDay: number
 }

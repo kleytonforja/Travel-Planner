@@ -139,6 +139,10 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
+- [~] **M2.2 — contratos de tipos do esquema v2 (parcial)** (D40): `budget?`, `pace?` e
+      `unallocatedBudget?` nos tipos, com validação de contrato. Comportamento atual preservado: geração e
+      persistência ainda exigem orçamento. M2.3 (persistência), M2.4 (import/export v2), M2.5 (geração sem
+      orçamento e interface) e M2.6 (validação integrada) **pendentes**. Validada localmente; sem commit.
 - [x] **V1-T3.8 — planejamento progressivo concluído; formulário tradicional removido** (D39):
       o fluxo de sete etapas é a única forma de criar roteiros; a home tem a seção "Planeje
       sua viagem" e os cards de destino abrem o planejamento. Pendências: orçamento ausente

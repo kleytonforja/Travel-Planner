@@ -336,17 +336,19 @@ export function ImportItinerary({
                 </div>
                 {previewDestination && (
                   <>
-                    <div>
-                      <dt className="font-semibold text-slate-700">
-                        Orçamento informado
-                      </dt>
-                      <dd className="text-slate-600">
-                        {formatCurrency(
-                          preview.itinerary.input.budget,
-                          previewDestination.currency,
-                        )}
-                      </dd>
-                    </div>
+                    {preview.itinerary.input.budget !== undefined && (
+                      <div>
+                        <dt className="font-semibold text-slate-700">
+                          Orçamento informado
+                        </dt>
+                        <dd className="text-slate-600">
+                          {formatCurrency(
+                            preview.itinerary.input.budget,
+                            previewDestination.currency,
+                          )}
+                        </dd>
+                      </div>
+                    )}
                     <div>
                       <dt className="font-semibold text-slate-700">
                         Custo estimado das atividades (ilustrativo)

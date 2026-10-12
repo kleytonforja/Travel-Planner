@@ -1,4 +1,4 @@
-import type { PlanningInput, TravelStyle } from '../types'
+import type { PlanningInput, TravelStyle, TripPace } from '../types'
 
 /**
  * Validação do formulário de planejamento.
@@ -16,6 +16,7 @@ export type PlanningField =
   | 'interests'
   | 'style'
   | 'budget'
+  | 'pace'
 
 export interface PlanningValidationResult {
   valid: boolean
@@ -24,6 +25,22 @@ export interface PlanningValidationResult {
 }
 
 const VALID_STYLES: TravelStyle[] = ['economico', 'equilibrado', 'confortavel']
+
+const VALID_PACES: readonly TripPace[] = ['tranquilo', 'equilibrado', 'intenso']
+
+/**
+ * Contrato v2 do orçamento: quando PRESENTE, deve ser um número finito e
+ * positivo. `null`, 0, negativos, NaN, Infinity e não numéricos são inválidos.
+ * (A AUSÊNCIA — propriedade omitida — é tratada por quem chama.)
+ */
+export function isValidBudgetValue(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+}
+
+/** Contrato v2 do ritmo: quando PRESENTE, deve ser um dos três valores conhecidos. */
+export function isValidPace(value: unknown): value is TripPace {
+  return typeof value === 'string' && (VALID_PACES as readonly string[]).includes(value)
+}
 
 /**
  * Valida os dados do formulário de planejamento.
@@ -60,8 +77,15 @@ export function validatePlanningInput(
     errors.style = 'Selecione um estilo de viagem.'
   }
 
-  if (!Number.isFinite(input.budget) || input.budget <= 0) {
+  // A geração ainda exige o orçamento (a ausência só é aceita no contrato de
+  // dados, não na geração): sem valor fictício e sem aceitar inválidos.
+  if (!isValidBudgetValue(input.budget)) {
     errors.budget = 'Informe um orçamento numérico maior que zero.'
+  }
+
+  // `pace` é opcional, mas, se presente, precisa ser conhecido (inclusive `null`).
+  if ('pace' in input && input.pace !== undefined && !isValidPace(input.pace)) {
+    errors.pace = 'Selecione um ritmo de viagem válido.'
   }
 
   return { valid: Object.keys(errors).length === 0, errors }

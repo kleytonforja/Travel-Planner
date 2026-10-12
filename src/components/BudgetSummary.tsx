@@ -6,7 +6,8 @@ import { formatCurrency } from '../utils/format'
 interface BudgetSummaryProps {
   totals: ItineraryTotals
   /** Orçamento total por pessoa informado no planejamento. */
-  budget: number
+  /** Ausente quando o roteiro não tem orçamento (contrato v2). */
+  budget?: number
   currency: Currency
 }
 
@@ -31,25 +32,33 @@ const NON_CONTEMPLATED_EXPENSES = [
  */
 export function BudgetSummary({ totals, budget, currency }: BudgetSummaryProps) {
   const items = [
-    {
-      label: 'Orçamento informado',
-      description: 'Valor total por pessoa definido por você no planejamento.',
-      value: formatCurrency(budget, currency),
-      tone: 'text-slate-900',
-    },
+    ...(budget === undefined
+      ? []
+      : [
+          {
+            label: 'Orçamento informado',
+            description: 'Valor total por pessoa definido por você no planejamento.',
+            value: formatCurrency(budget, currency),
+            tone: 'text-slate-900',
+          },
+        ]),
     {
       label: 'Custo estimado das atividades',
       description: 'Soma dos custos ilustrativos das atividades sugeridas.',
       value: formatCurrency(totals.estimatedActivitiesCost, currency),
       tone: 'text-blue-700',
     },
-    {
-      label: 'Saldo não alocado',
-      description:
-        'Parte do orçamento que não foi usada pelas atividades sugeridas.',
-      value: formatCurrency(totals.unallocatedBudget, currency),
-      tone: 'text-emerald-700',
-    },
+    ...(totals.unallocatedBudget === undefined
+      ? []
+      : [
+          {
+            label: 'Saldo não alocado',
+            description:
+              'Parte do orçamento que não foi usada pelas atividades sugeridas.',
+            value: formatCurrency(totals.unallocatedBudget, currency),
+            tone: 'text-emerald-700',
+          },
+        ]),
     {
       label: 'Custo médio das atividades por dia',
       description: 'Custo estimado das atividades dividido pelos dias.',

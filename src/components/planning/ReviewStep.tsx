@@ -183,7 +183,7 @@ export function ReviewStep({ draft, goToStep, onItineraryGenerated }: StepProps)
         <p className="font-semibold text-white">O que será usado na geração do roteiro</p>
         <p className="mt-1">
           Destino, duração em dias, interesses, estilo e orçamento por pessoa
-          {adapted.ok && currency
+          {adapted.ok && currency && adapted.input.budget !== undefined
             ? ` (${centsToMoney(Math.round(adapted.input.budget * 100), currency)}${draft.budget.basis === 'total' ? ', do valor total dividido igualmente entre os viajantes e arredondado para baixo' : ''})`
             : ''}
           .

@@ -148,7 +148,7 @@ describe('generateItinerary', () => {
     for (const budget of [150, 1000, 5000]) {
       const itinerary = generate(makeInput({ budget }))
       const { estimatedActivitiesCost, unallocatedBudget } = itinerary.totals
-      expect(estimatedActivitiesCost + unallocatedBudget).toBeCloseTo(budget)
+      expect(estimatedActivitiesCost + (unallocatedBudget as number)).toBeCloseTo(budget)
       expect(unallocatedBudget).toBeGreaterThanOrEqual(0)
       expect(itinerary.totals.averageCostPerDay).toBeCloseTo(
         estimatedActivitiesCost / itinerary.input.days,
@@ -160,10 +160,10 @@ describe('generateItinerary', () => {
     const input = makeInput({ budget: 150 })
     const itinerary = generate(input)
     expect(itinerary.totals.estimatedActivitiesCost).toBeLessThanOrEqual(
-      input.budget,
+      input.budget as number,
     )
     expect(itinerary.totals.unallocatedBudget).toBe(
-      input.budget - itinerary.totals.estimatedActivitiesCost,
+      (input.budget as number) - itinerary.totals.estimatedActivitiesCost,
     )
     expect(itinerary.totals.averageCostPerDay).toBeCloseTo(
       itinerary.totals.estimatedActivitiesCost / input.days,

@@ -210,6 +210,17 @@ export function generateItinerary(
     }
   }
 
+  // Contrato v2 prepara o orçamento opcional, mas a geração sem orçamento ainda
+  // não está ativada: recusa explícita, sem valor de orçamento fictício.
+  const budget = input.budget
+  if (budget === undefined) {
+    return {
+      ok: false,
+      message:
+        'Informe um orçamento por pessoa para gerar o roteiro: a geração sem orçamento ainda não está disponível.',
+    }
+  }
+
   const sorted = sortEligible(eligible, input.interests, input.style)
 
   // Seleção gananciosa respeitando o orçamento (atividades gratuitas sempre cabem).
@@ -217,7 +228,7 @@ export function generateItinerary(
   let selectedCost = 0
   let skippedByBudget = 0
   for (const activity of sorted) {
-    if (selectedCost + activity.estimatedCost <= input.budget) {
+    if (selectedCost + activity.estimatedCost <= budget) {
       selected.push(activity)
       selectedCost += activity.estimatedCost
     } else {
@@ -294,7 +305,7 @@ export function generateItinerary(
     days,
     totals: {
       estimatedActivitiesCost: scheduledCost,
-      unallocatedBudget: input.budget - scheduledCost,
+      unallocatedBudget: budget - scheduledCost,
       averageCostPerDay: scheduledCost / input.days,
     },
     warnings,

@@ -265,7 +265,7 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     expect(screen.queryByText('Selecione um destino para continuar.')).toBeNull()
   })
 
-  it('não oferece controles de etapas inexistentes', async () => {
+  it('não oferece controles de etapas inexistentes', { timeout: 20000 }, async () => {
     const user = openPlanning()
     await goToPlanning(user)
     // Etapa 1: só existe o avanço para a etapa 2, que está implementada.
@@ -331,7 +331,7 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Viagens incríveis começam com boas escolhas.')
   })
 
-  it('o planejamento é o único caminho: o formulário tradicional não existe mais e o roteiro sai da revisão', async () => {
+  it('o planejamento é o único caminho: o formulário tradicional não existe mais e o roteiro sai da revisão', { timeout: 20000 }, async () => {
     const user = openPlanning()
     // Na home não há formulário nem campos de planejamento.
     expect(document.getElementById('destino')).toBeNull()

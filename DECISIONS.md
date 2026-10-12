@@ -1063,3 +1063,35 @@ código; o planejamento progressivo de sete etapas é a única forma de criar ro
 - **Imagens das atrações**: apenas as fotografias de hero e dos três destinos existem.
 - **Mapas e rotas**: não existem; sem cálculo de distâncias ou tempos.
 - Após gerar um roteiro, "Novo planejamento" volta à home e o rascunho da sessão é mantido.
+
+## D40 — Esquema v2: contratos de tipos (M2.2) — parcial
+
+**Contexto**: o diagnóstico M1 e o plano M2.1 aprovaram a evolução do esquema (orçamento e ritmo
+opcionais, saldo opcional). Esta decisão registra **apenas os contratos de tipos**; o esquema v2
+**não** está implementado por completo.
+
+**Contratos adotados (M2.2)**:
+- `PlanningInput.budget?: number` e `PlanningInput.pace?: TripPace`; `TripPace = 'tranquilo' |
+  'equilibrado' | 'intenso'` (definido em `src/types`, reexportado por `utils/interests`).
+- `ItineraryTotals.unallocatedBudget?: number`.
+- **Ausência = propriedade omitida**; nunca `null`, 0 ou valor fictício. `budget` presente deve ser
+  finito e > 0 (`isValidBudgetValue`); `pace` presente deve ser um dos três valores (`isValidPace`);
+  `null`, 0, negativos, NaN/Infinity e ritmo desconhecido são rejeitados por
+  `validatePlanningInput` (novo campo de erro `pace`).
+
+**O que NÃO mudou (comportamento atual preservado)**:
+- A **geração ainda exige o orçamento**: `validatePlanningInput` mantém o erro de orçamento ausente e o
+  motor recusa, com mensagem explícita, um `PlanningInput` sem `budget` (sem teto fictício).
+- A **persistência continua rejeitando** registros sem orçamento ou sem saldo (razão explícita
+  "planejamento sem orçamento ainda não é suportado"); aceitá-los é a M2.3.
+- Importação/exportação inalteradas (versão 1); chaves do LocalStorage, quarentena e migração
+  inalteradas. O ritmo **não** é aplicado à distribuição e não é gravado pelo adaptador.
+- A interface mostra "Orçamento informado" e "Saldo não alocado" **somente se existirem** (hoje sempre
+  existem); não há texto nem valor para o caso ausente (M2.5).
+
+**Dependências identificadas**:
+- M2.3 precisa validar `pace` no armazenamento (hoje o validador ignora campos extras, então um
+  `pace` desconhecido gravado seria aceito), aceitar orçamento e saldo ausentes com seus invariantes
+  e incluir ritmo e ausência de orçamento na equivalência de planejamentos.
+- M2.4 precisa da exportação v2 e da importação das versões 1 e 2.
+- M2.5 ativa a geração sem orçamento e os textos de interface.

@@ -91,7 +91,7 @@ export function buildHistoricalValidRecord(): SavedItinerary {
       ],
       totals: {
         estimatedActivitiesCost: cost,
-        unallocatedBudget: HISTORICAL_VALID_INPUT.budget - cost,
+        unallocatedBudget: (HISTORICAL_VALID_INPUT.budget as number) - cost,
         averageCostPerDay: cost / HISTORICAL_VALID_INPUT.days,
       },
       warnings: [],
@@ -146,7 +146,7 @@ export function buildOverlappingHistoricalRecord(): SavedItinerary {
       ],
       totals: {
         estimatedActivitiesCost: cost,
-        unallocatedBudget: input.budget - cost,
+        unallocatedBudget: (input.budget as number) - cost,
         averageCostPerDay: cost / input.days,
       },
       warnings: [],

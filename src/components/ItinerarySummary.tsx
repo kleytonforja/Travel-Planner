@@ -69,23 +69,25 @@ export function ItinerarySummary({
             </div>
           </div>
 
-          <div className="flex items-start gap-3">
-            <Wallet
-              className="mt-0.5 h-5 w-5 text-blue-600"
-              aria-hidden="true"
-            />
-            <div>
-              <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                Orçamento informado
-              </dt>
-              <dd className="mt-0.5 text-sm font-semibold text-slate-900">
-                {formatCurrency(input.budget, destination.currency)}
-                <span className="block text-xs font-normal text-slate-500">
-                  por pessoa, em {destination.currency.code}
-                </span>
-              </dd>
+          {input.budget !== undefined && (
+            <div className="flex items-start gap-3">
+              <Wallet
+                className="mt-0.5 h-5 w-5 text-blue-600"
+                aria-hidden="true"
+              />
+              <div>
+                <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                  Orçamento informado
+                </dt>
+                <dd className="mt-0.5 text-sm font-semibold text-slate-900">
+                  {formatCurrency(input.budget, destination.currency)}
+                  <span className="block text-xs font-normal text-slate-500">
+                    por pessoa, em {destination.currency.code}
+                  </span>
+                </dd>
+              </div>
             </div>
-          </div>
+          )}
 
           <div>
             <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">

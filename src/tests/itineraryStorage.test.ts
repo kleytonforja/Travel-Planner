@@ -339,7 +339,7 @@ describe('itineraryStorage', () => {
   it('TP-02: rejeita totais financeiros incompatíveis com o orçamento', async () => {
     await seedMutatedRecord((record) => {
       const itinerary = record.itinerary as Itinerary
-      itinerary.totals.unallocatedBudget += 1
+      itinerary.totals.unallocatedBudget = (itinerary.totals.unallocatedBudget as number) + 1
     })
     expect(loadSavedItineraries().records).toEqual([])
   })

@@ -1,5 +1,7 @@
 import { INTEREST_LABELS } from '../data/labels'
-import type { InterestCategory } from '../types'
+import type { InterestCategory, TripPace } from '../types'
+
+export type { TripPace }
 
 /**
  * Interesses e ritmo da viagem (V1-T3.5).
@@ -29,8 +31,6 @@ export const TRIP_PACES = [
   { id: 'equilibrado', label: 'Equilibrado', description: 'Um meio-termo entre passeios e descanso.' },
   { id: 'intenso', label: 'Intenso', description: 'Aproveitar ao máximo cada dia.' },
 ] as const
-
-export type TripPace = (typeof TRIP_PACES)[number]['id']
 
 export const DEFAULT_PACE: TripPace = 'equilibrado'
 

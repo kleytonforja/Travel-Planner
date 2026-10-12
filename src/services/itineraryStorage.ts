@@ -464,6 +464,13 @@ export function validateSavedItinerary(value: unknown): ItineraryValidationResul
   }
 
   const input = itinerary.input
+  const budget = input.budget
+  if (budget === undefined) {
+    // `isValidPlanningInput` já rejeita a ausência; a aceitação de orçamento
+    // opcional é escopo da M2.3 e não pode acontecer por acidente aqui.
+    reasons.push('planejamento sem orçamento ainda não é suportado')
+    return { ok: false, reasons }
+  }
   if (itinerary.days.length !== input.days) {
     reasons.push('quantidade de dias diferente do planejamento')
     return { ok: false, reasons }
@@ -564,7 +571,7 @@ export function validateSavedItinerary(value: unknown): ItineraryValidationResul
   // admitem; ela não autoriza custo acima do orçamento, por menor que
   // seja a diferença (plano, seção 5: "Rejeitar custo superior ao
   // orçamento").
-  if (estimated > input.budget) {
+  if (estimated > budget) {
     reasons.push('custo estimado superior ao orçamento informado')
   }
   // Correção AUD-04: o saldo é comparado DIRETAMENTE com
@@ -575,7 +582,7 @@ export function validateSavedItinerary(value: unknown): ItineraryValidationResul
   // fosse 0. A subtração de dois valores finitos não negativos do
   // orçamento/custo é sempre finita, e a não negatividade do saldo já
   // foi verificada acima.
-  if (!approxEqual(unallocated, input.budget - estimated)) {
+  if (!approxEqual(unallocated, budget - estimated)) {
     reasons.push('saldo não alocado inconsistente com orçamento e custo')
   }
   if (!approxEqual(average, estimated / input.days)) {

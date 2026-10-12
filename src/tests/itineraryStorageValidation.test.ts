@@ -49,7 +49,7 @@ function syncTotals(record: SavedItinerary): void {
   )
   record.itinerary.totals = {
     estimatedActivitiesCost: cost,
-    unallocatedBudget: record.itinerary.input.budget - cost,
+    unallocatedBudget: (record.itinerary.input.budget as number) - cost,
     averageCostPerDay: cost / record.itinerary.input.days,
   }
 }
@@ -342,7 +342,7 @@ describe('validação de registros persistidos (TP-02)', () => {
       record.itinerary.days[0].activities[0].activity.estimatedCost = 70
       record.itinerary.totals = {
         estimatedActivitiesCost: 100,
-        unallocatedBudget: record.itinerary.input.budget - 100,
+        unallocatedBudget: (record.itinerary.input.budget as number) - 100,
         averageCostPerDay: 100 / 3,
       }
       expect(isSavedItinerary(record)).toBe(true)
