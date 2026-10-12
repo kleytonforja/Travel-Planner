@@ -571,3 +571,22 @@ integral de produção permanece pendente; a ausência dos artefatos
 históricos originais é registrada como risco, não como bloqueio automático
 da demonstração. Configuração remota, commit, push e publicação exigem
 autorização posterior e não fazem parte desta preparação.
+
+## Notas de reconciliação documental (2026-10-12)
+
+Não são novas decisões técnicas. Os identificadores e a ordem das decisões
+acima foram preservados; as notas indicam o que vale hoje.
+
+- **D3**: o remoto `origin` é `github.com/kleytonforja/Travel-Planner`; o nome
+  do repositório é compatível com `base: '/Travel-Planner/'`. A URL publicada
+  ainda não foi validada (ver `TASKS.md`, "Estado do Git e da publicação").
+- **D19**: o gatilho vigente do workflow é a branch `master` (revisão da
+  própria D19 e D27). A menção a `main` no texto original é histórica.
+- **D20**: descreve o estado inicial. Hoje o repositório tem histórico de
+  commits e remoto configurado; commits, pushes e publicações seguem
+  condicionados à autorização explícita (`AGENTS.md`).
+- **D21**: onde diverge da D22 (sem fallback de `randomUUID`, hash fora das
+  decisões de persistência) e da D23 (`discardCorruptedData` removida,
+  substituída pela recuperação explícita), prevalecem D22 e D23.
+- **Referências técnicas de persistência**: `docs/PERSISTENCE_REMEDIATION_PLAN.md`
+  (plano) e `docs/FINAL_AUDIT_FINDINGS.md` (achados AUD-01 a AUD-07).

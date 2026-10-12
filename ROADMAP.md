@@ -85,6 +85,13 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
 - [ ] Configurar remoto, GitHub Actions, Pages e ambiente `github-pages`
 - [ ] Publicar e validar a URL HTTPS após autorização explícita
 
+> **Nota de reconciliação (2026-10-12)**: o remoto `origin`
+> (`github.com/kleytonforja/Travel-Planner`) já está configurado e a `master`
+> foi enviada (`origin/master` = `6b8ea0a` na referência local). Os itens
+> acima permanecem desmarcados porque não há evidência registrada de
+> GitHub Actions, Pages, ambiente `github-pages` nem URL HTTPS validada.
+> Ver `TASKS.md`, "Estado do Git e da publicação".
+
 ## Evolução futura (pós-MVP, fora do escopo atual — NÃO implementar agora)
 
 - Planejamento passo a passo (wizard)

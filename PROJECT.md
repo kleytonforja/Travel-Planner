@@ -78,3 +78,15 @@ npm run typecheck   # verificação de tipos
 npm run lint        # análise estática (oxlint)
 npm run build       # build de produção
 ```
+
+Antes de considerar uma tarefa de código concluída, `typecheck`, `test:run`,
+`lint` e `build` são todos obrigatórios (ver `AGENTS.md`).
+
+## Documentos técnicos de persistência
+
+- `docs/PERSISTENCE_REMEDIATION_PLAN.md` — plano de remediação (TP-02 a TP-05)
+- `docs/FINAL_AUDIT_FINDINGS.md` — achados da auditoria independente final
+  (AUD-01 a AUD-07)
+
+Fluxo entre agentes e estado do Git/publicação: `AGENTS.md` ("Fluxo
+multiagente") e `TASKS.md` ("Fila atual").

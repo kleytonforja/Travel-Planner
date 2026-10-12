@@ -1,5 +1,101 @@
 # TASKS.md — Tarefas e Critérios de Aceite
 
+## Fila atual
+
+> Consultar antes de iniciar qualquer alteração e atualizar ao assumir e ao
+> finalizar uma tarefa. Regras em `AGENTS.md` (seção "Fluxo multiagente"):
+> um único agente executor por tarefa; preencher a tabela abaixo apenas com
+> autorização para escrever neste arquivo.
+
+| Campo               | Valor                                                                  |
+| ------------------- | ---------------------------------------------------------------------- |
+| Tarefa ativa        | Nenhuma. Reconciliação documental concluída (2026-10-12), aguardando revisão do usuário |
+| Agente responsável  | — (última execução: Claude Code)                                       |
+| Arquivos previstos  | — (alterados na última execução: `AGENTS.md`, `CLAUDE.md`, `TASKS.md`, `ROADMAP.md`, `DECISIONS.md`, `PROJECT.md`) |
+| Status              | ⬜ livre para nova tarefa mediante autorização; alterações documentais ainda sem commit |
+| Próximo checkpoint  | A definir pelo usuário. Pendentes: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+
+Modelo para uma nova tarefa: tarefa · agente (Claude Code, Codex ou Kimi K3) ·
+arquivos previstos · status (⬜ pendente, 🚧 em andamento, ✅ validada) ·
+próximo checkpoint.
+
+### Divergências documentais identificadas (2026-10-12)
+
+Registradas sem alterar decisões técnicas anteriores; correção depende de
+autorização.
+
+1. **Histórico Git**: a D20 e o critério da tarefa 4.7 dizem "sem commits",
+   mas o repositório já tem commits (ROADMAP, checkpoint 4: "histórico local
+   existente"). D20/4.7 refletem o momento original, não o estado atual.
+2. **Branch do workflow**: o corpo da D19 diz "push na `main`"; a revisão da
+   própria D19 e a D27 alinham o gatilho a `master`, que é o que o
+   `deploy.yml` usa.
+3. **Ordem e numeração em DECISIONS.md**: D21–D26 aparecem entre a D14 e a
+   D15, e a D27 após a D20. A numeração não é cronológica no arquivo, o que
+   favorece colisão de números entre agentes.
+4. **D21 × D22**: a D21 ainda descreve id com `crypto.randomUUID()` "com
+   fallback", removido pela D22; a D21 também cita `discardCorruptedData`,
+   removida na D23. As revisões existem, mas o texto original continua.
+5. **Playwright**: o relatório de 2026-10-12 cita Playwright 1.59.1 e
+   Chromium, que não constam do `package.json`. A origem da ferramenta não
+   está registrada (regra de dependências desnecessárias).
+6. **Comandos de validação**: o `AGENTS.md` exige `typecheck`, `test:run` e
+   `build`; PROJECT.md, o workflow e os relatórios deste arquivo também usam
+   `lint`.
+7. **Título do checkpoint 4**: "Qualidade e Publicação" aqui; "Qualidade e
+   Preparação de Publicação" no ROADMAP.
+8. **Documentos de referência**: `docs/PERSISTENCE_REMEDIATION_PLAN.md` e
+   `docs/FINAL_AUDIT_FINDINGS.md` governam a persistência, mas não constam
+   da lista de arquivos canônicos do `AGENTS.md`.
+9. **D3**: pressupõe o nome de repositório `Travel-Planner`; o remoto ainda
+   não existe, então a suposição não foi confirmada.
+
+### Estado do Git e da publicação (verificado em 2026-10-12)
+
+Comandos executados em leitura: `git status --short`, `git branch
+--show-current`, `git remote -v`, `git log -5 --oneline`.
+
+- **Branch atual**: `master`.
+- **Histórico**: 10 commits; o mais recente é `6b8ea0a chore: prepare Travel
+  Planner for experimental deployment`.
+- **Remoto**: `origin` → `https://github.com/kleytonforja/Travel-Planner.git`
+  (fetch e push). `master` acompanha `origin/master`, e a referência local
+  `origin/master` aponta para o mesmo commit do `HEAD` (`6b8ea0a`), ou seja,
+  o push da `master` foi feito. A referência local pode estar defasada em
+  relação ao GitHub; nenhuma consulta de rede foi feita.
+- **Working tree**: apenas as alterações documentais desta reconciliação e das
+  anteriores (nenhuma em `src/`).
+- **Publicação experimental no GitHub Pages**: **não comprovada pelos
+  registros do repositório.** Nenhum documento registra a URL HTTPS, a
+  execução do workflow nem a configuração de Pages/ambiente `github-pages`.
+  O remoto e o push são evidência indireta, não de publicação. Não registrar
+  como publicada até haver evidência (URL e execução do workflow).
+
+### Reconciliação das divergências acima (2026-10-12)
+
+O conteúdo histórico não foi alterado; cada item recebe uma nota atual.
+
+1. **Resolvida por nota**: D20 e a tarefa 4.7 descrevem o momento original.
+   Estado atual: repositório com histórico e remoto `origin` (ver acima).
+2. **Resolvida por nota**: o gatilho vigente do workflow é `master` (D19,
+   revisão; D27). O texto original da D19 permanece como histórico.
+3. **Preservada**: a ordem e os identificadores do `DECISIONS.md` não foram
+   alterados, conforme instrução. A cronologia está nas datas e revisões.
+4. **Resolvida por nota**: `DECISIONS.md` ganhou nota de reconciliação
+   indicando que D22/D23 prevalecem sobre trechos da D21.
+5. **Pendente**: origem do Playwright/Chromium segue sem registro. Não está
+   no `package.json`; confirmar com o autor do relatório.
+6. **Resolvida**: `typecheck`, `test:run`, `lint` e `build` são obrigatórios
+   (`AGENTS.md`, "Validação antes de concluir tarefas").
+7. **Pendente (cosmético)**: títulos do checkpoint 4 ainda diferem entre
+   `TASKS.md` e `ROADMAP.md`; histórico mantido.
+8. **Resolvida**: `docs/PERSISTENCE_REMEDIATION_PLAN.md` e
+   `docs/FINAL_AUDIT_FINDINGS.md` referenciados em `AGENTS.md` e `PROJECT.md`.
+9. **Parcialmente resolvida**: o remoto se chama `Travel-Planner`, o que é
+   compatível com a D3; a URL publicada ainda não foi validada.
+
+---
+
 Legenda de status: ⬜ pendente | 🚧 em andamento | ✅ concluída (validada)
 
 ## CHECKPOINT 1 — Fundação
