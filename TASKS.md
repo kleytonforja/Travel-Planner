@@ -15,6 +15,37 @@
 | Status              | ⬜ livre para nova tarefa mediante autorização; alterações documentais ainda sem commit |
 | Próximo checkpoint  | A definir pelo usuário. Pendentes: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
+#### Skills ativas (biblioteca global, registrado em 2026-10-12)
+
+Biblioteca: `C:\ProjetosDev\Skill-Library` (somente leitura; regras em
+`AGENTS.md`, "Biblioteca Global de Skills"). IDs e caminhos conferidos no
+`registry.yaml`.
+
+| Campo               | Valor                                                                  |
+| ------------------- | ---------------------------------------------------------------------- |
+| Fase atual          | Remediação de persistência com reauditoria independente pendente e preparação da publicação experimental (ver ROADMAP.md) |
+| Essenciais          | `tdd-testing`, `diagnosing-bugs`, `codebase-architecture`              |
+| Auxiliares (sob demanda) | `security-review`, `react-next-best-practices`                   |
+| Descartadas         | `domain-modeling`, `frontend-design`, `database-design`, `project-bootstrap`, `skill-router`, `find-skills` |
+| Próximo checkpoint  | C3 (aguardando autorização)                                            |
+
+Justificativa resumida:
+
+- `tdd-testing`: regressões e lógica de negócio críticas (persistência,
+  gerador); correções exigem teste que reproduza o defeito.
+- `diagnosing-bugs`: a fase trata achados de auditoria (AUD-xx, TP-xx) por
+  reprodução e causa raiz.
+- `codebase-architecture`: preservar a separação interface/dados/serviços e
+  evitar componentes grandes (`HomePage`, `itineraryStorage`).
+- `security-review` (auxiliar): usar se a tarefa tocar armazenamento,
+  exportação ou configuração de publicação; não há credenciais nem backend.
+- `react-next-best-practices` (auxiliar): usar em mudanças de componentes
+  React; o projeto não usa Next.js.
+- Descartadas: `domain-modeling` (regras de negócio estáveis, sem nova
+  modelagem), `frontend-design` (sem trabalho de UI nesta fase),
+  `database-design` (sem banco; LocalStorage), `project-bootstrap`,
+  `skill-router` e `find-skills` (projeto já estruturado e seleção feita).
+
 Modelo para uma nova tarefa: tarefa · agente (Claude Code, Codex ou Kimi K3) ·
 arquivos previstos · status (⬜ pendente, 🚧 em andamento, ✅ validada) ·
 próximo checkpoint.

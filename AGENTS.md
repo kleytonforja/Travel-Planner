@@ -48,6 +48,28 @@ working tree. As regras abaixo valem para todos.
    Code). Ele não substitui este arquivo; em divergência, prevalece o
    `AGENTS.md`.
 
+## Biblioteca Global de Skills
+
+O projeto usa a biblioteca global em `C:\ProjetosDev\Skill-Library`, sem
+copiar seus arquivos para o repositório.
+
+- **Índice oficial**: `registry.yaml` da biblioteca. Consultá-lo antes de
+  abrir qualquer `SKILL.md`; os caminhos vêm do campo `path`.
+- **Ativação por fase**: as skills são escolhidas pela fase atual do projeto
+  (`use_when`/`avoid_when` do registry), não por tarefa.
+- **Carregamento sob demanda**: abrir somente os `SKILL.md` das skills
+  selecionadas. **É proibido carregar a biblioteca inteira.**
+- **Limites**: 2 a 5 skills essenciais; até 3 auxiliares, quando
+  justificadas; acima de 8 no total, justificar explicitamente.
+- **Registro**: a seleção vigente (fase, skills, justificativa e descartadas)
+  fica em "Fila atual" no `TASKS.md`. Trocar a seleção exige autorização.
+- **Auditorias independentes**: somente leitura, inclusive em relação à
+  biblioteca.
+- **Biblioteca somente leitura para os agentes**: nenhuma alteração (arquivos,
+  registry, links ou cópias) sem autorização explícita do usuário. A regra
+  geral 1 (nada fora da pasta do projeto) continua valendo; a leitura da
+  biblioteca é a única exceção.
+
 ## Stack obrigatória
 
 - React + TypeScript + Vite
