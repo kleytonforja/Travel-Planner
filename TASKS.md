@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **V1-T3.5** — planejamento progressivo, etapa 5 (interesses e ritmo). Anteriores: V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **V1-T3.6** — planejamento progressivo, etapa 6 (orçamento). Anteriores: V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | 🚧 **parcial por desenho**: etapa 5 implementada e validada localmente em 2026-10-12 (ver "Relatório do V1-T3.5"); etapas 6 e 7 pendentes; **sem commit** (aguarda autorização) |
-| Próximo checkpoint  | Revisão/commit do V1-T3.5 e definição da etapa 6 (orçamento), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | 🚧 **parcial por desenho**: etapa 6 implementada e validada localmente em 2026-10-12 (ver "Relatório do V1-T3.6"); etapa 7 pendente; **sem commit** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do V1-T3.6 e definição da etapa 7 (revisão), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -1814,3 +1814,47 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   (V1-T3.7); (2) fotografias temáticas licenciadas para os cards de interesses.
 - **Preservado**: múltipla escolha de interesses, ritmo único com padrão
   Equilibrado, interesses no formulário tradicional e estado entre etapas.
+
+## Relatório do V1-T3.6 — planejamento progressivo: orçamento (2026-10-12)
+
+- **Status**: implementado e validado localmente; **sem commit, push ou deploy**.
+  Etapa 7 (Revisão) pendente. Próxima etapa: Revisão.
+- **Funcionalidade**: etapa 6 "Quanto você pretende investir na viagem?" com
+  estilo (Econômico/Equilibrado/Confortável, `SelectableCard`, padrão Equilibrado),
+  orçamento opcional ("Informar um valor"/"Ainda não defini"), modalidade valor
+  total ou por pessoa, valores equivalentes pela composição dos viajantes, moeda do
+  destino, validação (negativo, inválido, zero, 2 casas, teto), resumo com estilo e
+  orçamento, escolhas preservadas e formulário tradicional pré-preenchido com
+  estilo e valor por pessoa. Decisão e regras em D37.
+- **Regras de orçamento**: centavos inteiros; total ÷ viajantes arredondado para
+  baixo ao centavo; por pessoa × viajantes exato; adultos, crianças e bebês contam
+  1 cada, sem descontos; sem câmbio; teto provisório de 10.000.000,00.
+- **Limitações financeiras**: valores ilustrativos; orçamento é só teto de seleção
+  de atrações (não é dinheiro disponível); hospedagem, alimentação e transporte não
+  calculados.
+- **Integração pendente com o motor**: o motor continua intocado; recebe estilo e
+  orçamento por pessoa **apenas** via formulário tradicional. A geração direta
+  pelo fluxo, e o uso de viajantes, transporte e ritmo, ficam para a etapa de
+  Revisão e o V1-T3.7.
+- **Arquivos**: novos `src/utils/budget.ts`, `src/components/planning/BudgetStep.tsx`,
+  `src/tests/budget.test.ts`, `src/tests/budgetStep.test.tsx`; alterados
+  `planningSteps.ts`, `stepRegistry.ts`, `PlanningFlow.tsx` (resumo e texto no singular
+  para uma etapa pendente), `PlanningForm.tsx`, `HomePage.tsx`, `App.tsx`,
+  testes `planningFlow`, `datesStep`,
+  `travelersStep`, `transportStep`, `interestsStep`, `DECISIONS.md` (D37), `ROADMAP.md`,
+  `PROJECT.md`, `TASKS.md`. Motor, persistência e importação/exportação intocados.
+- **Testes**: 644 em 34 arquivos.
+- **Chromium**: 21 de 21 verificações (estilo único, orçamento opcional, total e por
+  pessoa, euro para Lisboa, mudança de viajantes, inválidos, teclado, preservação,
+  formulário tradicional, sem overflow e cards ≥ 44 px em 375, 768, 1366 e 1920 px).
+- **Riscos**: apenas Chromium; o teto de 10.000.000,00 é provisório.
+
+### Consolidação do V1-T3.6 (2026-10-12)
+
+- **Timeout**: o `testTimeout` global de 20 s foi **revertido** (`vite.config.ts` sem
+  alteração). Evidência: com 5 s, testes de fluxo das etapas 2–6 levam 3–6 s sob carga
+  e falharam em 2 de 3 execuções; passam a usar `vi.setConfig({ testTimeout: 20000 })`
+  só nos cinco arquivos de etapa. O teste de 25 cliques de viajantes perdeu o timeout próprio.
+- **Preservado**: estilo financeiro, orçamento opcional, total/por pessoa em centavos,
+  validações, teto provisório de 10.000.000,00 e pré-preenchimento do formulário tradicional.
+  Novo teste: alterar viajantes mantém a modalidade (por pessoa) e recalcula o total.

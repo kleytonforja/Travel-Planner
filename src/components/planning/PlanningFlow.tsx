@@ -2,9 +2,10 @@ import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { destinations } from '../../data/destinations'
+import { describeBudget } from '../../utils/budget'
 import { describeInterests } from '../../utils/interests'
 import { describeTransport } from '../../utils/transport'
-import { describeTravelers } from '../../utils/travelers'
+import { describeTravelers, totalTravelers } from '../../utils/travelers'
 import { formatShortDate } from '../../utils/tripDates'
 import { Button } from '../ui/Button'
 import { ProgressSteps } from '../ui/ProgressSteps'
@@ -125,6 +126,11 @@ export function PlanningFlow({
         {reached >= PLANNING_STEPS.findIndex((item) => item.id === 'interesses') && (
           <p className="mt-1 text-sm">Interesses: {describeInterests(draft.interests, draft.pace)}</p>
         )}
+        {reached >= PLANNING_STEPS.findIndex((item) => item.id === 'orcamento') && (
+          <p className="mt-1 text-sm">
+            Orçamento: {describeBudget(draft.budget, totalTravelers(draft.travelers), selected?.currency ?? null)}
+          </p>
+        )}
       </section>
 
       {(previous || nextAvailable) && (
@@ -161,7 +167,9 @@ export function PlanningFlow({
         >
           <p className="text-sm text-night-ink-muted">
             {pendingLabels.length > 0
-              ? `As etapas ${pendingLabels.join(', ')} ainda estão em desenvolvimento. `
+              ? pendingLabels.length === 1
+                ? `A etapa ${pendingLabels[0]} ainda está em desenvolvimento. `
+                : `As etapas ${pendingLabels.join(', ')} ainda estão em desenvolvimento. `
               : ''}
             Enquanto isso, você pode continuar pelo formulário tradicional, que já
             vem com as escolhas feitas até aqui.

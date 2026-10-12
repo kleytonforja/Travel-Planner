@@ -1,6 +1,8 @@
+import { isBudgetComplete } from '../../utils/budget'
 import { hasInterests } from '../../utils/interests'
 import { isTransportComplete } from '../../utils/transport'
 import { validateTravelers } from '../../utils/travelers'
+import { BudgetStep } from './BudgetStep'
 import { DatesStep } from './DatesStep'
 import { DestinationStep } from './DestinationStep'
 import { InterestsStep } from './InterestsStep'
@@ -14,8 +16,8 @@ import {
 } from './planningSteps'
 
 /**
- * Etapas implementadas: destino, datas, viajantes, transporte e interesses. As demais
- * (orçamento e revisão) entram aqui quando forem entregues.
+ * Etapas implementadas: destino, datas, viajantes, transporte, interesses e orçamento. As demais
+ * (revisão) entram aqui quando forem entregues.
  */
 export const STEP_REGISTRY: StepRegistry = {
   destino: DestinationStep,
@@ -23,6 +25,7 @@ export const STEP_REGISTRY: StepRegistry = {
   viajantes: TravelersStep,
   transporte: TransportStep,
   interesses: InterestsStep,
+  orcamento: BudgetStep,
 }
 
 /** Critério de conclusão de cada etapa (etapa sem critério conta como completa). */
@@ -32,6 +35,7 @@ export const STEP_COMPLETION: Partial<Record<PlanningStepId, (draft: PlanningDra
   viajantes: (draft) => validateTravelers(draft.travelers).valid,
   transporte: (draft) => isTransportComplete(draft.transport),
   interesses: (draft) => hasInterests(draft.interests),
+  orcamento: (draft) => isBudgetComplete(draft.budget),
 }
 
 /** Orientação exibida enquanto a etapa não está completa. */
@@ -41,4 +45,5 @@ export const STEP_HINTS: Partial<Record<PlanningStepId, string>> = {
   viajantes: 'Inclua pelo menos um adulto para continuar.',
   transporte: 'Corrija a cidade de origem (ou apague o campo) para continuar.',
   interesses: 'Selecione pelo menos um interesse para continuar.',
+  orcamento: 'Corrija o valor do orçamento (ou escolha "Ainda não defini") para continuar.',
 }

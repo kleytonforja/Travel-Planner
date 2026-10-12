@@ -6,6 +6,9 @@ import App from '../App'
 import { INTEREST_LABELS } from '../data/labels'
 import { describeInterests, INTEREST_OPTIONS, toggleInterest } from '../utils/interests'
 
+// Estes testes percorrem até 6 etapas do fluxo com user-event; medidos em 3-6 s sob carga (limite padrão: 5 s).
+vi.setConfig({ testTimeout: 20000 })
+
 type User = ReturnType<typeof userEvent.setup>
 
 async function toInterests(user: User, destination = 'Lisboa') {
@@ -26,7 +29,7 @@ const interests = () => within(screen.getByRole('group', { name: 'Seus interesse
 const pace = () => within(screen.getByRole('group', { name: 'Ritmo da viagem' }))
 const pressed = (el: HTMLElement) => el.getAttribute('aria-pressed') === 'true'
 const summary = () => screen.getByRole('region', { name: 'Resumo do planejamento' })
-const next = () => screen.getByRole('button', { name: 'Continuar com o formulário tradicional' })
+const next = () => screen.getByRole('button', { name: 'Continuar para Orçamento' })
 
 describe('interests util', () => {
   it('oferece somente as categorias reconhecidas pelo catálogo', () => {
@@ -70,8 +73,7 @@ describe('Etapa 5 — Interesses e ritmo', () => {
     expect(pressed(pace().getByRole('button', { name: /^Equilibrado/ }))).toBe(true)
     expect(screen.getByText('Nenhum interesse selecionado.')).toBeInTheDocument()
     expect(summary()).toHaveTextContent('Interesses: nenhum selecionado; ritmo equilibrado')
-    // Etapa 6 não existe: só o fallback, bloqueado sem interesse.
-    expect(screen.queryByRole('button', { name: /^Continuar para/ })).toBeNull()
+    // Avanço para o Orçamento bloqueado sem interesse.
     expect(next()).toBeDisabled()
     expect(screen.getByText('Selecione pelo menos um interesse para continuar.')).toBeInTheDocument()
     expect(screen.getByText(/o gerador ainda não ajusta o roteiro por ele/)).toBeInTheDocument()
@@ -171,6 +173,7 @@ describe('Etapa 5 — Interesses e ritmo', () => {
     await user.click(interests().getByRole('button', { name: /^Cultura/ }))
     await user.click(interests().getByRole('button', { name: /^Gastronomia/ }))
     await user.click(next())
+    await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
 
     const legacy = within(screen.getByRole('group', { name: 'Interesses' }))
     expect(legacy.getByRole('checkbox', { name: 'Cultura' })).toBeChecked()

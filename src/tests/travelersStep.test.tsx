@@ -4,6 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import App from '../App'
 
+// Estes testes percorrem até 6 etapas do fluxo com user-event; medidos em 3-6 s sob carga (limite padrão: 5 s).
+vi.setConfig({ testTimeout: 20000 })
+
 type User = ReturnType<typeof userEvent.setup>
 
 async function toTravelers(user: User, destination = 'Lisboa') {
@@ -88,7 +91,7 @@ describe('Etapa 3 — Viajantes', () => {
     expect(more('adultos')).toBeDisabled()
     expect(more('crianças')).toBeDisabled()
     expect(screen.getByText(/Total: 20 viajantes/)).toBeInTheDocument()
-  }, 20000)
+  })
 
   it('faixas etárias de crianças são opcionais e limitadas ao número de crianças', async () => {
     const user = userEvent.setup()
@@ -224,6 +227,7 @@ describe('Etapa 3 — Viajantes', () => {
     await user.click(screen.getByRole('button', { name: 'Continuar para Transporte' }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Interesses' }))
     await user.click(screen.getByRole('button', { name: /^Cultura/ }))
+    await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
     await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
     expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
     expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('7')

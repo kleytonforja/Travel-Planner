@@ -12,6 +12,9 @@ import App from '../App'
 
 const NOW = new Date(2026, 9, 12, 12, 0, 0)
 
+// Estes testes percorrem até 6 etapas do fluxo com user-event; medidos em 3-6 s sob carga (limite padrão: 5 s).
+vi.setConfig({ testTimeout: 20000 })
+
 type User = ReturnType<typeof userEvent.setup>
 
 async function toDatesStep(user: User, destination = 'Lisboa') {
@@ -309,6 +312,7 @@ describe('Etapa 2 — Datas e duração', () => {
     await user.click(screen.getByRole('button', { name: 'Continuar para Transporte' }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Interesses' }))
     await user.click(screen.getByRole('button', { name: /^Cultura/ }))
+    await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
     await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
 
     expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('3')

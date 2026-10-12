@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 
+import { DEFAULT_BUDGET, type BudgetDraft } from '../../utils/budget'
 import type { InterestCategory } from '../../types'
 import { DEFAULT_PACE, type TripPace } from '../../utils/interests'
 import { DEFAULT_TRANSPORT, type TransportDraft } from '../../utils/transport'
@@ -54,6 +55,8 @@ export interface PlanningDraft {
   interests: InterestCategory[]
   /** Ritmo da viagem (etapa 5); ainda não usado pelo motor. */
   pace: TripPace
+  /** Estilo financeiro e orçamento opcional (etapa 6); o motor ainda não os recebe do fluxo. */
+  budget: BudgetDraft
 }
 
 export const EMPTY_DRAFT: PlanningDraft = {
@@ -66,6 +69,7 @@ export const EMPTY_DRAFT: PlanningDraft = {
   transport: DEFAULT_TRANSPORT,
   interests: [],
   pace: DEFAULT_PACE,
+  budget: DEFAULT_BUDGET,
 }
 
 /**

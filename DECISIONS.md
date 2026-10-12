@@ -949,3 +949,46 @@ imagens genéricas fingindo ser de atrações específicas.
 
 **Navegação**: "Voltar para Transporte"; sem "Continuar" (etapa 6 inexistente);
 fallback do formulário tradicional habilitado com ao menos um interesse.
+
+## D37 — Planejamento progressivo: orçamento e estilo financeiro (V1-T3.6)
+
+**Decisão**: a etapa 6 ("Quanto você pretende investir na viagem?") guarda em
+`PlanningDraft.budget` (memória da sessão): estilo, modo do valor, modalidade e
+texto digitado. Regras em `src/utils/budget.ts`:
+- **Estilo** (`SelectableCard`, escolha única, padrão **Equilibrado**): são os
+  mesmos `TravelStyle` do motor (econômico, equilibrado, confortável). É o
+  **estilo financeiro**, distinto do **ritmo** da etapa 5 (D36).
+- **Orçamento opcional**: "Informar um valor" ou "Ainda não defini" (padrão). Valor
+  vazio ou "Ainda não defini" não bloqueiam; só texto inválido bloqueia.
+- **Modalidades**: valor **total da viagem** ou **por pessoa**, sempre explicitada
+  na tela e no resumo.
+- **Aritmética em centavos inteiros**, lida por regex (sem ponto flutuante);
+  aceita `2500`, `2500,50`, `2500.50` (até 2 casas); rejeita negativo, zero,
+  letras, separador de milhar, mais de 2 casas. **Teto provisório de entrada:
+  10.000.000,00** (o motor só exige valor > 0; o teto evita valores absurdos e
+  mantém o total × 20 viajantes em inteiros seguros).
+- **Viajantes**: adultos + crianças + bebês contam 1 cada; **sem descontos
+  presumidos**. Total → por pessoa divide igualmente e **arredonda para baixo ao
+  centavo** (nunca superestima; a tela avisa quando é "cerca de"); por pessoa →
+  total é exato. Recalcula ao mudar os viajantes. Valor pequeno demais para dividir
+  (< 0,01 por pessoa) é sinalizado.
+- **Moeda**: a do destino no catálogo (R$ ou €), `formatCurrency` existente;
+  **sem conversão cambial**.
+
+**Integração com o motor (sem alterá-lo)**: `PlanningInput.budget` é o orçamento
+**por pessoa** e `style` é o estilo financeiro. Ao usar o formulário tradicional
+depois do fluxo progressivo, ele abre com o **estilo** e o **valor por pessoa**
+(`initialStyle`, `initialBudget`; sem valor, o campo fica vazio e o formulário o
+exige). Sem passar pelo fluxo, o formulário direto da home continua vazio. A
+geração de roteiro a partir do fluxo progressivo é a etapa 7 (Revisão).
+
+**Limitações financeiras**: valores de atrações são estimativas ilustrativas; o
+orçamento é só um teto para o motor escolher atrações, **não** é dinheiro disponível
+para outras despesas; hospedagem, alimentação e transporte **não** são calculados;
+sem descontos para crianças/bebês; sem cotações nem câmbio. Nada é persistido.
+
+**Observação de teste (consolidação)**: com o limite padrão de 5 s, os testes que percorrem
+as etapas 2 a 6 medem 3–6 s sob carga e 2 de 3 execuções falharam por tempo. Em vez de
+alterar o `vite.config.ts` (mantido sem `testTimeout`), os cinco arquivos de etapa
+(`datesStep`, `travelersStep`, `transportStep`, `interestsStep`, `budgetStep`) usam
+`vi.setConfig({ testTimeout: 20000 })` localmente.

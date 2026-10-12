@@ -34,6 +34,10 @@ interface PlanningFormProps {
   initialDays?: number
   /** Interesses já escolhidos na etapa de interesses do planejamento progressivo. */
   initialInterests?: InterestCategory[]
+  /** Estilo financeiro escolhido na etapa de orçamento do planejamento progressivo. */
+  initialStyle?: TravelStyle
+  /** Orçamento por pessoa (texto, ex.: "333.33") derivado da etapa de orçamento. */
+  initialBudget?: string
 }
 
 type FormErrors = Partial<Record<PlanningField, string>>
@@ -57,11 +61,13 @@ export function PlanningForm({
   onItineraryGenerated,
   initialDays,
   initialInterests,
+  initialStyle,
+  initialBudget,
 }: PlanningFormProps) {
   const [days, setDays] = useState(initialDays === undefined ? '' : String(initialDays))
   const [interests, setInterests] = useState<InterestCategory[]>(initialInterests ?? [])
-  const [style, setStyle] = useState<TravelStyle | ''>('')
-  const [budget, setBudget] = useState('')
+  const [style, setStyle] = useState<TravelStyle | ''>(initialStyle ?? '')
+  const [budget, setBudget] = useState(initialBudget ?? '')
   const [errors, setErrors] = useState<FormErrors>({})
   const [generationError, setGenerationError] = useState<string | null>(null)
 

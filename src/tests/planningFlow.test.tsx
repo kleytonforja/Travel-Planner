@@ -53,13 +53,14 @@ describe('Planejamento progressivo — estrutura', () => {
   })
 
   it('só as etapas de destino, datas, viajantes, transporte e interesses estão implementadas', () => {
-    expect(Object.keys(STEP_REGISTRY)).toEqual(['destino', 'datas', 'viajantes', 'transporte', 'interesses'])
+    expect(isStepImplemented('orcamento', STEP_REGISTRY)).toBe(true)
+    expect(Object.keys(STEP_REGISTRY)).toEqual(['destino', 'datas', 'viajantes', 'transporte', 'interesses', 'orcamento'])
     expect(isStepImplemented('interesses', STEP_REGISTRY)).toBe(true)
     expect(isStepImplemented('transporte', STEP_REGISTRY)).toBe(true)
     expect(isStepImplemented('viajantes', STEP_REGISTRY)).toBe(true)
     expect(isStepImplemented('destino', STEP_REGISTRY)).toBe(true)
     expect(isStepImplemented('datas', STEP_REGISTRY)).toBe(true)
-    for (const step of PLANNING_STEPS.slice(5)) {
+    for (const step of PLANNING_STEPS.slice(6)) {
       expect(isStepImplemented(step.id, STEP_REGISTRY)).toBe(false)
     }
   })
@@ -289,10 +290,13 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     await user.click(screen.getByRole('button', { name: 'Continuar para Interesses' }))
     await screen.findByRole('heading', { name: 'Que experiências você gostaria de viver?' })
     await user.click(screen.getByRole('button', { name: /^Cultura/ }))
-    // Etapa 5: a etapa 6 não existe, então não há "Continuar", só o aviso e o formulário tradicional.
+    expect(screen.getAllByRole('button', { name: /^Continuar para/ }).map((b) => b.textContent)).toEqual(['Continuar para Orçamento'])
+    await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
+    await screen.findByRole('heading', { name: 'Quanto você pretende investir na viagem?' })
+    // Etapa 6: a etapa 7 não existe, então não há "Continuar", só o aviso e o formulário tradicional.
     expect(screen.queryByRole('button', { name: /^Continuar para/ })).toBeNull()
     expect(screen.getByRole('complementary', { name: 'Próximas etapas' })).toHaveTextContent(
-      'Orçamento, Revisão ainda estão em desenvolvimento',
+      'Revisão ainda está em desenvolvimento',
     )
   })
 
@@ -340,6 +344,7 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     await user.click(screen.getByRole('button', { name: 'Continuar para Transporte' }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Interesses' }))
     await user.click(screen.getByRole('button', { name: /^Cultura/ }))
+    await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
     await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
 
     // Volta para a home e rola até o formulário, já com destino e duração.

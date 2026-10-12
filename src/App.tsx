@@ -9,6 +9,8 @@ import { HomePage } from './pages/HomePage'
 import { ItineraryPage } from './pages/ItineraryPage'
 import { PlanningPage } from './pages/PlanningPage'
 import type { Itinerary, SavedItinerary } from './types'
+import { engineBudgetInput } from './utils/budget'
+import { totalTravelers } from './utils/travelers'
 
 /**
  * Componente raiz da aplicação.
@@ -28,6 +30,8 @@ function App() {
   const [draft, setDraft] = useState<PlanningDraft>(EMPTY_DRAFT)
   // Âncora a rolar depois da próxima troca de tela (sem estado extra).
   const pendingAnchor = useRef<string | null>(null)
+  // Estilo e orçamento só pré-preenchem o formulário tradicional depois de passar pelo fluxo progressivo.
+  const [prefillBudget, setPrefillBudget] = useState(false)
 
   useEffect(() => {
     const anchor = pendingAnchor.current
@@ -56,6 +60,7 @@ function App() {
 
   function handleUseLegacyForm() {
     pendingAnchor.current = 'planejar'
+    setPrefillBudget(true)
     setView({ name: 'home' })
   }
 
@@ -87,6 +92,10 @@ function App() {
       initialDestinationId={draft.destinationId}
       initialDays={resolveTripDays(draft) ?? undefined}
       initialInterests={draft.interests}
+      initialStyle={prefillBudget ? draft.budget.style : undefined}
+      initialBudget={
+        prefillBudget ? engineBudgetInput(draft.budget, totalTravelers(draft.travelers)) || undefined : undefined
+      }
       onDestinationChange={(id) => updateDraft({ destinationId: id })}
       onStartPlanning={() => setView({ name: 'planning' })}
     />
