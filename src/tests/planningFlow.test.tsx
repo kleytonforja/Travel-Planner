@@ -52,13 +52,14 @@ describe('Planejamento progressivo — estrutura', () => {
     expect(new Set(PLANNING_STEPS.map((step) => step.id)).size).toBe(7)
   })
 
-  it('só as etapas de destino, datas, viajantes e transporte estão implementadas', () => {
-    expect(Object.keys(STEP_REGISTRY)).toEqual(['destino', 'datas', 'viajantes', 'transporte'])
+  it('só as etapas de destino, datas, viajantes, transporte e interesses estão implementadas', () => {
+    expect(Object.keys(STEP_REGISTRY)).toEqual(['destino', 'datas', 'viajantes', 'transporte', 'interesses'])
+    expect(isStepImplemented('interesses', STEP_REGISTRY)).toBe(true)
     expect(isStepImplemented('transporte', STEP_REGISTRY)).toBe(true)
     expect(isStepImplemented('viajantes', STEP_REGISTRY)).toBe(true)
     expect(isStepImplemented('destino', STEP_REGISTRY)).toBe(true)
     expect(isStepImplemented('datas', STEP_REGISTRY)).toBe(true)
-    for (const step of PLANNING_STEPS.slice(4)) {
+    for (const step of PLANNING_STEPS.slice(5)) {
       expect(isStepImplemented(step.id, STEP_REGISTRY)).toBe(false)
     }
   })
@@ -284,10 +285,14 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     expect(screen.getAllByRole('button', { name: /^Continuar para/ }).map((b) => b.textContent)).toEqual(['Continuar para Transporte'])
     await user.click(screen.getByRole('button', { name: 'Continuar para Transporte' }))
     await screen.findByRole('heading', { name: 'Como você pretende viajar?' })
-    // Etapa 4: a etapa 5 não existe, então não há "Continuar", só o aviso e o formulário tradicional.
+    expect(screen.getAllByRole('button', { name: /^Continuar para/ }).map((b) => b.textContent)).toEqual(['Continuar para Interesses'])
+    await user.click(screen.getByRole('button', { name: 'Continuar para Interesses' }))
+    await screen.findByRole('heading', { name: 'Que experiências você gostaria de viver?' })
+    await user.click(screen.getByRole('button', { name: /^Cultura/ }))
+    // Etapa 5: a etapa 6 não existe, então não há "Continuar", só o aviso e o formulário tradicional.
     expect(screen.queryByRole('button', { name: /^Continuar para/ })).toBeNull()
     expect(screen.getByRole('complementary', { name: 'Próximas etapas' })).toHaveTextContent(
-      'Interesses, Orçamento, Revisão ainda estão em desenvolvimento',
+      'Orçamento, Revisão ainda estão em desenvolvimento',
     )
   })
 
@@ -333,6 +338,8 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     await user.click(screen.getByRole('button', { name: '5 dias' }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Viajantes' }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Transporte' }))
+    await user.click(screen.getByRole('button', { name: 'Continuar para Interesses' }))
+    await user.click(screen.getByRole('button', { name: /^Cultura/ }))
     await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
 
     // Volta para a home e rola até o formulário, já com destino e duração.
@@ -343,7 +350,7 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     expect(target.id).toBe('planejar')
 
     const interesses = screen.getByRole('group', { name: 'Interesses' })
-    await user.click(within(interesses).getByText('Cultura'))
+    expect(within(interesses).getByRole('checkbox', { name: 'Cultura' })).toBeChecked() // pré-selecionado na etapa 5
     await user.click(within(screen.getByRole('group', { name: 'Estilo de viagem' })).getByText('Equilibrado'))
     await user.type(document.getElementById('orcamento') as HTMLInputElement, '800')
     await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))

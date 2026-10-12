@@ -139,7 +139,13 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
-- [~] **V1-T3.4 — etapa 4, transporte (parcial)** (D35): chegada ao destino
+- [~] **V1-T3.5 — etapa 5, interesses e ritmo (parcial)** (D36): sete
+      interesses do catálogo (múltipla escolha, ao menos um) e ritmo
+      (Tranquilo/Equilibrado/Intenso, padrão Equilibrado). Os interesses chegam ao
+      formulário tradicional e ao motor; o **ritmo não é usado pelo motor**
+      (V1-T3.7). Fotografias temáticas licenciadas **pendentes** (visual com
+      ícones por ora). Próxima etapa: Orçamento. Validada localmente; sem commit.
+- [x] V1-T3.4 — etapa 4, transporte e `SelectableCard` (D35, commit `6518f12`): chegada ao destino
       (escolha única), cidade de origem opcional (texto livre, validado, não
       verificado) e deslocamentos locais (múltipla escolha, "Ainda não decidi"
       exclusivo). **Só preferências**: sem rotas, distâncias, tarifas ou mapa; o

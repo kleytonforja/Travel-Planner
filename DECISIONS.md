@@ -919,3 +919,33 @@ neutra. Semântica: botão com `aria-pressed`; o anel de foco independe da
 seleção. O componente é reutilizável pelas próximas etapas (Interesses) sem
 refatoração; os cards de perfil da etapa Viajantes (V1-T3.3) ainda usam o
 estilo anterior e podem migrar depois, sem mudar comportamento.
+
+## D36 — Planejamento progressivo: interesses e ritmo (V1-T3.5)
+
+**Decisão**: a etapa 5 ("Que experiências você gostaria de viver?") guarda em
+`PlanningDraft` (memória da sessão) `interests` e `pace`, usando
+`SelectableCard` (D35):
+- **Interesses** (múltipla escolha): exatamente as 7 `InterestCategory` do
+  catálogo e do motor (Gastronomia, Natureza, Cultura, Aventura, Compras,
+  Relaxamento, Vida noturna), com os ícones de categoria existentes; ordem do
+  catálogo mantida; remover um não afeta os outros. A etapa exige **ao menos um**
+  interesse (regra do motor/formulário). Não há subcategorias: o catálogo só tem
+  categoria por atividade, e nenhuma foi inventada.
+- **Ritmo** (escolha única, padrão Equilibrado, nunca vazio): Tranquilo,
+  Equilibrado, Intenso.
+- Regras em `src/utils/interests.ts`.
+
+**Suporte real do motor**: os **interesses são usados** pelo motor (via formulário
+tradicional, que agora abre já com os interesses marcados, `initialInterests`).
+O **ritmo NÃO tem suporte**: o gerador não tem parâmetro de ritmo (o `style` do
+motor — econômico, equilibrado, confortável — trata de custo e é outra coisa,
+coletado no formulário tradicional). O ritmo fica só no estado e a tela informa que
+o gerador ainda não ajusta o roteiro por ele. Integração prevista no V1-T3.7.
+
+**Pendência visual**: a referência aprovada usa cards fotográficos de
+interesses; esta etapa usa ícones. Fotografias temáticas licenciadas (e sua
+curadoria/créditos em `docs/IMAGE_CREDITS.md`) continuam **pendentes**, sem
+imagens genéricas fingindo ser de atrações específicas.
+
+**Navegação**: "Voltar para Transporte"; sem "Continuar" (etapa 6 inexistente);
+fallback do formulário tradicional habilitado com ao menos um interesse.

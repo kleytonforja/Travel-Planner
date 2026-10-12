@@ -1,5 +1,7 @@
 import type { ComponentType } from 'react'
 
+import type { InterestCategory } from '../../types'
+import { DEFAULT_PACE, type TripPace } from '../../utils/interests'
 import { DEFAULT_TRANSPORT, type TransportDraft } from '../../utils/transport'
 import { DEFAULT_TRAVELERS, type TravelersDraft } from '../../utils/travelers'
 import { isValidDuration, validateTripDates } from '../../utils/tripDates'
@@ -48,6 +50,10 @@ export interface PlanningDraft {
   travelers: TravelersDraft
   /** Preferências de transporte (etapa 4); só declaradas, sem cálculo. */
   transport: TransportDraft
+  /** Interesses (etapa 5), categorias do catálogo; o motor exige ao menos um. */
+  interests: InterestCategory[]
+  /** Ritmo da viagem (etapa 5); ainda não usado pelo motor. */
+  pace: TripPace
 }
 
 export const EMPTY_DRAFT: PlanningDraft = {
@@ -58,6 +64,8 @@ export const EMPTY_DRAFT: PlanningDraft = {
   durationDays: null,
   travelers: DEFAULT_TRAVELERS,
   transport: DEFAULT_TRANSPORT,
+  interests: [],
+  pace: DEFAULT_PACE,
 }
 
 /**

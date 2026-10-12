@@ -60,9 +60,9 @@ describe('Etapa 4 — Transporte', () => {
     expect(origin()).toHaveValue('')
     expect(summary()).toHaveTextContent('Transporte: ainda não definido')
     expect(screen.getByText(/não geram\s+cálculos de rotas, distâncias ou tarifas/)).toBeInTheDocument()
-    // Não há etapa 5: só o fallback.
-    expect(screen.queryByRole('button', { name: /^Continuar para/ })).toBeNull()
-    expect(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' })).toBeEnabled()
+    // A etapa 5 existe: o avanço é "Continuar para Interesses"; o fallback só aparece na última etapa.
+    expect(screen.getByRole('button', { name: 'Continuar para Interesses' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Continuar com o formulário tradicional' })).toBeNull()
   })
 
   it('transporte até o destino: escolha única que pode ser removida', async () => {
@@ -102,7 +102,7 @@ describe('Etapa 4 — Transporte', () => {
   it('cidade de origem: validação de formato e tamanho; não bloqueia quando vazia', async () => {
     const user = userEvent.setup()
     await toTransport(user)
-    const next = () => screen.getByRole('button', { name: 'Continuar com o formulário tradicional' })
+    const next = () => screen.getByRole('button', { name: 'Continuar para Interesses' })
 
     await user.type(origin(), 'Rio 2')
     expect(screen.getByRole('alert')).toHaveTextContent('Use apenas letras')
@@ -211,6 +211,8 @@ describe('Etapa 4 — Transporte', () => {
     await toTransport(user, 'Rio de Janeiro')
     await user.click(arrival().getByRole('button', { name: 'Avião' }))
     await user.type(origin(), 'Curitiba')
+    await user.click(screen.getByRole('button', { name: 'Continuar para Interesses' }))
+    await user.click(screen.getByRole('button', { name: /^Cultura/ }))
     await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
     expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
     expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('7')

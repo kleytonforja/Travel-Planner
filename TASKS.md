@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **V1-T3.4** — planejamento progressivo, etapa 4 (transporte). Anteriores: V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **V1-T3.5** — planejamento progressivo, etapa 5 (interesses e ritmo). Anteriores: V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | 🚧 **parcial por desenho**: etapa 4 implementada e validada localmente em 2026-10-12 (ver "Relatório do V1-T3.4"); etapas 5 a 7 pendentes; **sem commit** (aguarda autorização) |
-| Próximo checkpoint  | Revisão/commit do V1-T3.4 e definição da etapa 5 (interesses), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | 🚧 **parcial por desenho**: etapa 5 implementada e validada localmente em 2026-10-12 (ver "Relatório do V1-T3.5"); etapas 6 e 7 pendentes; **sem commit** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do V1-T3.5 e definição da etapa 6 (orçamento), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -1774,3 +1774,43 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
 - **Chromium**: 21/21 (transporte) + 13/13 (estilo calculado, check, múltiplos,
   foco por teclado no card selecionado, remoção, preservação, sem overflow) em
   375 e 1366 px.
+
+## Relatório do V1-T3.5 — planejamento progressivo: interesses e ritmo (2026-10-12)
+
+- **Status**: implementado e validado localmente; **sem commit, push ou deploy**.
+  Etapas 6 e 7 pendentes. Próxima etapa: Orçamento.
+- **Funcionalidade**: etapa 5 "Que experiências você gostaria de viver?" com os 7
+  interesses do catálogo em `SelectableCard` (múltipla escolha, remoção
+  individual, ao menos um para seguir) e ritmo Tranquilo/Equilibrado/Intenso
+  (escolha única, padrão Equilibrado); resumo "Interesses: …; ritmo …"; escolhas
+  preservadas ao voltar/avançar e ao alterar etapas anteriores; o formulário
+  tradicional abre com destino, duração e **interesses** já marcados
+  (`initialInterests`). Decisão em D36.
+- **Limitações reais do motor**: usa interesses, mas **não tem ritmo** (o `style`
+  do motor é custo); o ritmo só é guardado e a tela avisa. Transporte e viajantes
+  também não são usados. Integração: V1-T3.7. Sem subcategorias (não existem nos dados).
+- **Pendência visual**: fotografias temáticas licenciadas para os cards de
+  interesses (a referência é fotográfica); hoje há ícones. Nenhuma foto buscada
+  ou imagem genérica usada.
+- **Arquivos**: novos `src/utils/interests.ts`, `src/components/planning/InterestsStep.tsx`,
+  `src/tests/interestsStep.test.tsx`; alterados `planningSteps.ts`, `stepRegistry.ts`,
+  `PlanningFlow.tsx`, `PlanningForm.tsx`, `HomePage.tsx`, `App.tsx`, testes
+  `planningFlow`, `datesStep`, `travelersStep`, `transportStep`, `DECISIONS.md` (D36),
+  `ROADMAP.md`, `PROJECT.md`, `TASKS.md`. Motor, persistência e importação/exportação intocados.
+- **Testes**: 596 em 32 arquivos. Um teste lento de viajantes (25 cliques) ganhou
+  timeout de 20 s por oscilar no limite de 5 s sob carga.
+- **Chromium**: 17 de 17 verificações (múltipla escolha, remoção, ritmo único e
+  padrão, teclado, foco, preservação, fallback com interesses, sem overflow e
+  cards ≥ 44 px em 375, 768, 1366 e 1920 px).
+- **Riscos**: apenas Chromium; ritmo sem efeito no roteiro.
+
+### Consolidação do V1-T3.5 (2026-10-12)
+
+- **Distinção documentada** (D36): **ritmo** (Tranquilo/Equilibrado/Intenso, etapa 5,
+  só preferência) é diferente do **estilo financeiro** do motor (`style`:
+  econômico/equilibrado/confortável, que trata de custo e é coletado no
+  formulário tradicional; deverá relacionar-se à etapa 6, Orçamento).
+- **Pendências registradas**: (1) integração do ritmo com o motor de roteiros
+  (V1-T3.7); (2) fotografias temáticas licenciadas para os cards de interesses.
+- **Preservado**: múltipla escolha de interesses, ritmo único com padrão
+  Equilibrado, interesses no formulário tradicional e estado entre etapas.

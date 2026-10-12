@@ -307,12 +307,14 @@ describe('Etapa 2 — Datas e duração', () => {
     setDates('2026-10-20', '2026-10-22')
     await user.click(legacyButton())
     await user.click(screen.getByRole('button', { name: 'Continuar para Transporte' }))
+    await user.click(screen.getByRole('button', { name: 'Continuar para Interesses' }))
+    await user.click(screen.getByRole('button', { name: /^Cultura/ }))
     await user.click(screen.getByRole('button', { name: 'Continuar com o formulário tradicional' }))
 
     expect((document.getElementById('duracao') as HTMLInputElement).value).toBe('3')
     expect((document.getElementById('destino') as HTMLSelectElement).value).toBe('rio-de-janeiro')
 
-    await user.click(within(screen.getByRole('group', { name: 'Interesses' })).getByText('Cultura'))
+    expect(within(screen.getByRole('group', { name: 'Interesses' })).getByRole('checkbox', { name: 'Cultura' })).toBeChecked()
     await user.click(within(screen.getByRole('group', { name: 'Estilo de viagem' })).getByText('Equilibrado'))
     await user.type(document.getElementById('orcamento') as HTMLInputElement, '900')
     await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))

@@ -86,6 +86,7 @@ function App() {
       onOpenSaved={handleOpenSaved}
       initialDestinationId={draft.destinationId}
       initialDays={resolveTripDays(draft) ?? undefined}
+      initialInterests={draft.interests}
       onDestinationChange={(id) => updateDraft({ destinationId: id })}
       onStartPlanning={() => setView({ name: 'planning' })}
     />

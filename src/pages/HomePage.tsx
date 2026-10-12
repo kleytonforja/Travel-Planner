@@ -24,7 +24,7 @@ import {
   type RecoveryPreview,
   type StorageLoadResult,
 } from '../services/itineraryStorage'
-import type { Itinerary, SavedItinerary } from '../types'
+import type { InterestCategory, Itinerary, SavedItinerary } from '../types'
 
 interface HomePageProps {
   /** Chamado quando o formulário gera um roteiro com sucesso. */
@@ -35,6 +35,7 @@ interface HomePageProps {
   initialDestinationId?: string
   /** Duração em dias já escolhida na sessão (preenche o formulário tradicional). */
   initialDays?: number
+  initialInterests?: InterestCategory[]
   /** Informa a escolha de destino, para que ela seja preservada ao sair da home. */
   onDestinationChange?: (id: string) => void
   /** Abre o planejamento progressivo (botão principal do hero). */
@@ -65,6 +66,7 @@ export function HomePage({
   onOpenSaved,
   initialDestinationId = '',
   initialDays,
+  initialInterests,
   onDestinationChange,
   onStartPlanning,
 }: HomePageProps) {
@@ -688,6 +690,7 @@ export function HomePage({
           destinationId={destinationId}
           onDestinationChange={changeDestination}
           initialDays={initialDays}
+          initialInterests={initialInterests}
           onItineraryGenerated={onItineraryGenerated}
         />
         <SavedItineraries
