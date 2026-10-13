@@ -1377,3 +1377,15 @@ foto; o card consulta o mapa na hora de exibir, então roteiros antigos, importa
 - **Créditos**: "Créditos das fotografias" (recolhível, só com fotos no roteiro) com autor, fonte, licença (link) e alterações; nota no
   rodapé; `docs/IMAGE_CREDITS.md`. Versões derivadas BY-SA permanecem sob a mesma licença. **Sem revisão jurídica**.
 - Todas as imagens usam lazy (inclusive a primeira atração): são miniaturas de 56–80 px e o navegador carrega as visíveis de imediato.
+
+## D52 — Fotografias de Florianópolis e Lisboa (M5.5)
+
+**Decisão**: estender o mapa `ACTIVITY_PHOTOS` (D51) a 15 atrações de Florianópolis (8) e Lisboa (7), mantendo placeholder nas demais
+(Bares da Lagoa, Escuna, Pastéis de Belém, LX Factory e Time Out Market, além da Feira do Rio). Sem alteração em `ActivityCard`,
+no catálogo, no motor, no armazenamento ou no JSON.
+- **Critério**: licença e autor lidos na página do arquivo e conferidos por script antes de qualquer download; imagem aberta e conferida;
+  dúvida material (correspondência, interior comercial, pessoas, arte protegida, local não comprovado) → placeholder.
+- **Licenças**: agora também CC0 (Lagoinha, sem atribuição obrigatória, mas creditada), CC BY 3.0 e CC BY 4.0; os créditos mostram sempre o
+  nome e o link da licença específica. BY-SA: derivadas permanecem BY-SA.
+- **Meta de peso**: 480 px ≤ 60 KB (obtido: 15–46 KB, qualidade 74).
+- **Direitos**: sem revisão jurídica; liberdade de panorama em Portugal não verificada (por isso LX Factory ficou de fora).

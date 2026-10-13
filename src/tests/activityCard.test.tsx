@@ -5,7 +5,7 @@ import { ItineraryDayCard } from '../components/ItineraryDayCard'
 import { destinations } from '../data/destinations'
 import type { ItineraryDay } from '../types'
 
-const [first, second] = destinations[0].activities
+const [first, second] = destinations[0].activities.filter((item) => ['fln-noite-lagoa', 'fln-passeio-escuna'].includes(item.id))
 
 const day: ItineraryDay = {
   dayNumber: 2,

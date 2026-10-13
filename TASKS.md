@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **M5.3** — fotografias reais das atrações do Rio. Anteriores: M5.2 (pesquisa), M5.1 (commit `b52e377`), M4.5 (commit `c97b7ef`), M4.4 (commit `d8861ce`), M4.3 (commit `9478c10`), M4.2 (commit `b828af7`), M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **M5.5** — fotografias de Florianópolis e Lisboa. Anteriores: M5.4 (curadoria), M5.3 (commit `5a9688b`), M5.2 (pesquisa), M5.1 (commit `b52e377`), M4.5 (commit `c97b7ef`), M4.4 (commit `d8861ce`), M4.3 (commit `9478c10`), M4.2 (commit `b828af7`), M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | ✅ **M5.3 implementado e validado localmente** em 2026-10-13 (ver "Relatório do M5.3"); **sem commit** (aguarda autorização); inclui as alterações do relatório do M5.2 |
-| Próximo checkpoint  | Revisão/commit do M5.3, mediante autorização; revisão jurídica das licenças antes de publicar; Feira Hippie e demais destinos em fase posterior. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | ✅ **M5.5 implementado e validado localmente** em 2026-10-13 (ver "Relatório do M5.5"); **sem commit** (aguarda autorização); inclui as alterações do relatório do M5.4 |
+| Próximo checkpoint  | Revisão/commit do M5.5, mediante autorização; revisão jurídica das licenças antes de publicar; as 6 atrações sem foto continuam com placeholder. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -2205,3 +2205,77 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   Lisboa e Florianópolis sem fotos, sem erros de console nem requisições falhas.
 - **Riscos**: sem revisão jurídica; atribuição obrigatória (créditos no roteiro e rodapé); direitos de obras públicas e pessoas
   incidentais; só Chromium; imagens quadradas recortam o enquadramento original.
+
+## Relatório do M5.4 — curadoria de fotografias de Florianópolis e Lisboa (2026-10-13)
+
+- **Consolidação do M5.3**: validado (typecheck, lint, testes direcionados; 875 testes na execução completa anterior) e commitado
+  localmente (`5a9688b`); árvore limpa antes da curadoria.
+- **Método**: metadados do Wikimedia Commons (API pública) — licença, link da licença, autor, descrição, categorias e GPS lidos **por
+  arquivo**; nenhuma licença presumida pela plataforma. **Nenhuma imagem foi baixada para o projeto nem foi baixado arquivo original.**
+  Para a inspeção visual exigida, usei **miniaturas de até 1000 px geradas pelo próprio Commons, salvas só no scratchpad** (fora do
+  repositório; não foram incorporadas). Unsplash/Pexels: não consultados nesta etapa (a busca web não localizou fotos específicas
+  no M5.2). Catálogo, motor, armazenamento, JSON e componentes intocados.
+- **Candidatas** (arquivo = página `https://commons.wikimedia.org/wiki/File:<arquivo>`; todas permitem uso comercial,
+  armazenamento local e conversão para WebP; atribuição obrigatória, **exceto CC0**):
+
+| Destino | Atração (ID) | Candidata (autor) | Licença | Confiança | Pendências |
+| --- | --- | --- | --- | --- | --- |
+| Florianópolis | Trilha da Lagoinha do Leste (`fln-trilha-lagoinha-do-leste`) | Praia_da_Lagoinha_do_Leste,_Florianópolis.jpg (Papa Pic; via Flickr) | CC0 | alta | mostra a praia vista da trilha; GPS na praia; sem atribuição obrigatória (creditar por cortesia) |
+| Florianópolis | Praia de Jurerê Internacional (`fln-jurere-internacional`) | Praia_de_Jurerê_Internacional.JPG (Rafael Bernardino Mattei) | CC BY-SA 3.0 | média | marca d'água do autor no canto (recortar); não mostra beach clubs |
+| Florianópolis | Mercado Público (`fln-mercado-publico`) | Mercado_Público_de_Florianópolis_(3887553534).jpg (Rodrigo Soldon) | CC BY 2.0 | alta | GPS no mercado; exterior; pessoas pequenas e distantes |
+| Florianópolis | Santo Antônio de Lisboa (`fln-santo-antonio-de-lisboa`) | Santo_Antonio_de_Lisboa,_Florianópolis_06.jpg (Simone Balster) | CC BY-SA 4.0 | média | mostra a orla do distrito, não o casario, as ostras nem o pôr do sol; sem GPS/categoria |
+| Florianópolis | Ilha do Campeche (`fln-ilha-do-campeche`) | Ilha_do_Campeche_(3444645238).jpg (Rodrigo Soldon) | CC BY 2.0 | média | ilha vista do mar (GPS a ~2 km); a descrição do arquivo é genérica |
+| Florianópolis | Lagoa da Conceição (`fln-lagoa-da-conceicao`) | Florianópolis_SC_Brasil_-_Lagoa_da_Conceição_-_panoramio.jpg (Josue Marinho) | CC BY 3.0 | média | qualidade modesta; data gravada na imagem (recortar); crédito original no arquivo do Panoramio |
+| Florianópolis | Bares da Lagoa da Conceição (`fln-noite-lagoa`) | — | — | — | **sem alternativa**: nenhum arquivo do circuito de bares; manter placeholder |
+| Florianópolis | Shopping Beiramar (`fln-shopping-beiramar`) | Fachada_Beiramar_dez_2016.jpg (Rachmaninoff) | CC BY-SA 4.0 | média | fachada com decoração natalina sazonal e marca visível; sem revisão de marca/obra |
+| Florianópolis | Fortaleza de São José da Ponta Grossa (`fln-fortaleza-sao-jose`) | Fortaleza_de_São_José_da_Ponta_Grossa_SC_(3950234623).jpg (Luiz Pantoja) | CC BY 2.0 | alta | descrição só com o nome; confere visualmente (muralhas e casario de pedra) |
+| Florianópolis | Passeio de escuna (`fln-passeio-escuna`) | Escuna_de_passeio,_em_Florianópolis-SC,_BRASIL.JPG (ULIANO EDI) | CC BY-SA 4.0 | baixa | **pendente**: escuna de turismo, mas sem evidência de ser o passeio da Baía Sul (categoria só "Beaches of Brazil") |
+| Lisboa | Torre de Belém (`lis-torre-de-belem`) | Torre_de_Belem_-_Outside.jpg (Ingo Mehling) | CC BY-SA 4.0 | alta | GPS na torre; monumento antigo (sem obra protegida) |
+| Lisboa | Mosteiro dos Jerónimos (`lis-mosteiro-jeronimos`) | Cloister_of_the_Jerónimos_Monastery_in_Belém,_Lisbon,_20250604_1309_9188.jpg (Jakub Hałun) | CC BY 4.0 | alta | mostra o claustro (não a fachada); GPS no mosteiro |
+| Lisboa | Pastéis de Belém (`lis-pasteis-de-belem`) | Pastéis_de_Belém_-1.jpg (claralieu; via Flickr) | CC BY 2.0 | baixa | **pendente**: close do pastel de nata, sem evidência de ser da confeitaria original (sem GPS/categoria) |
+| Lisboa | Alfama e Miradouro de Santa Luzia (`lis-alfama-santa-luzia`) | Miradouro_de_Santa_Luzia_View_over_Alfama,_Lisbon_(54733651122).jpg (Dale Cruse) | CC BY 4.0 | alta | visitantes pequenos, de costas/distantes; arquivo gigante (11656×8742), só otimizar |
+| Lisboa | Castelo de São Jorge (`lis-castelo-sao-jorge`) | Lisbon_Castelo_de_São_Jorge_BW_2018-10-03_11-13-09.jpg (Berthold Werner) | CC BY-SA 4.0 | alta | GPS no castelo; duas pessoas minúsculas; quase quadrada (6475×6360) |
+| Lisboa | Oceanário de Lisboa (`lis-oceanario`) | The_size_of_Lisbon_Oceanarium.jpg (Sonse; via Flickr) | CC BY 2.0 | média | interior (tanque central) com silhueta anônima; sem GPS/categoria; fachada (obra moderna) evitada |
+| Lisboa | Noite no Bairro Alto (`lis-bairro-alto`) | Lisboa_Bairro_Alto_(53893930842).jpg (Jorge Franganillo) | CC BY 2.0 | média | rua ao anoitecer (GPS no bairro), não mostra bares nem fado; poucos pedestres ao longe |
+| Lisboa | LX Factory (`lis-lx-factory`) | Lisbon._LX_Factory._(41223897094).jpg (Vernaccia) | CC BY 2.0 | baixa | **pendente**: mostra muro com frase pintada e a ponte, não a área; arte de rua é obra protegida e o regime de liberdade de panorama em Portugal **não foi verificado**; outras fotos têm grafites ou multidão |
+| Lisboa | Bate-volta a Sintra (`lis-sintra-palacio-pena`) | Pena_Palace,_Sintra,_Portugal,_20250606_1036_0001.jpg (Jakub Hałun) | CC BY 4.0 | alta | GPS no palácio; sem pessoas reconhecíveis |
+| Lisboa | Time Out Market (`lis-time-out-market`) | Time_Out_Market_Lisbon_(28948187458).jpg (Nan Palmero) | CC BY 2.0 | média-baixa | **pendente**: interior de estabelecimento comercial, pessoas (pequenas) e marca/logotipo Time Out no centro da imagem |
+
+- **Resumo**: 20 atrações = **15 aptas para incorporação técnica** (8 com confiança alta; 7 média, com ressalvas acima), **4 pendentes
+  de verificação** (Escuna, Pastéis de Belém, LX Factory, Time Out Market) e **1 sem alternativa adequada** (Bares da Lagoa).
+  Licenças verificadas por arquivo: 1 CC0, 8 CC BY 2.0, 1 CC BY 3.0, 3 CC BY 4.0, 1 CC BY-SA 3.0, 5 CC BY-SA 4.0 = 19 candidatas (inclui as 4 pendentes; Bares da Lagoa não tem candidata).
+- **Direitos e riscos**: nada foi tratado como liberado só por estar no Commons. (1) **Pessoas**: nenhuma candidata apta mostra
+  rosto reconhecível, mas Santa Luzia, Mercado, Castelo e Bairro Alto têm pessoas pequenas; as pendentes (Time Out, LX) têm mais.
+  (2) **Interiores**: Oceanário e Jerónimos (monumento antigo); Time Out e LX ficaram pendentes. (3) **Obras protegidas**: monumentos
+  antigos (Torre, Jerónimos, Castelo, Pena, Mercado, Fortaleza) não oferecem esse risco; Beiramar (decoração natalina, marca) e
+  Oceanário (arquitetura moderna evitada) exigem atenção; liberdade de panorama em Portugal **não verificada**; a brasileira (Lei
+  9.610/98, art. 48) **sem revisão jurídica**. (4) **Atribuição** obrigatória (exceto CC0); BY-SA exige a mesma licença nas
+  versões derivadas. (5) **Falta de correspondência exata**: Santo Antônio, Jurerê, Bairro Alto e Lagoa mostram o lugar, não o que o card
+  promete; o alt-text deve dizer só o que aparece. (6) Algumas imagens de mídia oficial (MTur) estão marcadas "domínio público" no
+  Commons com "crédito obrigatório" na descrição — **descartadas** por ambiguidade (Jurerê e Lagoa da Conceição teriam alternativas melhores).
+- **Plano**: M5.5 incorpora as 15 aptas com o mesmo fluxo do M5.3 (original da página → WebP quadrado 480/960 → `activityPhotos.ts` →
+  créditos), após revisão visual do recorte; as 5 restantes mantêm o placeholder até haver imagem verificável.
+
+## Relatório do M5.5 — fotografias de Florianópolis e Lisboa (2026-10-13)
+
+- **Verificação (Etapa A)**: para as 15 candidatas, o script consultou a página de cada arquivo no Commons e **só baixou/recortou se a
+  licença e o autor coincidiam** (15/15; nenhuma divergência, nenhuma restrição declarada); os originais foram **inspecionados
+  visualmente**. Nenhuma candidata foi reprovada nesta etapa. Pontos de atenção registrados em `docs/IMAGE_CREDITS.md`: pessoas pequenas
+  (Mercado, Santa Luzia, Castelo, Jerónimos, Bairro Alto) e silhueta (Oceanário); marca/decoração do Beiramar; liberdade de panorama
+  (Brasil sem revisão jurídica; Portugal não verificada). A curadoria do M5.4 foi mantida; nenhuma pesquisa adicional.
+- **Incorporadas: 15** — Florianópolis **8** (Lagoinha, Jurerê, Mercado, Santo Antônio, Campeche, Lagoa, Beiramar, Fortaleza) e Lisboa **7**
+  (Torre, Jerónimos, Santa Luzia, Castelo, Oceanário, Bairro Alto, Pena). Com o Rio (9): **24 fotografias**.
+- **Placeholders**: Florianópolis **2** (Bares da Lagoa; Escuna), Lisboa **3** (Pastéis; LX Factory; Time Out), Rio **1** (Feira) — 6 de 30.
+- **Arquivos**: 30 WebP em `public/images/activities/` (480 px: 15–46 KB; 960 px: 49–150 KB), qualidade 74, recorte quadrado, sem metadados.
+- **Código**: apenas `src/data/activityPhotos.ts` (15 entradas; links das licenças CC0, BY 3.0/4.0 e BY-SA 3.0) e a nota do rodapé;
+  `ActivityCard` e `ActivityPhotoCredits` **sem alteração**. Catálogo, motor, armazenamento, JSON e demais componentes intocados.
+  (D52.)
+- **Testes**: `activityPhotos.test.tsx` reescrito para os três destinos (placeholders previstos por destino, 24 fotos mapeadas a IDs do
+  catálogo, arquivos e tamanhos, metadados e licenças, alt-text que diz o que a imagem mostra, CC0, créditos); `activityCard.test.tsx`
+  passou a usar atrações sem foto como exemplo de placeholder.
+- **Chromium** (`m55`): 40/40 — roteiros de Florianópolis e Lisboa de 3, 5 e 10 dias em 375/768/1366/1920 px (fotos carregadas,
+  56×56/80×80 constantes, sem overflow), foto correta por ID e placeholders, créditos (8 e 7) com links, fallback com requisição bloqueada,
+  salvar/exportar/reabrir/importar sem campos de foto, Rio com 9 fotos e 1 placeholder, sem erros de console nem requisições falhas.
+  Observação: com 10 dias e todos os interesses, o motor deixou de fora uma atração de Florianópolis (a escuna) — comportamento do motor, não alterado.
+- **Riscos**: sem revisão jurídica; atribuição obrigatória (créditos no roteiro e no rodapé); liberdade de panorama em Portugal não
+  verificada; alguns enquadramentos mostram o lugar, não a atividade (alt-text explicita); só Chromium; recortes quadrados.

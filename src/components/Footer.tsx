@@ -107,7 +107,7 @@ export function Footer() {
           .
         </p>
         <p className="mt-2 text-sm text-slate-500">
-          Fotografias das atrações do Rio de Janeiro: Wikimedia Commons (licenças CC BY e CC BY-SA); os
+          Fotografias das atrações (Rio de Janeiro, Florianópolis e Lisboa): Wikimedia Commons (licenças CC0, CC BY e CC BY-SA); os
           créditos de cada foto aparecem no roteiro.
         </p>
         <p className="mt-2 text-sm text-slate-500">

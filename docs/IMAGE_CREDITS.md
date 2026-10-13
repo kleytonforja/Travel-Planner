@@ -87,3 +87,57 @@ isso não se estende ao código do aplicativo.
 - **Pessoas**: aparecem incidentalmente (Confeitaria Colombo e Arcos da Lapa); o recorte da Lapa evita as pessoas em primeiro plano.
 - **Sem validação de cada licença no site da Creative Commons além da leitura da página do arquivo**; reverificar antes de publicar
   se houver mudança nas páginas de origem.
+
+## Fotografias de Florianópolis e Lisboa (M5.5)
+
+Quinze das vinte atrações têm fotografia, todas do **Wikimedia Commons**. Em 2026-10-13, a página de cada arquivo foi consultada
+pela API do Commons e o script de incorporação **só prosseguiu se a licença e o autor batiam** com os registrados abaixo; os
+originais (JPEG) foram baixados da página documentada e **inspecionados visualmente** antes do recorte. As licenças permitem uso
+comercial, armazenamento local, redimensionamento e conversão; exigem atribuição (exceto CC0) e, nas BY-SA, a mesma licença nas
+versões derivadas. Nada foi considerado liberado apenas por estar no Commons, e **não houve revisão jurídica**.
+
+| ID da atração | Arquivo no Commons (`https://commons.wikimedia.org/wiki/File:<arquivo>`) | Autor | Licença | Original | O que a imagem mostra |
+| --- | --- | --- | --- | --- | --- |
+| fln-trilha-lagoinha-do-leste | Praia_da_Lagoinha_do_Leste,_Florianópolis.jpg | Papa Pic (via Flickr) | CC0 | 4066×2287 | a praia vista do alto da trilha, com bromélias |
+| fln-jurere-internacional | Praia_de_Jurerê_Internacional.JPG | Rafael Bernardino Mattei | CC BY-SA 3.0 | 4608×2540 | a praia e a faixa de areia (**não mostra beach clubs**) |
+| fln-mercado-publico | Mercado_Público_de_Florianópolis_(3887553534).jpg | Rodrigo Soldon | CC BY 2.0 | 3264×2448 | a fachada, com as duas torres |
+| fln-santo-antonio-de-lisboa | Santo_Antonio_de_Lisboa,_Florianópolis_06.jpg | Simone Balster | CC BY-SA 4.0 | 5472×3648 | pedras da orla e a baía (**não mostra casario nem ostras**) |
+| fln-ilha-do-campeche | Ilha_do_Campeche_(3444645238).jpg | Rodrigo Soldon | CC BY 2.0 | 3264×2448 | a ilha vista do mar |
+| fln-lagoa-da-conceicao | Florianópolis_SC_Brasil_-_Lagoa_da_Conceição_-_panoramio.jpg | Josue Marinho | CC BY 3.0 | 4608×3456 | barco num trapiche da lagoa, com morros |
+| fln-shopping-beiramar | Fachada_Beiramar_dez_2016.jpg | Rachmaninoff | CC BY-SA 4.0 | 5312×2988 | a fachada à noite, com decoração natalina |
+| fln-fortaleza-sao-jose | Fortaleza_de_São_José_da_Ponta_Grossa_SC_(3950234623).jpg | Luiz Pantoja | CC BY 2.0 | 3008×2000 | muralhas e edificações de pedra |
+| lis-torre-de-belem | Torre_de_Belem_-_Outside.jpg | Ingo Mehling | CC BY-SA 4.0 | 6000×4000 | a torre, do lado do rio |
+| lis-mosteiro-jeronimos | Cloister_of_the_Jerónimos_Monastery_in_Belém,_Lisbon,_20250604_1309_9188.jpg | Jakub Hałun | CC BY 4.0 | 5954×3949 | o claustro (**não a fachada**) |
+| lis-alfama-santa-luzia | Miradouro_de_Santa_Luzia_View_over_Alfama,_Lisbon_(54733651122).jpg | Dale Cruse | CC BY 4.0 | 11656×8742 | telhados de Alfama e o Tejo |
+| lis-castelo-sao-jorge | Lisbon_Castelo_de_São_Jorge_BW_2018-10-03_11-13-09.jpg | Berthold Werner | CC BY-SA 4.0 | 6475×6360 | a torre e as muralhas |
+| lis-oceanario | The_size_of_Lisbon_Oceanarium.jpg | Sonse (via Flickr) | CC BY 2.0 | 5472×3494 | o tanque central, com a silhueta de um visitante |
+| lis-bairro-alto | Lisboa_Bairro_Alto_(53893930842).jpg | Jorge Franganillo | CC BY 2.0 | 5948×3965 | uma rua ao anoitecer (**não mostra bares nem fado**) |
+| lis-sintra-palacio-pena | Pena_Palace,_Sintra,_Portugal,_20250606_1036_0001.jpg | Jakub Hałun | CC BY 4.0 | 6056×4016 | muralhas e torres do Palácio da Pena |
+
+Contagem (15): **1 CC0**, **5 CC BY 2.0** (Mercado, Campeche, Fortaleza, Oceanário, Bairro Alto), **1 CC BY 3.0** (Lagoa),
+**3 CC BY 4.0** (Jerónimos, Santa Luzia, Pena), **1 CC BY-SA 3.0** (Jurerê) e **4 CC BY-SA 4.0** (Santo Antônio, Beiramar, Torre,
+Castelo). Com o Rio (9): 24 fotografias — 1 CC0, 8 CC BY 2.0, 1 CC BY 3.0, 3 CC BY 4.0, 1 CC BY-SA 3.0, 1 CC BY-SA 3.0 DE e 9 CC BY-SA 4.0.
+
+### Tratamento (igual ao M5.3)
+Recorte quadrado (posição horizontal escolhida por imagem; os recortes de Lagoa e Jurerê excluem a data e a marca d'água gravadas
+nas fotos) e conversão para WebP com `ffmpeg`/libwebp (qualidade 74, sem metadados) em **480 e 960 px**. Todos os arquivos de
+480 px têm de 15 a 46 KB (meta ≤ 60 KB); os de 960 px, de 49 a 150 KB. Mapeamento e créditos em `src/data/activityPhotos.ts`;
+créditos acessíveis no roteiro ("Créditos das fotografias") e nota no rodapé.
+
+### Atrações que continuam com placeholder
+- **fln-noite-lagoa** (Bares da Lagoa): nenhuma imagem do circuito de bares encontrada.
+- **fln-passeio-escuna** (Passeio de escuna): a única imagem não comprova que é o passeio da Baía Sul.
+- **lis-pasteis-de-belem**: foto do pastel de nata, sem evidência de ter sido tirada na confeitaria original.
+- **lis-lx-factory**: imagens mostram arte de rua/grafite ou multidão; liberdade de panorama em Portugal **não verificada**.
+- **lis-time-out-market**: interior de estabelecimento comercial, com pessoas e logotipo em destaque.
+- **rio-feira-ipanema**: nenhuma imagem livre e verificável.
+
+### Ressalvas desta etapa
+- **Pessoas**: nenhuma foto mostra rostos reconhecíveis; Mercado, Santa Luzia, Castelo, Jerónimos e Bairro Alto têm pessoas pequenas ou
+  distantes (em Santa Luzia, o recorte deixa só uma fatia de um visitante na borda esquerda); o Oceanário mostra uma silhueta.
+- **Obras e marcas**: monumentos antigos (Torre, Jerónimos, Castelo, Pena, Mercado, Fortaleza) não oferecem risco de direitos de obra;
+  **Beiramar** mostra decoração natalina e a marca do shopping, e o **Oceanário** (interior) não mostra a arquitetura moderna. Liberdade
+  de panorama: Brasil (Lei 9.610/98, art. 48) **sem revisão jurídica**; Portugal **não verificada**.
+- **Imagens do Ministério do Turismo (MTur)** marcadas como "domínio público" no Commons, mas com "crédito obrigatório" na descrição,
+  foram descartadas por ambiguidade.
+- **Lagoa da Conceição**: crédito original do Panoramio (arquivo recuperado pelo Commons); qualidade modesta.

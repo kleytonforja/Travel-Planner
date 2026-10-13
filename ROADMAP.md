@@ -139,9 +139,10 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
-- [~] **M5.3 — fotografias das atrações do Rio (parcial)** (D51): 9 de 10 atrações com foto do Wikimedia Commons (CC BY/CC BY-SA),
-      créditos no roteiro e no rodapé; Feira Hippie com placeholder; demais destinos **pendentes**; revisão jurídica **pendente**.
-      Validada localmente; sem commit.
+- [~] **M5.5 — fotografias de Florianópolis e Lisboa (parcial)** (D52): 15 de 20 atrações com foto do Wikimedia Commons (8 + 7), 5 com
+      placeholder; créditos no roteiro e no rodapé. Revisão jurídica **pendente**. Validada localmente; sem commit.
+- [x] **M5.3 — fotografias das atrações do Rio** (D51, commit `5a9688b`): 9 de 10 atrações com foto do Wikimedia Commons (CC BY/CC BY-SA),
+      créditos no roteiro e no rodapé; Feira Hippie com placeholder.
 - [x] **M5.1 — cards do roteiro diário** (D50, commit `b52e377`): `ActivityCard` com área visual reservada (placeholder, sem foto), horário, categorias,
       duração e custo ilustrativo; fotografias entregues no M5.3.
 - [x] **M4.5 — validação integrada do M4** (D49): fluxo completo em 375/768/1366/1920 px sem regressão; foto da Revisão sem
