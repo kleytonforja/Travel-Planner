@@ -1188,3 +1188,37 @@ ser criados.
 
 **Pendências do M3**: aplicar o ritmo como limite de atividades por dia, passar `pace` do adaptador ao motor e gravá-lo
 no roteiro (com aviso das atividades deixadas de fora pelo ritmo), mantendo roteiros sem ritmo como "sem limite".
+
+## D44 — Esquema v2 concluído e validado de forma integrada (M2.6)
+
+**Estado**: o esquema v2 (orçamento, saldo e ritmo opcionais) está **concluído e validado** nas camadas de contrato
+(D40), persistência (D41), JSON (D42) e geração/interface (D43). O **ritmo** existe no esquema, mas **ainda não é
+aplicado pelo motor nem gravado pelo fluxo** (M3).
+
+**Validação integrada** (2026-10-12): 801 testes em 43 arquivos (3 execuções completas sem falha); Chromium 22/22 (fluxo
+completo com orçamento, salvar, abrir, exportar, excluir, importar), 18/18 (sem orçamento, v1 e v2) e 15/15 (estados
+inválidos); 432 cenários de regressão financeira verificados também contra o motor do commit `d63812f` (anterior ao
+esquema v2): 432/432 idênticos.
+
+**Compatibilidade v1/v2**: registros e arquivos v1 permanecem válidos e idênticos; a leitura nunca regrava; arquivos v2
+só abrem em versões que conheçam a v2.
+
+**Política de downgrade** (testada em ambiente isolado, com o serviço de armazenamento do commit `d63812f` sobre um
+`localStorage` em memória; o armazenamento real do usuário não foi tocado):
+- Registro v2 **com orçamento** (inclusive com ritmo): lido normalmente pela versão antiga (o ritmo é ignorado).
+- Registro v2 **sem orçamento**: a versão antiga o classifica como **inválido** e a coleção como **corrompida**; as
+  gravações antigas ficam **bloqueadas**; os bytes originais permanecem intactos; os registros válidos aparecem só para
+  consulta.
+- **Recuperação explícita** na versão antiga: o conteúdo bruto original (incluindo o roteiro sem orçamento) é copiado
+  **byte a byte** para a quarentena; só os registros válidos continuam ativos; nada é apagado em silêncio.
+- Ao voltar à versão nova, a coleção recuperada é íntegra, a quarentena continua ocupada e a restauração só é permitida
+  sem roteiros ativos (nada é sobrescrito).
+- Um arquivo v2 (`schemaVersion: 2`) é recusado pela versão antiga com `unsupported-version`.
+**Orientação**: antes de fazer rollback do aplicativo, exporte os roteiros sem orçamento; depois do rollback, use a
+recuperação explícita se a coleção aparecer como corrompida.
+
+**Limitações atuais**: ritmo não aplicado; viajantes, transporte, perfil e acessibilidade não influenciam nem são
+persistidos; catálogo de 4 a 10 atividades por estilo e destino; sem mapas nem imagens de atrações; apenas Chromium.
+
+**Próxima fase (M3)**: aplicar o ritmo como limite de atividades por dia, passar `pace` do adaptador ao motor e gravá-lo
+no roteiro, com aviso das atividades deixadas de fora (roteiros sem ritmo continuam "sem limite").

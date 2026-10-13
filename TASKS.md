@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **M2.5** — geração sem orçamento e integração financeira (parcial). Anteriores: M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **M2.6** — consolidação e validação integrada do esquema v2. Anteriores: M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | 🚧 **M2.5 implementada e validada localmente** em 2026-10-12 (ver "Relatório do M2.5"); falta a validação integrada M2.6; ritmo no motor é M3; **sem commit do M2.5** (aguarda autorização) |
-| Próximo checkpoint  | Revisão/commit do M2.5 e início do M2.6 (validação integrada), mediante autorização; depois M3 (ritmo). Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | ✅ **Esquema v2 concluído e validado** em 2026-10-12 (ver "Relatório do M2.6"); ritmo no motor é o M3; **sem commit do M2.6** (aguarda autorização); 4 commits locais (M2.2–M2.5) aguardam decisão de push |
+| Próximo checkpoint  | Decisão de publicação (push/deploy) do esquema v2 e início do M3 (ritmo no motor), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -2006,3 +2006,32 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   Nota de método: `innerText` sofre o `uppercase` do CSS; as verificações usam `textContent`.
 - **Limitações restantes e pendências do M3**: ver D43 (ritmo, preferências não usadas, catálogo, downgrade alcançável).
 - **Riscos**: o downgrade registrado em D41/D42 passa a ser alcançável; apenas Chromium.
+
+## Relatório do M2.6 — consolidação e validação integrada do esquema v2 (2026-10-12)
+
+- **Consolidação do M2.5**: confirmados branch `master`, HEAD `0338fe8` e alterações pendentes exclusivas do M2.5;
+  `goldenItineraries.json` verificado contra o motor do commit `d63812f` (anterior ao esquema v2): **432/432** cenários
+  idênticos, ou seja, as saídas são históricas e não derivam do código novo; validado e commitado localmente
+  (`eda5188`).
+- **Cobertura verificada** (testes existentes + novo `schemaV2Integration.test.ts`, 9 casos): contratos; motor; persistência
+  (leitura sem regravar nem remover chaves, exclusão preservando os demais registros, `expectedRaw` obsoleto cancela,
+  salvar sem tocar nos existentes); JSON (ida e volta de v1 histórico, v2 com orçamento, sem orçamento e com ritmo, com
+  reexportação idêntica); interface (fluxo de sete etapas, com e sem orçamento); concorrência (suítes existentes de
+  locks, `expectedRaw`, colisões e falhas de gravação, **sem alteração da arquitetura**).
+- **Downgrade** (script em ambiente isolado, 20/20; serviço de armazenamento do commit `d63812f`): registro v2 com
+  orçamento e ritmo é lido normalmente; registro sem orçamento torna a coleção corrompida, bloqueia gravações antigas,
+  mantém os bytes intactos e, após recuperação explícita, vai **byte a byte** para a quarentena sem apagar nada; a
+  versão nova relê a coleção recuperada, mantém a quarentena e bloqueia restauração com roteiros ativos. O script não é
+  parte do repositório (resultado registrado em D44).
+- **Testes**: 801 em 43 arquivos, 3 execuções completas sem falha; `typecheck`, `lint`, `build` e `git diff --check` sem
+  problemas.
+- **Chromium**: 22/22 (fluxo completo com orçamento, salvar, abrir, exportar, excluir, importar; o roteiro exportado agora é
+  v2, e a verificação foi atualizada), 18/18 (sem orçamento, v1 e v2) e 15/15 (orçamento inválido no fluxo; importação
+  rejeitada de versão 3, orçamento só no resumo, saldo sem orçamento, ritmo inválido, não JSON e arquivo acima de 256 KB,
+  sem alterar o armazenamento; exclusão com quarentena intocada); sem erros de console; sem overflow em 375, 768, 1366
+  e 1920 px.
+- **Política de downgrade e limitações**: ver D44.
+- **Decisão de publicação**: apta para publicação do ponto de vista técnico, **a critério do responsável** (push e deploy
+  exigem autorização explícita); a publicação torna alcançável o cenário de downgrade descrito em D44.
+- **Riscos restantes**: downgrade para versão antiga com roteiros sem orçamento; ritmo ainda sem efeito; apenas Chromium;
+  falha rara e não reproduzida de `itineraryImportInteraction` (registrada no M2.2, sem recorrência em mais de 30 execuções).

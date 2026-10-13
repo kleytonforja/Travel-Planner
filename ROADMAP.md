@@ -139,7 +139,10 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
-- [~] **M2.5 — geração sem orçamento e integração financeira (parcial)** (D43): o orçamento é opcional na geração
+- [x] **M2.6 — validação integrada do esquema v2** (D44): esquema v2 concluído e validado (801 testes, Chromium 22/22 +
+      18/18 + 15/15, regressão financeira 432/432 contra o motor anterior, teste de downgrade em ambiente isolado).
+      Ritmo no motor (**M3**) pendente. Validada localmente; sem commit.
+- [x] **M2.5 — geração sem orçamento e integração financeira** (D43, commit `eda5188`): o orçamento é opcional na geração
       (sem teto, sem saldo, sem valor fictício), com a revisão, o resultado e a importação mostrando "Orçamento não
       informado"; com orçamento o resultado é idêntico ao anterior (432 cenários). Ritmo no motor (M3) e validação
       integrada/publicação (M2.6) **pendentes**. Validada localmente; sem commit.
