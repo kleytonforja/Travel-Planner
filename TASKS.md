@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **M4.5** — validação integrada do M4. Anteriores: M4.4 (commit `d8861ce`), M4.3 (commit `9478c10`), M4.2 (commit `b828af7`), M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **M5.1** — redesign dos cards do roteiro diário. Anteriores: M4.5 (commit `c97b7ef`), M4.4 (commit `d8861ce`), M4.3 (commit `9478c10`), M4.2 (commit `b828af7`), M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | ✅ **M4 concluído e validado localmente** em 2026-10-13 (ver "Relatório do M4.5"); commits locais `d8861ce` (M4.4) e o do M4.5; **sem push/deploy** |
-| Próximo checkpoint  | Teste manual do teclado virtual em Android real; push/publicação do M4, mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | ✅ **M5.1 implementado e validado localmente** em 2026-10-13 (ver "Relatório do M5.1"); **sem commit do M5.1** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do M5.1, mediante autorização; depois M5.2 (fotografias reais das atrações). Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -2131,3 +2131,15 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   nem esconde campo/mensagem. Emulação desktop apenas.
 - **Riscos restantes**: **teste manual em Android real pendente** (teclado virtual, `visualViewport`); só Chromium; com campo em
   foco no celular a barra fica no fluxo da página (é preciso rolar para ver "Continuar" até o campo perder o foco).
+
+## Relatório do M5.1 — cards do roteiro diário (2026-10-13)
+
+- **Implementado** (D50): `ActivityCard` novo; `ItineraryDayCard` o utiliza e ganhou cabeçalho com número do dia. Sem `<img>` e sem foto
+  genérica; área visual reservada para o M5.2. Motor, catálogo, armazenamento e JSON intocados.
+- **Testes**: 865 em 49 arquivos, 2 execuções completas sem falha (3 novos em `activityCard.test.tsx`); o erro transitório
+  "no tests" apareceu em execuções com troca de diretório e passou na repetição.
+- **Chromium**: `m51` 23/23 — roteiros de 3, 5, 7 e 10 dias (este com 4 dias vazios) em 375/768/1366/1920 px: sem overflow, sem corte,
+  sem imagem, área visual em todos os cards, horários em ordem, aviso de dia livre, teclado, exportação v2 intacta, sem erros de
+  console. Achado: a 1ª versão (3 colunas no celular) ficou mais alta que a anterior (189 vs 165 px); o horário passou a ficar
+  em linha sobre o nome. O build também precisa passar antes de qualquer verificação no Chromium (o `dist` antigo mascarou o teste).
+- **Riscos**: apenas Chromium; ícones repetitivos até o M5.2.

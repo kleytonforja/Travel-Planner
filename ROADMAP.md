@@ -139,6 +139,8 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
+- [~] **M5.1 — cards do roteiro diário (parcial)** (D50): `ActivityCard` com área visual reservada (placeholder, sem foto), horário, categorias,
+      duração e custo ilustrativo; fotografias reais **pendentes (M5.2)**. Validada localmente; sem commit.
 - [x] **M4.5 — validação integrada do M4** (D49): fluxo completo em 375/768/1366/1920 px sem regressão; foto da Revisão sem
       `lazy`. **M4 concluído**; pendente apenas o teste manual do teclado virtual em Android real. Sem push/deploy.
 - [x] **M4.4 — Revisão no modelo Híbrido Tabi** (D48, commit `d8861ce`): cabeçalho com foto, grupos compactos com "Editar", avisos

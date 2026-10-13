@@ -1343,3 +1343,23 @@ sem alterar motor, armazenamento, importação/exportação ou catálogo.
   segue funcionando; o atraso só adia a volta da barra, nunca bloqueia interação nem esconde campo ou mensagem.
   **Não validado em Android real** (teclado virtual, `visualViewport`): teste manual pendente.
 - Sem mudança de motor, armazenamento, JSON ou catálogo.
+
+## D50 — Card da atração no roteiro diário, modelo Híbrido Travel Planner (M5.1)
+
+**Decisão**: apresentar cada atração do roteiro com o novo componente `ActivityCard` (usado por `ItineraryDayCard`), preparado
+para receber fotografias reais no M5.2, sem tocar em motor, catálogo, armazenamento ou JSON.
+- **Estrutura**: horário (início, término e período) · área visual reservada · nome em destaque · descrição · chips de categorias
+  (ícone e cor de `CATEGORY_STYLES`), duração e custo ilustrativo ("gratuita" quando 0). Os rótulos "Duração:" e "Custo ilustrativo:"
+  continuam no DOM (`sr-only`) para leitores de tela.
+- **Área visual**: placeholder discreto (bloco com o ícone da categoria principal, `aria-hidden`, `data-testid="activity-media"`),
+  **sem `<img>`**; nunca imagem genérica como se fosse a atração. A foto real ocupará o mesmo espaço (56 px no celular, 80 px a
+  partir de 640 px), sem mudar a altura do card.
+- **Layout**: em grade; no celular o horário fica numa linha sobre o nome e a área visual à esquerda (texto com mais largura); a
+  partir de 640 px, três colunas (horário, visual, conteúdo). Cabeçalho do dia com número em círculo, fundo suave e resumo
+  "N atividades · custo (ilustrativo)" (texto igual ao anterior); aviso de dia livre mantido.
+- Ordem, horários, custos, agrupamento por dia, salvamento e JSON inalterados.
+
+**Medidas**: altura média do card 189 px em 375 px (primeira versão, 3 colunas) → 161 px com o horário em linha (antes do M5.1: 165 px); 145 → 115 px em
+1366 px; página de 3 dias em 375 px: 4.152 → 4.111 px.
+
+**Riscos**: ícone por categoria principal pode parecer repetitivo até as fotos (M5.2); só Chromium.
