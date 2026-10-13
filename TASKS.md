@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **M5.1** — redesign dos cards do roteiro diário. Anteriores: M4.5 (commit `c97b7ef`), M4.4 (commit `d8861ce`), M4.3 (commit `9478c10`), M4.2 (commit `b828af7`), M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **M5.3** — fotografias reais das atrações do Rio. Anteriores: M5.2 (pesquisa), M5.1 (commit `b52e377`), M4.5 (commit `c97b7ef`), M4.4 (commit `d8861ce`), M4.3 (commit `9478c10`), M4.2 (commit `b828af7`), M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | ✅ **M5.1 implementado e validado localmente** em 2026-10-13 (ver "Relatório do M5.1"); **sem commit do M5.1** (aguarda autorização) |
-| Próximo checkpoint  | Revisão/commit do M5.1, mediante autorização; depois M5.2 (fotografias reais das atrações). Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | ✅ **M5.3 implementado e validado localmente** em 2026-10-13 (ver "Relatório do M5.3"); **sem commit** (aguarda autorização); inclui as alterações do relatório do M5.2 |
+| Próximo checkpoint  | Revisão/commit do M5.3, mediante autorização; revisão jurídica das licenças antes de publicar; Feira Hippie e demais destinos em fase posterior. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -2143,3 +2143,65 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   console. Achado: a 1ª versão (3 colunas no celular) ficou mais alta que a anterior (189 vs 165 px); o horário passou a ficar
   em linha sobre o nome. O build também precisa passar antes de qualquer verificação no Chromium (o `dist` antigo mascarou o teste).
 - **Riscos**: apenas Chromium; ícones repetitivos até o M5.2.
+
+## Relatório do M5.2 — pesquisa de fotografias das atrações do Rio (2026-10-13)
+
+- **Consolidação do M5.1**: commit local `b52e377` (typecheck, lint, testes direcionados; árvore limpa antes desta pesquisa).
+- **Método**: API pública do Wikimedia Commons (somente metadados; **nenhuma imagem baixada**). Licença, autor, resolução, categorias,
+  descrição e GPS lidos **por arquivo**, na página de cada imagem. Correspondência com o local = título + descrição + categorias (+ GPS
+  quando existe); **não houve inspeção visual** das imagens, que deve ocorrer na incorporação. Unsplash/Pexels: buscas web não
+  localizaram fotos específicas das atrações; nada foi presumido.
+- **Candidatas** (ID do catálogo → arquivo no Commons; todas com atribuição obrigatória; páginas em `https://commons.wikimedia.org/wiki/File:<arquivo>`):
+
+| ID | Arquivo (autor) | Licença | Resolução | Correspondência | Confiança |
+| --- | --- | --- | --- | --- | --- |
+| rio-cristo-redentor | Rio_de_Janeiro_-_Cristo_Redentor_01.jpg (Arturdiasr) | CC BY-SA 4.0 | 3760×2388 | categoria "Cristo Redentor in 2015"; imagem de qualidade (Wiki Loves Monuments 2015) | alta |
+| rio-pao-de-acucar | Pão_de_Açúcar_-_Rio_de_Janeiro,_Brasil.jpg (Nico Kaiser, via Flickr) | CC BY 2.0 | 3648×2432 | título e descrição; revisada pelo FlickreviewR | alta |
+| rio-praia-copacabana | Rio_de_janeiro_copacabana_beach_2010.JPG (chensiyuan) | CC BY-SA 4.0 | 4288×2848 | categoria "Copacabana (Rio de Janeiro)"; descrição | alta |
+| rio-museu-do-amanha | Museu_do_Amanhã_-_entrada_(28044443423).jpg (Leandro Neumann Ciuffo) | CC BY 2.0 | 4912×3264 | descrição "Museum of Tomorrow (entrance)"; GPS -22.8943,-43.1796 | alta |
+| rio-trilha-dois-irmaos | Morro_Dois_Irmãos,_Rio_de_Janeiro.JPG (Tony Cavalcanti) | CC BY-SA 3.0 | 4000×3000 | descrição cita o morro e as trilhas; mostra o morro, **não a trilha** | média |
+| rio-feira-ipanema | — | — | — | nenhum arquivo (Commons: 0 fotos; web: nenhuma verificável) | **lacuna** |
+| rio-confeitaria-colombo | Confeitaria_Colombo_(2)_(6738795079).jpg (Leandro Neumann Ciuffo) | CC BY 2.0 | 2896×1944 | categoria "Confeitaria Colombo (interior)"; GPS -22.9050,-43.1789 | alta |
+| rio-lapa | Arcos_da_Lapa_colorido.jpg (AlexandreLuizOliveira) | CC BY-SA 4.0 | 4096×2304 | descrição "Arco da Lapa… à noite"; mostra os Arcos, **não** bares/música | média |
+| rio-jardim-botanico | Jardim_Botânico_do_Rio_de_Janeiro_13.jpg (Eugenio Hansen, OFS) | CC BY-SA 4.0 | 3944×2989 | categoria "Jardim Botânico do Rio de Janeiro" | alta |
+| rio-santa-teresa-selaron | Escadaria_do_Selarón_(9603331584).jpg (Collectif Les Enfants) | CC BY 2.0 | 1920×1200 | título e descrição citam a escadaria | alta |
+
+- **Alternativas**: Cristo — "Estátua do Cristo Redentor… panoramio.jpg" (CC BY 3.0); Copacabana — Arian Zwegers (CC BY 2.0, vista do Pão de Açúcar);
+  Dois Irmãos — "De cima do Dois Irmãos, olhando a zona sul!.jpg" (CC BY-SA 4.0, GPS no morro); Lapa — "Arcos da Lapa (3028445643).jpg" (CC BY 2.0, dia).
+- **Licenças**: *(corrigido no M5.3: eram 4 CC BY e 5 CC BY-SA entre as 9 candidatas, não 5 e 5; ver `docs/IMAGE_CREDITS.md`)* nenhuma é de domínio público/CC0 sem exigência. Todas permitem uso comercial,
+  redimensionamento e distribuição, mas exigem crédito (autor, licença com link, indicação de alterações); a SA exige que a **imagem
+  derivada** (o WebP) continue sob a mesma licença — isso **não** se estende ao código do aplicativo, mas precisa constar nos créditos.
+  O Unsplash tem outro regime (sem atribuição legal): `docs/IMAGE_CREDITS.md` e o rodapé hoje só tratam Unsplash e terão de ser estendidos.
+- **Lacunas/riscos**: Feira Hippie sem foto verificável (manter placeholder); Lapa e Dois Irmãos retratam o lugar, não exatamente a
+  atividade (alt-text deve descrever o que a imagem mostra); direitos de obra em espaço público (estátua do Cristo, edifício do Museu do
+  Amanhã, mosaico de Selarón) — o Commons as hospeda amparado na liberdade de panorama brasileira (Lei 9.610/98, art. 48), mas
+  **sem revisão jurídica**; correspondência não validada visualmente; atribuição obrigatória exige UI de crédito (rodapé/roteiro).
+- **Plano mínimo de incorporação (M5.3)**: (1) `public/images/activities/<id>-480.webp` e `-960.webp` (WebP, 4:3 ou 1:1 conforme o
+  card; recorte sem edição criativa); (2) `src/data/activityPhotos.ts`: `Record<activityId, ActivityPhoto>` com src, tamanhos, alt,
+  autor, URL da página, licença e URL da licença — **chave = id da atração** (nada no catálogo, no motor, no armazenamento nem no JSON);
+  (3) `ActivityCard`: se houver foto, `<img loading="lazy" decoding="async" width/height>` no mesmo espaço de 56/80 px (a 1ª atração do
+  roteiro pode ser `eager`); sem foto ou em caso de `onError`, placeholder atual; (4) créditos: linha por foto no rodapé do roteiro
+  e em `docs/IMAGE_CREDITS.md` (autor, licença, link, "recortada e convertida para WebP"); (5) testes: todo id do Rio tem entrada ou
+  está na lista de exceções (Feira), toda entrada aponta para id existente e arquivo presente em `public`, alt e licença não vazios,
+  `onError` volta ao placeholder; (6) verificações: Chromium em 375/768/1366/1920 px (sem salto de layout, altura do card constante),
+  peso total das imagens (meta ≤ 60 KB por WebP de 480 px) e ausência de erros de console.
+
+## Relatório do M5.3 — fotografias reais das atrações do Rio (2026-10-13)
+
+- **Preparação**: os 10 IDs do Rio conferidos no catálogo; **inconsistência de contagem corrigida** (9 candidatas = 4 CC BY + 5 CC BY-SA
+  no quadro do M5.2, não 5 + 5; no resultado final, 3 CC BY 2.0, 5 CC BY-SA 4.0 e 1 CC BY-SA 3.0 DE). Páginas, autores e licenças
+  conferidos por arquivo (API do Commons); nada presumido sobre outros direitos (obras em espaço público, pessoas).
+- **Inspeção visual** das 9 imagens: **1 rejeitada** — a candidata de Dois Irmãos (Tony Cavalcanti) mostrava a **Pedra da Gávea**;
+  trocada por Diego Baravelli. Museu do Amanhã e Jardim Botânico também trocados por imagens que identificam melhor o lugar.
+  Lapa (Arcos à noite) e Dois Irmãos (o morro) têm alt-text que diz o que mostram, sem afirmar a atividade. Feira Hippie: placeholder.
+- **Implementado**: 18 WebP quadrados (480/960 px) em `public/images/activities/`; `src/data/activityPhotos.ts` (chave = ID da atração);
+  `ActivityCard` com `<img srcSet sizes loading="lazy">` no espaço fixo de 56/80 px e fallback ao placeholder em `onError`;
+  `ActivityPhotoCredits` ("Créditos das fotografias", recolhível) na página do roteiro; nota no rodapé; `docs/IMAGE_CREDITS.md`
+  (D51). Catálogo, motor, armazenamento, JSON e demais destinos intocados.
+- **Testes**: 10 novos em `activityPhotos.test.tsx` (mapeamento por ID, 9 fotos + 1 exceção, arquivos existentes e leves,
+  créditos, alt-text, fallback, placeholder da Feira, créditos únicos).
+- **Chromium** (`m53`): 25/25 — roteiros do Rio de 3, 5 e 7 dias em 375/768/1366/1920 px (fotos carregadas, 56×56/80×80 constantes, sem
+  overflow), foto correta por ID, créditos, fallback com requisição bloqueada, salvar/reabrir/exportar/importar sem campos de foto,
+  Lisboa e Florianópolis sem fotos, sem erros de console nem requisições falhas.
+- **Riscos**: sem revisão jurídica; atribuição obrigatória (créditos no roteiro e rodapé); direitos de obras públicas e pessoas
+  incidentais; só Chromium; imagens quadradas recortam o enquadramento original.

@@ -107,6 +107,10 @@ export function Footer() {
           .
         </p>
         <p className="mt-2 text-sm text-slate-500">
+          Fotografias das atrações do Rio de Janeiro: Wikimedia Commons (licenças CC BY e CC BY-SA); os
+          créditos de cada foto aparecem no roteiro.
+        </p>
+        <p className="mt-2 text-sm text-slate-500">
           © {CURRENT_YEAR} Travel Planner. Projeto de código aberto.
         </p>
       </div>

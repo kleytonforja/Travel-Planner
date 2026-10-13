@@ -1363,3 +1363,17 @@ para receber fotografias reais no M5.2, sem tocar em motor, catálogo, armazenam
 1366 px; página de 3 dias em 375 px: 4.152 → 4.111 px.
 
 **Riscos**: ícone por categoria principal pode parecer repetitivo até as fotos (M5.2); só Chromium.
+
+## D51 — Fotografias reais das atrações do Rio de Janeiro (M5.3)
+
+**Decisão**: incorporar fotografias do Wikimedia Commons em 9 das 10 atrações do Rio, mapeadas **pelo ID da atração** em
+`src/data/activityPhotos.ts`, sem tocar em catálogo, motor, armazenamento ou JSON (os roteiros salvos e exportados não guardam
+foto; o card consulta o mapa na hora de exibir, então roteiros antigos, importados e salvos também mostram as fotos).
+- **Critério**: licença lida na página de cada arquivo (CC BY ou CC BY-SA, com atribuição), imagem aberta e conferida; dúvida
+  relevante → placeholder. Rejeitada a foto de Dois Irmãos que mostrava a Pedra da Gávea. Feira Hippie: sem foto.
+- **Arquivos**: WebP quadrado (480/960 px, recorte e conversão registrados como alteração) em `public/images/activities/<id>-<w>.webp`.
+- **Card**: `<img>` com `srcSet`/`sizes`, `loading="lazy"` e `width/height` no espaço fixo de 56/80 px (sem salto de layout);
+  `onError` volta ao placeholder; `aria-hidden` só no placeholder; alt-text descreve o que a imagem mostra.
+- **Créditos**: "Créditos das fotografias" (recolhível, só com fotos no roteiro) com autor, fonte, licença (link) e alterações; nota no
+  rodapé; `docs/IMAGE_CREDITS.md`. Versões derivadas BY-SA permanecem sob a mesma licença. **Sem revisão jurídica**.
+- Todas as imagens usam lazy (inclusive a primeira atração): são miniaturas de 56–80 px e o navegador carrega as visíveis de imediato.

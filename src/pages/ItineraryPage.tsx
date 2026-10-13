@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import { BudgetSummary } from '../components/BudgetSummary'
 import { Footer } from '../components/Footer'
 import { Header } from '../components/Header'
+import { ActivityPhotoCredits } from '../components/ActivityPhotoCredits'
 import { ItineraryDayCard } from '../components/ItineraryDayCard'
 import { ItinerarySummary } from '../components/ItinerarySummary'
 import { destinations } from '../data/destinations'
@@ -274,6 +275,7 @@ export function ItineraryPage({
               />
             ))}
           </div>
+          <ActivityPhotoCredits days={itinerary.days} />
         </section>
 
         {/* C. Resumo financeiro */}

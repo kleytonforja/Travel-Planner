@@ -1,5 +1,7 @@
 import { Clock, Wallet } from 'lucide-react'
+import { useState } from 'react'
 
+import { ACTIVITY_PHOTOS } from '../data/activityPhotos'
 import { INTEREST_LABELS, PERIOD_LABELS } from '../data/labels'
 import type { Currency, ScheduledActivity, ScheduledPeriod } from '../types'
 import { formatCurrency, formatDuration, formatMinutesToTime } from '../utils/format'
@@ -20,14 +22,18 @@ const PERIOD_TEXT_CLASS: Record<ScheduledPeriod, string> = {
  * Atração do roteiro diário (modelo "Híbrido Travel Planner", M5.1): horário à esquerda, área visual
  * reservada, nome em destaque, descrição objetiva e metadados (categorias, duração e custo ilustrativo).
  *
- * A área visual é um placeholder discreto — um bloco com o ícone da categoria principal —, nunca uma
- * imagem genérica apresentada como fotografia da atração. A fotografia real entra neste mesmo espaço
- * (M5.2), sem alterar a altura do cartão.
+ * A área visual mostra a fotografia real da atração quando há uma em `ACTIVITY_PHOTOS` (M5.3); sem foto,
+ * ou se ela falhar ao carregar, mostra um placeholder discreto — um bloco com o ícone da categoria
+ * principal —, nunca uma imagem genérica apresentada como fotografia da atração. O espaço tem tamanho
+ * fixo nos dois casos, então a altura do cartão não muda.
  */
 export function ActivityCard({ item, currency }: ActivityCardProps) {
   const { activity } = item
   const main = CATEGORY_STYLES[activity.categories[0]]
   const MainIcon = main.icon
+  const photo = ACTIVITY_PHOTOS[activity.id]
+  const [photoFailed, setPhotoFailed] = useState(false)
+  const showPhoto = photo !== undefined && !photoFailed
 
   return (
     <li className="grid grid-cols-[3.5rem_1fr] gap-x-3 gap-y-1 px-4 py-3 sm:grid-cols-[4rem_5rem_1fr] sm:gap-x-4 sm:px-5">
@@ -45,13 +51,28 @@ export function ActivityCard({ item, currency }: ActivityCardProps) {
         </p>
       </div>
 
-      {/* Área reservada para a fotografia da atração (M5.2): placeholder discreto, sem imagem. */}
+      {/* Área visual de tamanho fixo: fotografia real (M5.3) ou placeholder discreto, sem imagem genérica. */}
       <div
-        aria-hidden="true"
         data-testid="activity-media"
-        className={`col-start-1 row-span-2 row-start-1 flex h-14 w-14 items-center justify-center self-start rounded-card sm:col-start-2 sm:row-span-1 sm:h-20 sm:w-20 ${main.tone}`}
+        {...(showPhoto ? {} : { 'aria-hidden': true })}
+        className={`col-start-1 row-span-2 row-start-1 flex h-14 w-14 items-center justify-center self-start overflow-hidden rounded-card sm:col-start-2 sm:row-span-1 sm:h-20 sm:w-20 ${showPhoto ? 'bg-slate-100' : main.tone}`}
       >
-        <MainIcon className="h-6 w-6 opacity-70 sm:h-7 sm:w-7" />
+        {showPhoto ? (
+          <img
+            src={photo.small}
+            srcSet={`${photo.small} ${photo.smallWidth}w, ${photo.large} ${photo.largeWidth}w`}
+            sizes="(min-width: 640px) 80px, 56px"
+            width={photo.width}
+            height={photo.height}
+            alt={photo.alt}
+            loading="lazy"
+            decoding="async"
+            onError={() => setPhotoFailed(true)}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <MainIcon className="h-6 w-6 opacity-70 sm:h-7 sm:w-7" />
+        )}
       </div>
 
       <div className="col-start-2 row-start-2 min-w-0 sm:col-start-3 sm:row-span-1 sm:row-start-1">
