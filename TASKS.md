@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **M5.5** — fotografias de Florianópolis e Lisboa. Anteriores: M5.4 (curadoria), M5.3 (commit `5a9688b`), M5.2 (pesquisa), M5.1 (commit `b52e377`), M4.5 (commit `c97b7ef`), M4.4 (commit `d8861ce`), M4.3 (commit `9478c10`), M4.2 (commit `b828af7`), M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **M6** — validação final do MVP. Anteriores: M5.5 (commit `4fd1f07`), M5.4 (curadoria, no mesmo commit), M5.3 (commit `5a9688b`), M5.2 (pesquisa), M5.1 (commit `b52e377`), M4.5 (commit `c97b7ef`), M4.4 (commit `d8861ce`), M4.3 (commit `9478c10`), M4.2 (commit `b828af7`), M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | ✅ **M5.5 implementado e validado localmente** em 2026-10-13 (ver "Relatório do M5.5"); **sem commit** (aguarda autorização); inclui as alterações do relatório do M5.4 |
-| Próximo checkpoint  | Revisão/commit do M5.5, mediante autorização; revisão jurídica das licenças antes de publicar; as 6 atrações sem foto continuam com placeholder. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | ✅ **M6 concluído em 2026-10-13** (ver "Relatório do M6"): MVP validado de ponta a ponta, **sem P0 e sem P1**; 4 itens P2; sem alteração de código; **sem push/deploy** |
+| Próximo checkpoint  | Decisão do usuário sobre a publicação (push/deploy) e sobre o risco jurídico das fotografias; itens P2 do "Relatório do M6" depois. |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -2279,3 +2279,47 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   Observação: com 10 dias e todos os interesses, o motor deixou de fora uma atração de Florianópolis (a escuna) — comportamento do motor, não alterado.
 - **Riscos**: sem revisão jurídica; atribuição obrigatória (créditos no roteiro e no rodapé); liberdade de panorama em Portugal não
   verificada; alguns enquadramentos mostram o lugar, não a atividade (alt-text explicita); só Chromium; recortes quadrados.
+
+## Relatório do M6 — validação final do MVP (2026-10-13)
+
+- **Consolidação do M5.5**: validado (typecheck, lint, testes direcionados, 24 entradas de foto com os 48 WebP presentes, créditos) e
+  commitado localmente (`4fd1f07`, incluindo a curadoria do M5.4 em `TASKS.md`); árvore limpa antes do QA. **Nenhum código foi alterado
+  no M6** (nenhum commit adicional de correção).
+- **QA funcional e visual (Chromium, `m6`)**: matriz de **27 combinações** — 3 destinos × 3, 5 e 7 dias × 3 ritmos, com e sem orçamento
+  (alternados) e larguras 375/768/1366/1920 rotacionadas. Cada roteiro foi conferido: número de dias; limite de atividades por dia do
+  ritmo (2/3/sem limite); horários em ordem e sem sobreposição; dia livre com aviso; **soma dos custos dos dias = custo estimado do
+  resumo financeiro**; com orçamento, **saldo = orçamento − custo**; sem orçamento, "não informado" e **nenhum saldo**; avisos de custos
+  ilustrativos e de gastos não contemplados; foto em toda atração mapeada e placeholder nas 6 sem foto (nenhuma imagem quebrada);
+  zero overflow; console limpo. Resultado: **35/35** (27 roteiros + edição pela Revisão com novo ritmo aplicado, salvar, reabrir, exportar
+  v2, excluir, importar v2 e v1).
+- **Regressões (scripts anteriores)**: `final` 22/22 (salvar, abrir, exportar, excluir, importar), `m25b` 18/18 (sem orçamento, v1/v2),
+  `m26` 15/15 (arquivos inválidos, limite de 256 KB, exclusão), `m3` 23/23 (ritmos), `m43` 83/83, `m44` 32/32, `m45` 75/75, `m55` 40/40.
+  Os scripts `m51` e `m53` ficaram **obsoletos** (afirmam "sem fotos" em Lisboa/Florianópolis) e `final` precisou trocar o seletor de
+  "Dia N" (o número do dia passou a ser um círculo, o título acessível continua "Dia N").
+- **Segurança e compatibilidade (Etapa D)**: cobertas pelas suítes existentes, todas verdes — armazenamento e gravações seguras,
+  quarentena (descartar/restaurar), deduplicação e colisão verdadeira, JSON inválido e acima do limite, contratos v1/v2 e integridade
+  financeira (testes de unidade + `m25b`/`m26`/matriz). Nenhum contrato ou arquitetura foi alterado.
+- **Testes**: `npm run test:run` — **879 em 50 arquivos**, verdes em 10 execuções completas normais nesta etapa (2 + 1 + 1 + 6) além das 2 do M5.5,
+  além de typecheck, lint, build e `git diff --check` limpos.
+- **Falhas intermitentes investigadas (não ocultadas; nenhum timeout alterado)**:
+  1. **Unidade lançada de um terminal com a letra da unidade em minúscula (`c:\ProjetosDev\...`)**: reproduzido 100% (3/3 via `cmd`; 5/5
+     no terminal do agente) — **50/50 arquivos falham com "Cannot read properties of undefined (reading 'config')" / "no tests"**. Com
+     `C:\` tudo passa. É problema de ambiente (casamento de caminhos no Windows), não do produto: explica as falhas "no tests"
+     vistas desde o M5.1 e que "passavam ao repetir".
+  2. **Sensibilidade a carga**: com **duas suítes completas em paralelo** (estresse artificial) os testes que percorrem as 7 etapas
+     (`user-event` + jsdom) estouram os 20 s e houve estouro de memória do Node; a suíte sozinha passa. Uma ocorrência isolada
+     (teste de ARIA da importação, M5.2) e um arquivo falho não identificado numa execução com cwd em minúscula **não foram reproduzidos**
+     nessas execuções normais. Não é regressão funcional; é fragilidade de desempenho dos testes de fluxo (P2).
+- **Achados**:
+  - **P0**: nenhum (nenhuma perda de dados, nenhuma impossibilidade de uso).
+  - **P1**: nenhum.
+  - **P2**: (a) rodar a suíte exige cwd com `C:` maiúsculo (documentar/mitigar no `package.json`); (b) testes de fluxo lentos e sensíveis
+    a carga (considerar `pool: 'vmThreads'` ou dividir os fluxos); (c) validação visual/funcional só em Chromium e sem leitor de tela real
+    (Android real foi validado antes, no M4); (d) fotografias: revisão jurídica pendente, liberdade de panorama em Portugal não verificada,
+    6 atrações com placeholder (Feira, Bares da Lagoa, Escuna, Pastéis, LX Factory, Time Out), alt-text que explicita quando a imagem mostra
+    o lugar e não a atividade. Nada disso foi implementado.
+- **Recomendação de publicação**: **pode publicar** — sem P0/P1, com 879 testes verdes e QA de ponta a ponta. Condições sugeridas, nesta ordem:
+  (1) autorização explícita do usuário para o `push` (o workflow de deploy usa `master`); (2) decisão sobre as fotografias: publicar com os
+  créditos atuais **aceitando o risco jurídico** ou aguardar a revisão (alternativa de baixo custo: remover as entradas de
+  `ACTIVITY_PHOTOS`, que volta aos placeholders sem outra mudança); (3) após o deploy, conferir a URL do GitHub Pages (imagens com o caminho
+  base `/Travel-Planner/` e créditos) e a execução do workflow.

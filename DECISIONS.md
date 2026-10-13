@@ -1389,3 +1389,14 @@ no catálogo, no motor, no armazenamento ou no JSON.
   nome e o link da licença específica. BY-SA: derivadas permanecem BY-SA.
 - **Meta de peso**: 480 px ≤ 60 KB (obtido: 15–46 KB, qualidade 74).
 - **Direitos**: sem revisão jurídica; liberdade de panorama em Portugal não verificada (por isso LX Factory ficou de fora).
+
+## D53 — Validação final do MVP (M6)
+
+**Decisão**: considerar o MVP validado para publicação, sem alteração de código, arquitetura ou contratos, com os achados classificados em
+P0/P1/P2 (ver "Relatório do M6" em `TASKS.md`).
+- **Resultado**: sem P0 e sem P1; P2 = cwd com letra de unidade minúscula derruba a suíte (50/50 arquivos), testes de fluxo sensíveis a
+  carga, só Chromium, e pendências das fotografias (revisão jurídica, placeholders).
+- **Intermitências**: causa da falha "no tests / reading 'config'" identificada e reproduzida (caminho com `c:` minúsculo); a
+  sensibilidade a carga dos testes de fluxo foi **registrada, não mascarada** — os timeouts de 20 s **não** foram aumentados.
+- **Publicação**: recomendada, condicionada à autorização do `push` e à decisão sobre o risco jurídico das fotografias; reversão simples
+  das fotos (esvaziar `ACTIVITY_PHOTOS`).
