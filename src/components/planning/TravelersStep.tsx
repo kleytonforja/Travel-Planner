@@ -17,6 +17,7 @@ import {
   type TravelerKind,
   type TravelProfile,
 } from '../../utils/travelers'
+import { SelectableCard } from '../ui/SelectableCard'
 import type { StepProps } from './planningSteps'
 
 const PROFILE_ICONS: Record<TravelProfile, typeof User> = {
@@ -164,32 +165,18 @@ export function TravelersStep({ draft, onDraftChange }: StepProps) {
         <p className="mt-1 text-sm text-night-ink">
           Escolha o que melhor descreve o grupo. Não é definido automaticamente; clique de novo para remover.
         </p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {TRAVEL_PROFILES.map((profile) => {
-            const Icon = PROFILE_ICONS[profile.id]
-            const active = travelers.profile === profile.id
-            return (
-              <button
-                key={profile.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => update(setProfile(travelers, profile.id))}
-                className={`flex h-full items-start gap-3 rounded-card-lg border-2 p-4 text-left shadow-card transition-colors focus-ring-on-dark ${
-                  active
-                    ? 'border-brand-600 bg-brand-50'
-                    : 'border-transparent bg-surface hover:bg-surface-muted'
-                }`}
-              >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-brand-100 text-brand-700">
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <span>
-                  <span className="block text-base font-semibold text-ink">{profile.label}</span>
-                  <span className="mt-0.5 block text-sm text-ink-muted">{profile.description}</span>
-                </span>
-              </button>
-            )
-          })}
+        <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {TRAVEL_PROFILES.map((profile) => (
+            <SelectableCard
+              key={profile.id}
+              density="compact"
+              label={profile.label}
+              description={profile.description}
+              icon={PROFILE_ICONS[profile.id]}
+              selected={travelers.profile === profile.id}
+              onClick={() => update(setProfile(travelers, profile.id))}
+            />
+          ))}
         </div>
       </fieldset>
 

@@ -10,6 +10,7 @@ import {
   todayISO,
   validateTripDates,
 } from '../../utils/tripDates'
+import { SelectableRadioCard } from '../ui/SelectableCard'
 import type { DateMode, StepProps } from './planningSteps'
 
 const QUICK_DURATIONS = [3, 5, 7, 10, 14] as const
@@ -80,27 +81,18 @@ export function DatesStep({ draft, onDraftChange }: StepProps) {
 
       <fieldset className="mt-6">
         <legend className="sr-only">Como você quer informar a duração?</legend>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           {MODE_OPTIONS.map((option) => (
-            <label key={option.mode} className="cursor-pointer">
-              <input
-                type="radio"
-                name={groupId}
-                value={option.mode}
-                checked={draft.dateMode === option.mode}
-                onChange={() => onDraftChange({ dateMode: option.mode })}
-                className="peer sr-only"
-              />
-              <span className="flex h-full items-start gap-4 rounded-card-lg border-2 border-transparent bg-surface p-5 shadow-card transition-colors hover:bg-surface-muted peer-checked:border-brand-600 peer-checked:bg-brand-50 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-white">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-card bg-brand-100 text-brand-700">
-                  <option.icon className="h-6 w-6" aria-hidden="true" />
-                </span>
-                <span>
-                  <span className="block text-base font-semibold text-ink">{option.title}</span>
-                  <span className="mt-1 block text-sm text-ink-muted">{option.description}</span>
-                </span>
-              </span>
-            </label>
+            <SelectableRadioCard
+              key={option.mode}
+              name={groupId}
+              value={option.mode}
+              label={option.title}
+              description={option.description}
+              icon={option.icon}
+              selected={draft.dateMode === option.mode}
+              onSelect={() => onDraftChange({ dateMode: option.mode })}
+            />
           ))}
         </div>
       </fieldset>

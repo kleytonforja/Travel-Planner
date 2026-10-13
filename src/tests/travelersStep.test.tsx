@@ -132,6 +132,45 @@ describe('Etapa 3 — Viajantes', () => {
     expect(screen.getByRole('button', { name: /^Casal/ })).toHaveAttribute('aria-pressed', 'false')
   })
 
+  it('perfil usa o padrão visual dos demais cards: check só no selecionado, estado acessível e foco visível', async () => {
+    const user = userEvent.setup()
+    await toTravelers(user)
+    const profile = (name: RegExp) => screen.getByRole('button', { name })
+    // Nenhum check quando nada está selecionado (os contadores e demais controles não usam o check).
+    expect(screen.queryAllByTestId('selected-check')).toHaveLength(0)
+    const family = profile(/^Família/)
+    expect(family).toHaveClass('focus-ring-on-dark', 'min-h-14', 'border-line-strong', 'bg-surface')
+    await user.click(family)
+    expect(family).toHaveAttribute('aria-pressed', 'true')
+    expect(family).toHaveClass('border-2', 'border-brand-600', 'bg-brand-100')
+    expect(within(family).getByTestId('selected-check')).toHaveAttribute('aria-hidden', 'true')
+    expect(screen.getAllByTestId('selected-check')).toHaveLength(1)
+    expect(family).toHaveAccessibleName(/^Família/) // o check não altera o nome
+    // Seleção única: trocar move o check; clicar de novo remove.
+    await user.click(profile(/^Amigos/))
+    expect(within(family).queryByTestId('selected-check')).toBeNull()
+    expect(screen.getAllByTestId('selected-check')).toHaveLength(1)
+    await user.click(profile(/^Amigos/))
+    expect(screen.queryAllByTestId('selected-check')).toHaveLength(0)
+    // As quatro opções seguem presentes, com descrição acessível.
+    for (const name of ['Individual', 'Casal', 'Família', 'Amigos']) {
+      expect(profile(new RegExp(`^${name}`))).toBeInTheDocument()
+    }
+    expect(family).toHaveAccessibleName(/crianças ou várias gerações/)
+  })
+
+  it('o perfil já escolhido é preservado ao voltar, avançar e editar etapas anteriores', async () => {
+    const user = userEvent.setup()
+    await toTravelers(user)
+    await user.click(screen.getByRole('button', { name: /^Casal/ }))
+    await user.click(screen.getByRole('button', { name: 'Voltar para Datas' }))
+    await user.click(screen.getByRole('button', { name: '10 dias' }))
+    await user.click(screen.getByRole('button', { name: 'Continuar para Viajantes' }))
+    const couple = screen.getByRole('button', { name: /^Casal/ })
+    expect(couple).toHaveAttribute('aria-pressed', 'true')
+    expect(within(couple).getByTestId('selected-check')).toBeInTheDocument()
+  })
+
   it('funciona pelo teclado: Tab, Enter e Espaço', async () => {
     const user = userEvent.setup()
     await toTravelers(user)

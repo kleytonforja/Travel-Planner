@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **M3** — ritmo da viagem aplicado pelo motor. Anteriores: M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **M4.2** — padronização dos cards selecionáveis. Anteriores: M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | ✅ **M3 implementado e validado localmente** em 2026-10-12 (ver "Relatório do M3"); **sem commit do M3** (aguarda autorização) |
-| Próximo checkpoint  | Revisão/commit do M3, mediante autorização; depois, otimização dos cards e do fluxo (M1: experiência) e ampliação do catálogo, em tarefas próprias. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | ✅ **M4.2 implementado e validado localmente** em 2026-10-12 (ver "Relatório do M4.2"); **sem commit do M4.2** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do M4.2, mediante autorização; depois M4.3 em diante (resumos duplicados, opcionais recolhíveis, barra fixa, compactação das etapas e Revisão), conforme o diagnóstico M4.1. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -2061,3 +2061,19 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   de console, sem overflow em 375, 768, 1366 e 1920 px.
 - **Limitações do catálogo**: ver D45 (10 atividades por destino; o ritmo só muda o resultado em viagens curtas).
 - **Riscos**: roteiros anteriores ao M3 não têm ritmo; apenas Chromium.
+
+## Relatório do M4.2 — padronização dos cards selecionáveis (2026-10-12)
+
+- **Status**: implementado e validado localmente; **sem commit, push ou deploy**. Não compacta ainda as demais etapas.
+- **Implementado** (D46): `SelectableCard` com `density="compact"` (~56 px, ícone e check menores, texto de 14 px, alvo de toque
+  ≥ 44 px) mantendo a variante padrão idêntica; `SelectableRadioCard` com radio nativo; **Perfil da viagem** migrado
+  (Individual, Casal, Família, Amigos; seleção única, clicar de novo remove, estado preservado ao navegar); **modos de Datas**
+  migrados (radio, setas, exclusividade). Estado selecionado único em todas as etapas: fundo azul-claro, borda de 2 px,
+  check no canto superior direito, `aria-pressed`/`checked` e anel de foco.
+- **Testes**: 839 em 46 arquivos, 2 execuções completas sem falha (`selectableCardVariants.test.tsx`: variante padrão
+  preservada, compacta, selecionado/não selecionado, teclado, radio; novos casos de Perfil em `travelersStep` e ajuste do
+  teste de modos de Datas).
+- **Chromium (45/45)** em 375, 768, 1366 e 1920 px: Datas (um check, setas trocam o modo, foco visível, borda de 2 px e fundo
+  azul-claro) e Perfil (check no canto superior direito, `aria-pressed`, borda de 2 px, card entre 52 e 100 px, seleção
+  única, remoção, Enter, foco visível, sem overflow); Transporte (variante padrão) inalterado; sem erros de console.
+- **Riscos**: apenas Chromium; a descrição do perfil só é visível a partir de 640 px (continua no nome acessível).

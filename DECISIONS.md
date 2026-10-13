@@ -1252,3 +1252,23 @@ para preencher dias.
 
 **Riscos**: roteiros salvos antes do M3 não têm ritmo (válidos, sem limite); a regra de limite no validador torna inválido
 qualquer roteiro com ritmo e mais atividades por dia que o limite (impossível pelo gerador).
+
+## D46 — Padrão único de cards selecionáveis (M4.2)
+
+**Decisão**: todos os cards de seleção usam a mesma linguagem visual do `SelectableCard`: fundo azul-claro (`brand-100`),
+borda azul de 2 px, **check no canto superior direito** (decorativo, `aria-hidden`), sombra de destaque e anel de foco
+visível independente da seleção; não selecionado: fundo branco e borda neutra.
+- **Variantes** (`src/components/ui/SelectableCard.tsx`): `SelectableCard` (botão com `aria-pressed`; `density="default"`
+  mantida **idêntica** à anterior, `density="compact"` nova, ~56 px de altura mínima, ícone de 32 px, texto de 14 px,
+  check de 20 px; a descrição aparece visualmente a partir de 640 px e permanece disponível a leitores de tela) e
+  `SelectableRadioCard` (nova: `<input type="radio">` nativo com o mesmo visual, para escolha única com setas).
+- **Migrações**: o **Perfil da viagem** (Viajantes) agora usa `SelectableCard` compacto em grade 2×2 (4 colunas no desktop),
+  com seleção única, remoção ao clicar de novo e preservação do estado; os **modos da etapa Datas** usam
+  `SelectableRadioCard` (semântica de radio, navegação por setas). Corrigiu a inconsistência apontada no M4.1: esses cards
+  não tinham o check e tinham destaque mais fraco (`brand-50`).
+- **Não alterados**: cards de Transporte, Interesses, Orçamento (variante padrão), a Revisão, os filtros e chips; nenhuma
+  compactação adicional das etapas (M4.3 em diante).
+
+**Riscos**: o nome acessível dos botões de perfil continua começando pelo rótulo e agora inclui a descrição (já incluía);
+o radio de Datas mantém nomes e ordem. O check é o mesmo `data-testid="selected-check"`, então contagens de check em
+testes passam a incluir Perfil e Datas.

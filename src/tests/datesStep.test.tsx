@@ -238,10 +238,18 @@ describe('Etapa 2 — Datas e duração', () => {
     a.focus()
     await user.keyboard(' ')
     expect(a).toBeChecked()
-    expect(a.nextElementSibling).toHaveClass('peer-checked:border-brand-600')
+    // Mesmo padrão visual dos demais cards: fundo azul-claro, borda azul e check.
+    const visual = (radioInput: HTMLElement) => radioInput.nextElementSibling as HTMLElement
+    expect(visual(a)).toHaveClass('border-brand-600', 'bg-brand-100')
+    expect(within(visual(a)).getByTestId('selected-check')).toBeInTheDocument()
+    expect(within(visual(b)).queryByTestId('selected-check')).toBeNull()
+    expect(visual(b)).toHaveClass('border-line-strong', 'bg-surface')
     await user.keyboard('{ArrowDown}')
     expect(b).toBeChecked()
     expect(a).not.toBeChecked()
+    expect(within(visual(b)).getByTestId('selected-check')).toBeInTheDocument()
+    expect(within(visual(a)).queryByTestId('selected-check')).toBeNull()
+    expect(screen.getAllByTestId('selected-check')).toHaveLength(1) // seleção exclusiva
     expect(screen.getByRole('group', { name: 'Duração rápida' })).toBeInTheDocument()
   })
 
