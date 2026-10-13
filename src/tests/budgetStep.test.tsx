@@ -28,7 +28,6 @@ async function toBudget(user: User, destination = 'Lisboa', adults = 1) {
 
 const styles = () => within(screen.getByRole('group', { name: 'Estilo da viagem' }))
 const amountMode = () => within(screen.getByRole('group', { name: 'Orçamento (opcional)' }))
-const basis = () => within(screen.getByRole('group', { name: 'Como você quer informar o valor?' }))
 const pressed = (el: HTMLElement) => el.getAttribute('aria-pressed') === 'true'
 const summary = () => screen.getByRole('region', { name: 'Resumo do planejamento' })
 const legacy = () => screen.getByRole('button', { name: 'Continuar para Revisão' })
@@ -49,8 +48,8 @@ describe('Etapa 6 — Orçamento', () => {
     expect(styles().getAllByRole('button').map((b) => b.textContent?.split(/[.A-Z]/)[0])).toHaveLength(3)
     expect(pressed(styles().getByRole('button', { name: /^Equilibrado/ }))).toBe(true)
     expect(styles().getAllByRole('button').filter(pressed)).toHaveLength(1)
-    expect(pressed(amountMode().getByRole('button', { name: /^Ainda não defini/ }))).toBe(true)
-    expect(screen.queryByLabelText(/^Valor/)).toBeNull()
+    expect((amountMode().getByRole('radio', { name: /^Não informar/ }) as HTMLInputElement).checked).toBe(true)
+    expect(screen.queryByLabelText(/^Valor (total da viagem|por pessoa)/)).toBeNull()
     expect(summary()).toHaveTextContent('Orçamento: Equilibrado; orçamento não informado')
     // Opcional: segue sem valor para a revisão.
     expect(legacy()).toBeEnabled()
@@ -73,8 +72,8 @@ describe('Etapa 6 — Orçamento', () => {
   it('valor total: mostra a modalidade, a moeda do destino e o equivalente por pessoa', async () => {
     const user = userEvent.setup()
     await toBudget(user, 'Lisboa', 3)
-    await user.click(amountMode().getByRole('button', { name: /^Informar um valor/ }))
-    expect(pressed(basis().getByRole('button', { name: /^Valor total da viagem/ }))).toBe(true)
+    await user.click(amountMode().getByRole('radio', { name: /^Valor total/ }))
+    expect((amountMode().getByRole('radio', { name: /^Valor total/ }) as HTMLInputElement).checked).toBe(true)
     expect(screen.getByLabelText('Valor total da viagem (EUR)')).toBeInTheDocument()
     await user.type(field(), '3000')
     const status = screen.getByRole('status')
@@ -87,14 +86,13 @@ describe('Etapa 6 — Orçamento', () => {
   it('valor por pessoa: multiplica pelos viajantes; divisão inexata é arredondada para baixo e avisada', async () => {
     const user = userEvent.setup()
     await toBudget(user, 'Rio de Janeiro', 3)
-    await user.click(amountMode().getByRole('button', { name: /^Informar um valor/ }))
-    await user.click(basis().getByRole('button', { name: /^Valor por pessoa/ }))
+    await user.click(amountMode().getByRole('radio', { name: /^Por pessoa/ }))
     expect(screen.getByLabelText('Valor por pessoa (BRL)')).toBeInTheDocument()
     await user.type(field(), '500')
     expect(screen.getByRole('status')).toHaveTextContent(/500,00.* por pessoa, para 3 viajantes: total de .*1\.500,00/)
     expect(screen.getByRole('status').textContent).toContain('R$')
 
-    await user.click(basis().getByRole('button', { name: /^Valor total da viagem/ }))
+    await user.click(amountMode().getByRole('radio', { name: /^Valor total/ }))
     await user.clear(field())
     await user.type(field(), '1000')
     expect(screen.getByRole('status')).toHaveTextContent(/cerca de .*333,33.* por pessoa/)
@@ -105,7 +103,7 @@ describe('Etapa 6 — Orçamento', () => {
   it('valores inválidos mostram alerta e bloqueiam; vazio e "Ainda não defini" não bloqueiam', async () => {
     const user = userEvent.setup()
     await toBudget(user)
-    await user.click(amountMode().getByRole('button', { name: /^Informar um valor/ }))
+    await user.click(amountMode().getByRole('radio', { name: /^Valor total/ }))
     expect(legacy()).toBeEnabled() // vazio
     for (const [text, msg] of [
       ['-5', 'negativo'],
@@ -121,9 +119,9 @@ describe('Etapa 6 — Orçamento', () => {
       expect(legacy()).toBeDisabled()
     }
     expect(screen.getByText('Corrija o valor do orçamento (ou escolha "Ainda não defini") para continuar.')).toBeInTheDocument()
-    await user.click(amountMode().getByRole('button', { name: /^Ainda não defini/ }))
+    await user.click(amountMode().getByRole('radio', { name: /^Não informar/ }))
     expect(legacy()).toBeEnabled()
-    await user.click(amountMode().getByRole('button', { name: /^Informar um valor/ }))
+    await user.click(amountMode().getByRole('radio', { name: /^Valor total/ }))
     expect(field()).toHaveValue('99999999') // o texto é preservado
     await user.clear(field())
     expect(screen.queryByRole('alert')).toBeNull()
@@ -132,7 +130,7 @@ describe('Etapa 6 — Orçamento', () => {
   it('valor pequeno demais para dividir entre os viajantes é sinalizado', async () => {
     const user = userEvent.setup()
     await toBudget(user, 'Lisboa', 3)
-    await user.click(amountMode().getByRole('button', { name: /^Informar um valor/ }))
+    await user.click(amountMode().getByRole('radio', { name: /^Valor total/ }))
     await user.type(field(), '0,02')
     expect(screen.getByRole('alert')).toHaveTextContent('pequeno demais')
   })
@@ -140,7 +138,7 @@ describe('Etapa 6 — Orçamento', () => {
   it('o total por pessoa acompanha a alteração da quantidade de viajantes', async () => {
     const user = userEvent.setup()
     await toBudget(user, 'Lisboa', 2)
-    await user.click(amountMode().getByRole('button', { name: /^Informar um valor/ }))
+    await user.click(amountMode().getByRole('radio', { name: /^Valor total/ }))
     await user.type(field(), '1200')
     expect(screen.getByRole('status')).toHaveTextContent(/2 viajantes: .*600,00.* por pessoa/)
 
@@ -159,8 +157,7 @@ describe('Etapa 6 — Orçamento', () => {
   it('alterar viajantes preserva a modalidade escolhida (por pessoa) e recalcula o total', async () => {
     const user = userEvent.setup()
     await toBudget(user, 'Lisboa', 2)
-    await user.click(amountMode().getByRole('button', { name: /^Informar um valor/ }))
-    await user.click(basis().getByRole('button', { name: /^Valor por pessoa/ }))
+    await user.click(amountMode().getByRole('radio', { name: /^Por pessoa/ }))
     await user.type(field(), '400')
     expect(screen.getByRole('status')).toHaveTextContent(/2 viajantes: total de .*800,00/)
 
@@ -171,8 +168,8 @@ describe('Etapa 6 — Orçamento', () => {
     for (const name of ['Transporte', 'Interesses', 'Orçamento']) {
       await user.click(screen.getByRole('button', { name: `Continuar para ${name}` }))
     }
-    expect(pressed(basis().getByRole('button', { name: /^Valor por pessoa/ }))).toBe(true)
-    expect(pressed(basis().getByRole('button', { name: /^Valor total da viagem/ }))).toBe(false)
+    expect((amountMode().getByRole('radio', { name: /^Por pessoa/ }) as HTMLInputElement).checked).toBe(true)
+    expect((amountMode().getByRole('radio', { name: /^Valor total/ }) as HTMLInputElement).checked).toBe(false)
     expect(field()).toHaveValue('400')
     expect(screen.getByRole('status')).toHaveTextContent(/3 viajantes: total de .*1.?200,00/)
   })
@@ -184,17 +181,17 @@ describe('Etapa 6 — Orçamento', () => {
     comfy.focus()
     await user.keyboard('{Enter}')
     expect(pressed(comfy)).toBe(true)
-    const inform = amountMode().getByRole('button', { name: /^Informar um valor/ })
+    const inform = amountMode().getByRole('radio', { name: /^Valor total/ })
     inform.focus()
     await user.keyboard(' ')
-    expect(pressed(inform)).toBe(true)
-    await user.click(basis().getByRole('button', { name: /^Valor por pessoa/ }))
+    expect((inform as HTMLInputElement).checked).toBe(true)
+    await user.click(amountMode().getByRole('radio', { name: /^Por pessoa/ }))
     await user.type(field(), '800,5')
 
     await user.click(screen.getByRole('button', { name: 'Voltar para Interesses' }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
     expect(pressed(styles().getByRole('button', { name: /^Confortável/ }))).toBe(true)
-    expect(pressed(basis().getByRole('button', { name: /^Valor por pessoa/ }))).toBe(true)
+    expect((amountMode().getByRole('radio', { name: /^Por pessoa/ }) as HTMLInputElement).checked).toBe(true)
     expect(field()).toHaveValue('800,5')
   })
 
@@ -203,7 +200,7 @@ describe('Etapa 6 — Orçamento', () => {
     const user = userEvent.setup()
     await toBudget(user, 'Rio de Janeiro', 3)
     await user.click(styles().getByRole('button', { name: /^Econômico/ }))
-    await user.click(amountMode().getByRole('button', { name: /^Informar um valor/ }))
+    await user.click(amountMode().getByRole('radio', { name: /^Valor total/ }))
     await user.type(field(), '1000')
     await user.click(legacy())
 

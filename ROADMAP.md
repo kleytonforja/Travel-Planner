@@ -139,10 +139,13 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
-- [~] **M4.2 — padronização dos cards selecionáveis (parcial)** (D46): variante compacta e variante radio do
+- [~] **M4.3 — compactação das etapas 1 a 6 e barra fixa no celular (parcial)** (D47): filtros, opcionais e origem recolhíveis,
+      cards compactos, orçamento em controle segmentado, resumo de uma linha e barra Voltar/Continuar fixa até 768 px (blocos
+      de 666 a 1.287 px em 375 px, antes 690 a 2.099). Revisão (M4.7) e demais passos do M4.1 **pendentes**. Validada localmente;
+      sem commit.
+- [x] **M4.2 — padronização dos cards selecionáveis** (D46, commit `b828af7`): variante compacta e variante radio do
       `SelectableCard`; Perfil da viagem e modos de Datas com o mesmo estado selecionado (fundo, borda de 2 px, check).
-      Compactação das etapas, barra fixa, opcionais recolhíveis e redesign da Revisão (M4.3+) **pendentes**. Validada
-      localmente; sem commit.
+      Compactação, barra fixa e opcionais recolhíveis entregues no M4.3; redesign da Revisão pendente.
 - [x] **M3 — ritmo da viagem no motor** (D45, commit `b9737f1`): limite de atividades por dia (Tranquilo 2, Equilibrado 3, Intenso
       sem limite), com distribuição antes do descarte, aviso das excluídas, gravação do ritmo nos roteiros e
       regressão idêntica sem ritmo. Catálogo de 10 atividades por destino continua limitando viagens longas. Validada

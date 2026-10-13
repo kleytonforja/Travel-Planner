@@ -99,6 +99,13 @@
     outline-offset: 2px;
   }
 
+  /* Barra fixa Voltar/Continuar do planejamento (até 768 px): o foco nunca fica atrás dela. */
+  @media (max-width: 768px) {
+    html {
+      scroll-padding-bottom: 7rem;
+    }
+  }
+
   /* Respeito a prefers-reduced-motion: sem rolagem suave nem transições longas. */
   @media (prefers-reduced-motion: reduce) {
     html {

@@ -12,6 +12,7 @@ import {
 } from '../../utils/destinationSearch'
 import { DestinationCard } from '../DestinationCard'
 import { Button } from '../ui/Button'
+import { Disclosure } from '../ui/Disclosure'
 import { SearchField } from '../ui/SearchField'
 import { CATEGORY_STYLES } from '../ui/variants'
 import type { StepProps } from './planningSteps'
@@ -112,23 +113,31 @@ export function DestinationStep({ draft, onDraftChange }: StepProps) {
         />
       </div>
 
-      <div role="group" aria-label="Filtrar destinos" className="mt-4 space-y-3">
-        <FilterChips
-          caption="Localização"
-          options={locationOptions}
-          activeKey={activeKey}
-          onSelect={setFilter}
-        />
-        <FilterChips
-          caption="Categorias dos destinos"
-          options={categoryOptions}
-          activeKey={activeKey}
-          onSelect={setFilter}
-        />
-        <p className="text-xs text-night-ink-muted">
-          Estes controles apenas filtram os destinos listados abaixo. Os seus
-          interesses de viagem serão escolhidos em uma etapa própria.
-        </p>
+      <div className="mt-4">
+        <Disclosure
+          title="Filtros"
+          summary={activeKey === 'all' ? undefined : '1 filtro ativo'}
+          defaultOpen={activeKey !== 'all'}
+        >
+          <div role="group" aria-label="Filtrar destinos" className="space-y-3">
+            <FilterChips
+              caption="Localização"
+              options={locationOptions}
+              activeKey={activeKey}
+              onSelect={setFilter}
+            />
+            <FilterChips
+              caption="Categorias dos destinos"
+              options={categoryOptions}
+              activeKey={activeKey}
+              onSelect={setFilter}
+            />
+            <p className="text-xs text-night-ink-muted">
+              Estes controles apenas filtram os destinos listados abaixo. Os seus
+              interesses de viagem serão escolhidos em uma etapa própria.
+            </p>
+          </div>
+        </Disclosure>
       </div>
 
       <p role="status" aria-live="polite" className="mt-5 text-sm text-night-ink-muted">
@@ -144,11 +153,12 @@ export function DestinationStep({ draft, onDraftChange }: StepProps) {
           </Button>
         </div>
       ) : (
-        <div className="mt-4 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 grid gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
           {results.map((destination) => (
             <DestinationCard
               key={destination.id}
               destination={destination}
+              compact
               selected={destination.id === draft.destinationId}
               onSelect={(id) => onDraftChange({ destinationId: id })}
             />

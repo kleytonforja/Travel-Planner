@@ -106,6 +106,7 @@ describe('Etapa 4 — Transporte', () => {
     await toTransport(user)
     const next = () => screen.getByRole('button', { name: 'Continuar para Interesses' })
 
+    await user.click(screen.getByRole('button', { name: 'Informar a cidade de origem (opcional)' }))
     await user.type(origin(), 'Rio 2')
     expect(screen.getByRole('alert')).toHaveTextContent('Use apenas letras')
     expect(origin()).toHaveAttribute('aria-invalid', 'true')

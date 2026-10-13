@@ -1272,3 +1272,39 @@ visível independente da seleção; não selecionado: fundo branco e borda neutr
 **Riscos**: o nome acessível dos botões de perfil continua começando pelo rótulo e agora inclui a descrição (já incluía);
 o radio de Datas mantém nomes e ordem. O check é o mesmo `data-testid="selected-check"`, então contagens de check em
 testes passam a incluir Perfil e Datas.
+
+## D47 — Compactação das etapas 1 a 6 e barra de navegação fixa no celular (M4.3)
+
+**Decisão**: reduzir a altura e as interações das etapas 1 a 6 sem alterar nenhuma regra de negócio, e manter a navegação sempre
+acessível no celular. A Revisão (etapa 7), o motor, o armazenamento e o JSON **não** foram alterados.
+- **Componentes novos**: `Disclosure` (seção recolhível: botão com `aria-expanded`/`aria-controls`, conteúdo montado com
+  `hidden`, então **nada é apagado ao recolher**; abre sozinho quando já há dados) e `stackedOnMobile` no `SelectableCard`
+  compacto (ícone sobre o rótulo abaixo de 640 px, para grades de 3 colunas sem estourar a largura).
+- **Destino**: busca sempre visível; filtros em "Filtros" (recolhido; abre se houver filtro ativo); `DestinationCard compact` (foto
+  4:1 no celular e 2:1 a partir de 640 px, `overflow-hidden` para a foto respeitar a proporção, descrição em até 2 linhas); os três
+  destinos continuam acessíveis.
+- **Viajantes**: contadores sempre visíveis; "Faixas etárias" e "Acessibilidade e mobilidade" recolhíveis (abrem sozinhos com dados,
+  resumo "N marcada(s)"); perfil compacto (M4.2).
+- **Transporte**: cards compactos em 2 colunas no celular (3 a partir de 640 px; 5 na chegada em telas largas), nomes acessíveis
+  iguais; origem opcional em "Informar a cidade de origem (opcional)" (abre com dados; mostra a cidade no resumo do botão).
+- **Interesses**: interesses e ritmo em cards compactos; múltipla escolha, ao menos um interesse e ritmo único preservados.
+- **Orçamento**: estilo em 3 cards compactos; orçamento opcional em **controle segmentado de rádios** "Não informar" (padrão) /
+  "Por pessoa" / "Valor total" (um clique define modalidade); o campo monetário só aparece com valor; o texto digitado é
+  preservado ao alternar; cálculos em centavos e regras financeiras inalterados (substitui os botões "Informar um valor"/"Ainda
+  não defini" e a escolha de modalidade em duas etapas).
+- **Resumo**: nas etapas 1 a 6, uma única linha (`line-clamp-2`, texto completo em `title` e no DOM, mesmos rótulos); a Revisão mantém
+  o resumo anterior (será tratado no M4.7).
+- **Barra Voltar/Continuar**: **uma** barra (sem botões duplicados) fixa na base até 768 px (`max-[769px]`, pois o `max-` do
+  Tailwind v4 é exclusivo), com botões ≥ 44 px, a dica de validação **dentro** da barra, espaço reservado no conteúdo e na
+  página (`pb-24`/`pb-20`) e `scroll-padding-bottom` para o foco nunca ficar atrás dela. Enquanto um campo de texto/número/data
+  está em foco (teclado virtual) a barra deixa de ser fixa; a volta à posição fixa é **adiada ~400 ms após o blur** — achado do
+  Chromium: sem o atraso, tocar em "Continuar" com um campo focado movia o botão entre o toque e o clique e o clique se perdia.
+- **Testes**: botões "Filtros", "Faixas etárias…", "Acessibilidade e mobilidade…" e "Informar a cidade de origem…" precisam ser abertos
+  antes de usar o conteúdo; o orçamento passou a usar rádios (`/^Por pessoa/`, `/^Valor total/`, `/^Não informar/`).
+
+**Medidas (375×812, altura do bloco da etapa, antes → depois)**: Destino 2.099 → 1.287 px; Datas 690 → 666; Viajantes 1.406 → 882;
+Transporte 1.698 → 997; Interesses 1.440 → 798; Orçamento 950 → 572 (com valor: 1.440 → 782); resumo de 58–198 px → 38–58 px;
+Revisão (inalterada) 2.199. "Continuar" visível sem rolagem em todas as etapas 1–6 até 768 px.
+
+**Riscos**: a descrição dos cards compactos só aparece a partir de 640 px (continua no nome acessível); o recolhimento exige um
+clique extra para quem quer preencher os opcionais; só Chromium.

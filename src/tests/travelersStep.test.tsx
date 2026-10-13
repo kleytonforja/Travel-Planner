@@ -99,6 +99,7 @@ describe('Etapa 3 — Viajantes', () => {
     await user.click(more('crianças'))
     await user.click(more('crianças'))
     expect(screen.getByText('Faixas etárias das crianças (opcional)')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Faixas etárias das crianças (opcional)' }))
     await user.click(more('3 a 5 anos'))
     await user.click(more('6 a 11 anos'))
     expect(more('12 a 17 anos')).toBeDisabled()
@@ -189,6 +190,7 @@ describe('Etapa 3 — Viajantes', () => {
     await user.keyboard(' ')
     expect(familia).toHaveAttribute('aria-pressed', 'true')
 
+    await user.click(screen.getByRole('button', { name: 'Acessibilidade e mobilidade (opcional)' }))
     const visual = screen.getByRole('checkbox', { name: 'Deficiência visual' })
     visual.focus()
     await user.keyboard(' ')
@@ -198,6 +200,7 @@ describe('Etapa 3 — Viajantes', () => {
   it('acessibilidade e mobilidade: necessidades opcionais independentes', async () => {
     const user = userEvent.setup()
     await toTravelers(user)
+    await user.click(screen.getByRole('button', { name: 'Acessibilidade e mobilidade (opcional)' }))
     const group = screen.getByRole('group', { name: /Acessibilidade e mobilidade/ })
     const boxes = within(group).getAllByRole('checkbox')
     expect(boxes).toHaveLength(4)
@@ -214,9 +217,11 @@ describe('Etapa 3 — Viajantes', () => {
     await toTravelers(user)
     await user.click(more('adultos'))
     await user.click(more('crianças'))
+    await user.click(screen.getByRole('button', { name: 'Faixas etárias das crianças (opcional)' }))
     await user.click(more('6 a 11 anos'))
     await user.click(more('bebês'))
     await user.click(screen.getByRole('button', { name: /^Família/ }))
+    await user.click(screen.getByRole('button', { name: 'Acessibilidade e mobilidade (opcional)' }))
     await user.click(screen.getByRole('checkbox', { name: /Evitar escadas/ }))
 
     // Volta às datas e altera.

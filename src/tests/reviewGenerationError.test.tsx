@@ -38,8 +38,7 @@ describe('Revisão — erro de geração', () => {
     }
     await user.click(screen.getByRole('button', { name: /^Cultura/ }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
-    await user.click(screen.getByRole('button', { name: /^Informar um valor/ }))
-    await user.click(screen.getByRole('button', { name: /^Valor por pessoa/ }))
+    await user.click(screen.getByRole('radio', { name: /^Por pessoa/ }))
     await user.type(screen.getByLabelText(/^Valor por pessoa/), '1200')
     await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
 

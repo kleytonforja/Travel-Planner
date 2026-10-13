@@ -3,6 +3,7 @@ import { useId } from 'react'
 
 import {
   ACCESSIBILITY_NEEDS,
+  agedChildren,
   CHILD_AGE_BANDS,
   MAX_TRAVELERS,
   setChildAge,
@@ -17,6 +18,7 @@ import {
   type TravelerKind,
   type TravelProfile,
 } from '../../utils/travelers'
+import { Disclosure } from '../ui/Disclosure'
 import { SelectableCard } from '../ui/SelectableCard'
 import type { StepProps } from './planningSteps'
 
@@ -133,29 +135,35 @@ export function TravelersStep({ draft, onDraftChange }: StepProps) {
 
         {travelers.children > 0 && (
           <div className="mt-4 border-t border-line pt-4">
-            <h3 className="text-base font-semibold text-ink">Faixas etárias das crianças (opcional)</h3>
-            <p className="text-sm text-ink-muted">
-              Só quantas crianças há em cada faixa; não pedimos nomes nem datas de nascimento.
-            </p>
-            <div className="divide-y divide-line">
-              {CHILD_AGE_BANDS.map((band) => {
-                const others = CHILD_AGE_BANDS.reduce(
-                  (sum, item) => (item.id === band.id ? sum : sum + travelers.childAges[item.id]),
-                  0,
-                )
-                return (
-                  <Counter
-                    key={band.id}
-                    label={band.label}
-                    hint="Crianças nesta faixa"
-                    value={travelers.childAges[band.id as ChildAgeBand]}
-                    min={0}
-                    max={travelers.children - others}
-                    onChange={(value) => update(setChildAge(travelers, band.id, value))}
-                  />
-                )
-              })}
-            </div>
+            <Disclosure
+              tone="onLight"
+              title="Faixas etárias das crianças (opcional)"
+              summary={agedChildren(travelers) > 0 ? `${agedChildren(travelers)} informada(s)` : undefined}
+              defaultOpen={agedChildren(travelers) > 0}
+            >
+              <p className="text-sm text-ink-muted">
+                Só quantas crianças há em cada faixa; não pedimos nomes nem datas de nascimento.
+              </p>
+              <div className="divide-y divide-line">
+                {CHILD_AGE_BANDS.map((band) => {
+                  const others = CHILD_AGE_BANDS.reduce(
+                    (sum, item) => (item.id === band.id ? sum : sum + travelers.childAges[item.id]),
+                    0,
+                  )
+                  return (
+                    <Counter
+                      key={band.id}
+                      label={band.label}
+                      hint="Crianças nesta faixa"
+                      value={travelers.childAges[band.id as ChildAgeBand]}
+                      min={0}
+                      max={travelers.children - others}
+                      onChange={(value) => update(setChildAge(travelers, band.id, value))}
+                    />
+                  )
+                })}
+              </div>
+            </Disclosure>
           </div>
         )}
       </div>
@@ -180,27 +188,35 @@ export function TravelersStep({ draft, onDraftChange }: StepProps) {
         </div>
       </fieldset>
 
-      <fieldset className="mt-6 rounded-card-lg bg-surface p-5 text-ink shadow-card">
-        <legend className="sr-only">Acessibilidade e mobilidade</legend>
-        <h2 className="text-lg font-semibold text-ink">Acessibilidade e mobilidade (opcional)</h2>
-        <p className="text-sm text-ink-muted">Marque o que se aplica a alguém do grupo.</p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {ACCESSIBILITY_NEEDS.map((need) => (
-            <label
-              key={need.id}
-              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control px-2 text-sm text-ink hover:bg-surface-muted"
-            >
-              <input
-                type="checkbox"
-                checked={travelers.accessibility.includes(need.id)}
-                onChange={() => update(toggleAccessibility(travelers, need.id))}
-                className="h-5 w-5 rounded border-line-strong accent-brand-600 focus-ring"
-              />
-              {need.label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      <div className="mt-6">
+        <Disclosure
+          title="Acessibilidade e mobilidade (opcional)"
+          summary={travelers.accessibility.length > 0 ? `${travelers.accessibility.length} marcada(s)` : undefined}
+          defaultOpen={travelers.accessibility.length > 0}
+        >
+          <fieldset className="rounded-card-lg bg-surface p-5 text-ink shadow-card">
+            <legend className="sr-only">Acessibilidade e mobilidade</legend>
+            <h2 className="text-lg font-semibold text-ink">Acessibilidade e mobilidade (opcional)</h2>
+            <p className="text-sm text-ink-muted">Marque o que se aplica a alguém do grupo.</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {ACCESSIBILITY_NEEDS.map((need) => (
+                <label
+                  key={need.id}
+                  className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control px-2 text-sm text-ink hover:bg-surface-muted"
+                >
+                  <input
+                    type="checkbox"
+                    checked={travelers.accessibility.includes(need.id)}
+                    onChange={() => update(toggleAccessibility(travelers, need.id))}
+                    className="h-5 w-5 rounded border-line-strong accent-brand-600 focus-ring"
+                  />
+                  {need.label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </Disclosure>
+      </div>
 
       <p className="mt-4 text-sm text-night-ink-muted">
         Por enquanto, estas informações são guardadas apenas nesta sessão e ainda não

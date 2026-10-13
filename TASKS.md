@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **M4.2** — padronização dos cards selecionáveis. Anteriores: M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **M4.3** — compactação das etapas 1 a 6 e barra fixa no celular. Anteriores: M4.2 (commit `b828af7`), M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | ✅ **M4.2 implementado e validado localmente** em 2026-10-12 (ver "Relatório do M4.2"); **sem commit do M4.2** (aguarda autorização) |
-| Próximo checkpoint  | Revisão/commit do M4.2, mediante autorização; depois M4.3 em diante (resumos duplicados, opcionais recolhíveis, barra fixa, compactação das etapas e Revisão), conforme o diagnóstico M4.1. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | ✅ **M4.3 implementado e validado localmente** em 2026-10-12 (ver "Relatório do M4.3"); **sem commit do M4.3** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do M4.3, mediante autorização; depois a Revisão (M4.7, alternativa C) e a validação integrada do M4.1. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -2077,3 +2077,27 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   azul-claro) e Perfil (check no canto superior direito, `aria-pressed`, borda de 2 px, card entre 52 e 100 px, seleção
   única, remoção, Enter, foco visível, sem overflow); Transporte (variante padrão) inalterado; sem erros de console.
 - **Riscos**: apenas Chromium; a descrição do perfil só é visível a partir de 640 px (continua no nome acessível).
+
+## Relatório do M4.3 — compactação das etapas e navegação fixa no celular (2026-10-12)
+
+- **Consolidação do M4.2**: validado (839 testes, typecheck, lint, build, diff --check) e commitado localmente (`b828af7`); árvore
+  limpa antes do M4.3.
+- **Implementado** (D47): `Disclosure`; filtros, faixas etárias, acessibilidade e origem recolhíveis (abrem com dados, nada é
+  apagado); cards compactos em Destino, Transporte, Interesses e Orçamento; orçamento em controle segmentado de rádios;
+  resumo de uma linha nas etapas 1–6; barra Voltar/Continuar única e fixa até 768 px, com dica de validação dentro da barra,
+  espaço reservado, `scroll-padding` e comportamento com teclado virtual. Revisão, motor, armazenamento e JSON intocados.
+- **Medidas em 375×812 (bloco da etapa, antes → depois)**: Destino 2.099 → 1.287; Datas 690 → 666; Viajantes 1.406 → 882; Transporte
+  1.698 → 997; Interesses 1.440 → 798; Orçamento 950 → 572 (com valor 1.440 → 782); resumo 58–198 → 38–58. Em 1366×768: Destino
+  822 → 694, Viajantes 852 → 654, Transporte 814 → 608, Interesses 736 → 551, Orçamento 468 → 408.
+- **Achados durante a validação**: (1) card de 3 colunas estourava a largura em 375 px (corrigido com `stackedOnMobile`); (2) a foto
+  do card ignorava a proporção (corrigido com `overflow-hidden`); (3) o `max-` do Tailwind v4 é exclusivo, então "até 768 px"
+  exigiu `max-[769px]`; (4) o hover sobrescrevia o segmento selecionado do orçamento (corrigido); (5) tocar em "Continuar" com um
+  campo focado perdia o clique porque a barra mudava de posição no blur (corrigido com atraso de ~400 ms).
+- **Testes**: 854 em 47 arquivos, 2 execuções completas sem falha (15 novos em `compactSteps.test.tsx`; ajustes nos testes de
+  etapas, filtros, orçamento e revisão para abrir os recolhíveis e usar os rádios).
+- **Chromium**: 83/83 (`m43`: 4 larguras × etapas 1–6, abertura/fechamento e preservação, interesses e ritmo, orçamento total e por
+  pessoa, geração após a compactação, barra fixa, foco, teclado, sem overflow, sem erros de console) e regressões: 22/22
+  (fluxo completo com salvar, abrir, exportar, excluir, importar), 18/18 (sem orçamento, v1/v2), 15/15 (inválidos), 23/23 (ritmos).
+  O script antigo do V1-T3.7 (`rev_e2e`) ficou obsoleto (esperava orçamento obrigatório e exportação v1) e foi substituído
+  pelos demais.
+- **Riscos**: apenas Chromium; interação extra para abrir opcionais; a descrição dos cards compactos só é visível a partir de 640 px.

@@ -22,6 +22,7 @@ import {
   type ArrivalMode,
   type LocalMode,
 } from '../../utils/transport'
+import { Disclosure } from '../ui/Disclosure'
 import { SelectableCard } from '../ui/SelectableCard'
 import type { StepProps } from './planningSteps'
 
@@ -66,9 +67,10 @@ export function TransportStep({ draft, onDraftChange }: StepProps) {
       <fieldset className="mt-6">
         <legend className="text-lg font-semibold text-white">Como você chegará ao destino?</legend>
         <p className="mt-1 text-sm text-night-ink">Escolha uma opção; clique de novo para remover.</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {ARRIVAL_MODES.map((mode) => (
             <SelectableCard
+              density="compact"
               key={mode.id}
               label={mode.label}
               icon={ARRIVAL_ICONS[mode.id]}
@@ -79,31 +81,39 @@ export function TransportStep({ draft, onDraftChange }: StepProps) {
         </div>
       </fieldset>
 
-      <div className="mt-6 rounded-card-lg bg-surface p-5 text-ink shadow-card">
-        <label htmlFor={originId} className="text-base font-semibold text-ink">
-          Cidade de origem (opcional)
-        </label>
-        <p id={`${originId}-ajuda`} className="text-sm text-ink-muted">
-          Texto livre: não é verificado e não calcula distâncias nem preços.
-        </p>
-        <input
-          id={originId}
-          type="text"
-          autoComplete="off"
-          maxLength={MAX_ORIGIN_LENGTH + 20}
-          value={transport.origin}
-          onChange={(event) => update({ ...transport, origin: event.target.value })}
-          aria-invalid={origin.status === 'invalid'}
-          aria-describedby={`${originId}-ajuda ${originId}-erro`}
-          className={`mt-2 w-full max-w-md rounded-control border bg-surface px-3 py-2.5 text-sm text-ink focus-ring ${origin.status === 'invalid' ? 'border-red-600' : 'border-line-strong'}`}
-        />
-        <div id={`${originId}-erro`} className="mt-2 min-h-5 text-sm">
-          {origin.status === 'invalid' && (
-            <p role="alert" className="font-medium text-red-700">
-              {origin.message}
-            </p>
-          )}
+      <div className="mt-6">
+        <Disclosure
+          title="Informar a cidade de origem (opcional)"
+          summary={origin.status === 'valid' ? origin.value : undefined}
+          defaultOpen={transport.origin.trim() !== ''}
+        >
+         <div className="mt-6 rounded-card-lg bg-surface p-5 text-ink shadow-card">
+          <label htmlFor={originId} className="text-base font-semibold text-ink">
+            Cidade de origem (opcional)
+          </label>
+          <p id={`${originId}-ajuda`} className="text-sm text-ink-muted">
+            Texto livre: não é verificado e não calcula distâncias nem preços.
+          </p>
+          <input
+            id={originId}
+            type="text"
+            autoComplete="off"
+            maxLength={MAX_ORIGIN_LENGTH + 20}
+            value={transport.origin}
+            onChange={(event) => update({ ...transport, origin: event.target.value })}
+            aria-invalid={origin.status === 'invalid'}
+            aria-describedby={`${originId}-ajuda ${originId}-erro`}
+            className={`mt-2 w-full max-w-md rounded-control border bg-surface px-3 py-2.5 text-sm text-ink focus-ring ${origin.status === 'invalid' ? 'border-red-600' : 'border-line-strong'}`}
+          />
+          <div id={`${originId}-erro`} className="mt-2 min-h-5 text-sm">
+            {origin.status === 'invalid' && (
+              <p role="alert" className="font-medium text-red-700">
+                {origin.message}
+              </p>
+            )}
+          </div>
         </div>
+        </Disclosure>
       </div>
 
       <fieldset className="mt-6">
@@ -113,9 +123,10 @@ export function TransportStep({ draft, onDraftChange }: StepProps) {
         <p className="mt-1 text-sm text-night-ink">
           Você pode combinar opções. &quot;Ainda não decidi&quot; não se mistura com as outras.
         </p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
           {LOCAL_MODES.map((mode) => (
             <SelectableCard
+              density="compact"
               key={mode.id}
               label={mode.label}
               icon={LOCAL_ICONS[mode.id]}

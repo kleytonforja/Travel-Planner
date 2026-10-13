@@ -12,6 +12,11 @@ interface BaseProps {
   icon: CardIcon
   selected: boolean
   density?: SelectableCardDensity
+  /**
+   * Só na densidade compacta: abaixo de 640 px empilha ícone e rótulo (centralizados), para
+   * grades de 3 colunas em telas estreitas sem estourar a largura.
+   */
+  stackedOnMobile?: boolean
 }
 
 interface SelectableCardProps extends BaseProps {
@@ -32,8 +37,12 @@ const ICON_BOX: Record<SelectableCardDensity, string> = {
   compact: 'h-8 w-8 rounded-control',
 }
 
-function frameClasses(selected: boolean, density: SelectableCardDensity): string {
-  return `relative flex h-full w-full items-center border-2 text-left transition-colors ${FRAME[density]} ${selected ? SELECTED : IDLE}`
+const STACKED =
+  'max-[639px]:flex-col max-[639px]:justify-center max-[639px]:gap-1 max-[639px]:px-1.5 max-[639px]:text-center'
+
+function frameClasses(selected: boolean, density: SelectableCardDensity, stacked = false): string {
+  const stack = density === 'compact' && stacked ? ` ${STACKED}` : ''
+  return `relative flex h-full w-full items-center border-2 text-left transition-colors ${FRAME[density]}${stack} ${selected ? SELECTED : IDLE}`
 }
 
 /** Conteúdo comum: ícone, texto e check de confirmação (decorativo) no canto superior direito. */
@@ -92,7 +101,7 @@ export function SelectableCard({ onClick, ...content }: SelectableCardProps) {
       type="button"
       aria-pressed={content.selected}
       onClick={onClick}
-      className={`${frameClasses(content.selected, content.density ?? 'default')} focus-ring-on-dark`}
+      className={`${frameClasses(content.selected, content.density ?? 'default', content.stackedOnMobile)} focus-ring-on-dark`}
     >
       <CardContent {...content} />
     </button>
@@ -123,7 +132,7 @@ export function SelectableRadioCard({ name, value, onSelect, ...content }: Selec
         className="peer sr-only"
       />
       <span
-        className={`${frameClasses(content.selected, content.density ?? 'default')} peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-white`}
+        className={`${frameClasses(content.selected, content.density ?? 'default', content.stackedOnMobile)} peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-white`}
       >
         <CardContent {...content} />
       </span>

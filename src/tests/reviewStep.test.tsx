@@ -34,8 +34,7 @@ async function toReview(user: User, { destination = 'Rio de Janeiro', adults = 2
   await user.click(screen.getByRole('button', { name: /^Natureza/ }))
   await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
   if (budget !== null) {
-    await user.click(screen.getByRole('button', { name: /^Informar um valor/ }))
-    await user.click(screen.getByRole('button', { name: /^Valor por pessoa/ }))
+    await user.click(screen.getByRole('radio', { name: /^Por pessoa/ }))
     await user.type(screen.getByLabelText(/^Valor por pessoa/), budget)
   }
   await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
@@ -123,7 +122,7 @@ describe('Etapa 7 — Revisão e geração', () => {
     expect(card('Datas e duração')).toHaveTextContent('7 dias')
 
     await user.click(screen.getByRole('button', { name: 'Editar Estilo e orçamento' }))
-    await user.click(screen.getByRole('button', { name: /^Valor total da viagem/ }))
+    await user.click(screen.getByRole('radio', { name: /^Valor total/ }))
     await user.clear(screen.getByLabelText(/^Valor total da viagem/))
     await user.type(screen.getByLabelText(/^Valor total da viagem/), '1000')
     await user.click(screen.getByRole('button', { name: 'Voltar para a revisão' }))
@@ -162,8 +161,7 @@ describe('Etapa 7 — Revisão e geração', () => {
     const user = userEvent.setup()
     await toReview(user, { budget: null })
     await user.click(screen.getByRole('button', { name: 'Editar Estilo e orçamento' }))
-    await user.click(screen.getByRole('button', { name: /^Informar um valor/ }))
-    await user.click(screen.getByRole('button', { name: /^Valor por pessoa/ }))
+    await user.click(screen.getByRole('radio', { name: /^Por pessoa/ }))
     await user.type(screen.getByLabelText(/^Valor por pessoa/), '0')
     // O próprio passo bloqueia o avanço, mas a revisão acessível por "Voltar para a revisão" também recusa.
     await user.click(screen.getByRole('button', { name: 'Voltar para a revisão' }))

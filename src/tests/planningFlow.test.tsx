@@ -164,6 +164,7 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
   it('os filtros por país e categoria usam aria-pressed e podem ser combinados com a pesquisa', async () => {
     const user = openPlanning()
     await goToPlanning(user)
+    await user.click(screen.getByRole('button', { name: 'Filtros' }))
     const group = screen.getByRole('group', { name: 'Filtrar destinos' })
     const todos = within(group).getByRole('button', { name: 'Todos' })
     const portugal = within(group).getByRole('button', { name: 'Portugal' })
@@ -189,6 +190,7 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
   it('diferencia os filtros de localização dos de categoria e informa que eles filtram destinos', async () => {
     const user = openPlanning()
     await goToPlanning(user)
+    await user.click(screen.getByRole('button', { name: 'Filtros' }))
 
     const location = screen.getByRole('group', { name: 'Localização' })
     const category = screen.getByRole('group', { name: 'Categorias dos destinos' })
@@ -213,6 +215,7 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
   it('os filtros não são seleção múltipla de interesses: escolher outro substitui o anterior', async () => {
     const user = openPlanning()
     await goToPlanning(user)
+    await user.click(screen.getByRole('button', { name: 'Filtros' }))
     const cultura = within(screen.getByRole('group', { name: 'Categorias dos destinos' })).getByRole('button', { name: 'Cultura' })
     const natureza = within(screen.getByRole('group', { name: 'Categorias dos destinos' })).getByRole('button', { name: 'Natureza' })
     await user.click(cultura)
@@ -348,8 +351,7 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     await user.click(screen.getByRole('button', { name: 'Continuar para Interesses' }))
     await user.click(screen.getByRole('button', { name: /^Cultura/ }))
     await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
-    await user.click(screen.getByRole('button', { name: /^Informar um valor/ }))
-    await user.click(screen.getByRole('button', { name: /^Valor por pessoa/ }))
+    await user.click(screen.getByRole('radio', { name: /^Por pessoa/ }))
     await user.type(screen.getByLabelText(/^Valor por pessoa/), '800')
     await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
     await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))

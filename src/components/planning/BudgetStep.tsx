@@ -1,4 +1,4 @@
-import { Banknote, CircleHelp, Gem, Scale, Users, Wallet } from 'lucide-react'
+import { Gem, Scale, Wallet } from 'lucide-react'
 import { useId } from 'react'
 
 import { destinations } from '../../data/destinations'
@@ -10,6 +10,7 @@ import {
   parseAmount,
   TRAVEL_STYLE_OPTIONS,
   type BudgetBasis,
+  type BudgetDraft,
 } from '../../utils/budget'
 import { totalTravelers } from '../../utils/travelers'
 import { SelectableCard } from '../ui/SelectableCard'
@@ -21,9 +22,18 @@ const STYLE_ICONS: Record<TravelStyle, typeof Wallet> = {
   confortavel: Gem,
 }
 
-const BASIS_OPTIONS: ReadonlyArray<{ id: BudgetBasis; label: string; description: string }> = [
-  { id: 'total', label: 'Valor total da viagem', description: 'Dividido igualmente entre os viajantes.' },
-  { id: 'perPerson', label: 'Valor por pessoa', description: 'Multiplicado pelo número de viajantes.' },
+const BASIS_OPTIONS: ReadonlyArray<{ id: BudgetBasis; label: string }> = [
+  { id: 'total', label: 'Valor total da viagem' },
+  { id: 'perPerson', label: 'Valor por pessoa' },
+]
+
+/** Controle segmentado do orçamento: nada, valor por pessoa ou valor total (campo só quando há valor). */
+type BudgetMode = 'none' | 'perPerson' | 'total'
+
+const SEGMENTS: ReadonlyArray<{ id: BudgetMode; label: string; patch: Partial<BudgetDraft> }> = [
+  { id: 'none', label: 'Não informar', patch: { amountMode: 'undecided' } },
+  { id: 'perPerson', label: 'Por pessoa', patch: { amountMode: 'value', basis: 'perPerson' } },
+  { id: 'total', label: 'Valor total', patch: { amountMode: 'value', basis: 'total' } },
 ]
 
 /**
@@ -37,6 +47,8 @@ export function BudgetStep({ draft, onDraftChange }: StepProps) {
   const budget = draft.budget
   const update = (patch: Partial<typeof budget>) => onDraftChange({ budget: { ...budget, ...patch } })
   const inputId = useId()
+  const segmentName = useId()
+  const mode: BudgetMode = budget.amountMode === 'undecided' ? 'none' : budget.basis === 'perPerson' ? 'perPerson' : 'total'
   const currency = destinations.find((item) => item.id === draft.destinationId)?.currency ?? null
   const travelers = totalTravelers(draft.travelers)
   const parsed = parseAmount(budget.amount)
@@ -55,9 +67,11 @@ export function BudgetStep({ draft, onDraftChange }: StepProps) {
 
       <fieldset className="mt-6">
         <legend className="text-lg font-semibold text-white">Estilo da viagem</legend>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="mt-3 grid grid-cols-3 gap-3">
           {TRAVEL_STYLE_OPTIONS.map((style) => (
             <SelectableCard
+              density="compact"
+              stackedOnMobile
               key={style}
               label={STYLE_LABELS[style]}
               description={STYLE_DESCRIPTIONS[style]}
@@ -71,42 +85,27 @@ export function BudgetStep({ draft, onDraftChange }: StepProps) {
 
       <fieldset className="mt-6">
         <legend className="text-lg font-semibold text-white">Orçamento (opcional)</legend>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <SelectableCard
-            label="Informar um valor"
-            description="Defina quanto pretende investir."
-            icon={Banknote}
-            selected={budget.amountMode === 'value'}
-            onClick={() => update({ amountMode: 'value' })}
-          />
-          <SelectableCard
-            label="Ainda não defini"
-            description="Você pode informar o valor depois."
-            icon={CircleHelp}
-            selected={budget.amountMode === 'undecided'}
-            onClick={() => update({ amountMode: 'undecided' })}
-          />
+        <div className="mt-3 grid grid-cols-3 gap-1 rounded-card border border-white/25 bg-night-900/70 p-1">
+          {SEGMENTS.map((segment) => (
+            <label key={segment.id} className="block cursor-pointer">
+              <input
+                type="radio"
+                name={segmentName}
+                value={segment.id}
+                checked={mode === segment.id}
+                onChange={() => update(segment.patch)}
+                className="peer sr-only"
+              />
+              <span className="flex min-h-11 items-center justify-center rounded-control px-2 text-center text-sm font-semibold text-night-ink transition-colors hover:bg-white/10 peer-checked:bg-brand-600 peer-checked:text-white peer-checked:hover:bg-brand-600 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-white">
+                {segment.label}
+              </span>
+            </label>
+          ))}
         </div>
       </fieldset>
 
       {budget.amountMode === 'value' && (
         <>
-          <fieldset className="mt-6">
-            <legend className="text-lg font-semibold text-white">Como você quer informar o valor?</legend>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              {BASIS_OPTIONS.map((option) => (
-                <SelectableCard
-                  key={option.id}
-                  label={option.label}
-                  description={option.description}
-                  icon={option.id === 'total' ? Banknote : Users}
-                  selected={budget.basis === option.id}
-                  onClick={() => update({ basis: option.id })}
-                />
-              ))}
-            </div>
-          </fieldset>
-
           <div className="mt-6 rounded-card-lg bg-surface p-5 text-ink shadow-card">
             <label htmlFor={inputId} className="text-base font-semibold text-ink">
               {basisLabel}

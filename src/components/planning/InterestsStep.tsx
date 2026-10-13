@@ -38,9 +38,10 @@ export function InterestsStep({ draft, onDraftChange }: StepProps) {
       <fieldset className="mt-6">
         <legend className="text-lg font-semibold text-white">Seus interesses</legend>
         <p className="mt-1 text-sm text-night-ink">Selecione quantos quiser; clique de novo para remover.</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {INTEREST_OPTIONS.map((interest) => (
             <SelectableCard
+              density="compact"
               key={interest}
               label={INTEREST_LABELS[interest]}
               description={INTEREST_DESCRIPTIONS[interest]}
@@ -60,9 +61,11 @@ export function InterestsStep({ draft, onDraftChange }: StepProps) {
       <fieldset className="mt-6">
         <legend className="text-lg font-semibold text-white">Ritmo da viagem</legend>
         <p className="mt-1 text-sm text-night-ink">Escolha um ritmo; o padrão é Equilibrado.</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="mt-3 grid grid-cols-3 gap-3">
           {TRIP_PACES.map((pace) => (
             <SelectableCard
+              density="compact"
+              stackedOnMobile
               key={pace.id}
               label={pace.label}
               description={pace.description}

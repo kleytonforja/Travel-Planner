@@ -40,8 +40,7 @@ export async function driveWizardToReview(
   await user.click(screen.getByRole('button', { name: 'Continuar para Orçamento' }))
   if (style) await user.click(screen.getByRole('button', { name: new RegExp(`^${style}`) }))
   if (budgetPerPerson !== null) {
-    await user.click(screen.getByRole('button', { name: /^Informar um valor/ }))
-    await user.click(screen.getByRole('button', { name: /^Valor por pessoa/ }))
+    await user.click(screen.getByRole('radio', { name: /^Por pessoa/ }))
     await user.type(screen.getByLabelText(/^Valor por pessoa/), budgetPerPerson)
   }
   await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
