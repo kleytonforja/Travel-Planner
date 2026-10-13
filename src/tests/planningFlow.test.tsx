@@ -301,7 +301,7 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     expect(screen.queryByRole('complementary', { name: 'Próximas etapas' })).toBeNull()
     expect(screen.queryByText(/formulário tradicional/i)).toBeNull()
     // Orçamento é opcional: com destino, duração e interesse, a geração já está liberada.
-    expect(screen.getByRole('button', { name: 'Gerar roteiro' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Gerar meu roteiro' })).toBeEnabled()
   })
 
   it('preserva a seleção ao voltar para a home e ao retornar ao planejamento', async () => {
@@ -339,7 +339,7 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     const user = openPlanning()
     // Na home não há formulário nem campos de planejamento.
     expect(document.getElementById('destino')).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Gerar roteiro' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Gerar meu roteiro' })).toBeNull()
     expect(screen.queryByText(/formulário tradicional/i)).toBeNull()
     await goToPlanning(user)
     await user.click(within(cardOf('Rio de Janeiro')).getByRole('button', { name: 'Selecionar destino' }))
@@ -354,7 +354,7 @@ describe('Planejamento progressivo — navegação e etapa de destino', () => {
     await user.click(screen.getByRole('radio', { name: /^Por pessoa/ }))
     await user.type(screen.getByLabelText(/^Valor por pessoa/), '800')
     await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
-    await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
+    await user.click(screen.getByRole('button', { name: 'Gerar meu roteiro' }))
     expect(await screen.findByRole('button', { name: 'Salvar roteiro' })).toBeInTheDocument()
   })
 })

@@ -31,13 +31,15 @@ export function HeroPhoto() {
 interface DestinationPhotoImageProps {
   destinationId: string
   name: string
+  /** Foto visível na primeira tela (ex.: cabeçalho da Revisão): carrega sem espera, sem `loading="lazy"`. */
+  eager?: boolean
 }
 
 /**
  * Fotografia de um destino: carregamento preguiçoso, proporção fixa e, na
  * ausência da foto ou se o carregamento falhar, a ilustração original.
  */
-export function DestinationPhotoImage({ destinationId, name }: DestinationPhotoImageProps) {
+export function DestinationPhotoImage({ destinationId, name, eager = false }: DestinationPhotoImageProps) {
   const [failed, setFailed] = useState(false)
   const photo = DESTINATION_PHOTOS[destinationId]
   if (!photo || failed) {
@@ -51,7 +53,7 @@ export function DestinationPhotoImage({ destinationId, name }: DestinationPhotoI
       width={photo.width}
       height={photo.height}
       alt={photo.alt}
-      loading="lazy"
+      loading={eager ? 'eager' : 'lazy'}
       decoding="async"
       onError={() => setFailed(true)}
       className="h-full w-full object-cover"

@@ -95,6 +95,8 @@ export interface StepProps {
   goToStep?: (id: PlanningStepId) => void
   /** Chamado quando o roteiro é gerado pela etapa de revisão. */
   onItineraryGenerated?: (itinerary: Itinerary) => void
+  /** Espaço na barra de navegação onde a revisão coloca a ação principal ("Gerar meu roteiro"). */
+  actionSlot?: HTMLElement | null
 }
 
 /** Componentes das etapas já implementadas. */

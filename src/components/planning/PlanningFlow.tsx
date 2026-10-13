@@ -58,6 +58,8 @@ export function PlanningFlow({
   const [fromReview, setFromReview] = useState(false)
   // Enquanto um campo de texto está em foco (teclado virtual aberto), a barra deixa de ser fixa.
   const [typing, setTyping] = useState(false)
+  // Elemento da barra de navegação que recebe a ação principal da revisão.
+  const [actionSlot, setActionSlot] = useState<HTMLElement | null>(null)
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   // A barra só volta a ficar fixa um instante depois do blur: se o toque no botão começou com o campo
   // em foco, o botão não pode sair do lugar entre o toque e o clique (o clique se perderia).
@@ -159,6 +161,7 @@ export function PlanningFlow({
             onDraftChange={onDraftChange}
             goToStep={goToStep}
             onItineraryGenerated={onItineraryGenerated}
+            actionSlot={actionSlot}
           />
         ) : (
           <p role="alert" className="text-night-ink">
@@ -167,19 +170,7 @@ export function PlanningFlow({
         )}
       </div>
 
-      {isReview ? (
-        <section
-          aria-label="Resumo do planejamento"
-          className="mt-8 rounded-card-lg border border-white/15 bg-night-950/60 p-4 text-night-ink"
-        >
-          <p className="font-semibold text-white">{summaryParts[0]}</p>
-          {summaryParts.slice(1).map((part) => (
-            <p key={part} className="mt-1 text-sm">
-              {part}
-            </p>
-          ))}
-        </section>
-      ) : (
+      {isReview ? null : (
         <section
           aria-label="Resumo do planejamento"
           className="mt-6 rounded-card border border-white/15 bg-night-950/60 px-4 py-2 text-sm text-night-ink"
@@ -217,6 +208,7 @@ export function PlanningFlow({
                 Voltar para {previous.label}
               </Button>
             )}
+            {isReview && <div ref={setActionSlot} className="max-[769px]:min-w-0 max-[769px]:flex-1" />}
             {nextAvailable && (
               <Button
                 variant="primary"

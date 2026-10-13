@@ -33,8 +33,8 @@ describe('Fluxo sem orçamento', () => {
     render(<App />)
     await driveWizardToReview(user, { destination: 'Lisboa', days: 3, interests: ['Cultura', 'Gastronomia'], budgetPerPerson: null })
 
-    expect(screen.getByRole('region', { name: 'Estilo e orçamento' })).toHaveTextContent('Orçamento não informado')
-    await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
+    expect(screen.getByRole('region', { name: 'Estilo e orçamento' })).toHaveTextContent(/orçamento não informado/i)
+    await user.click(screen.getByRole('button', { name: 'Gerar meu roteiro' }))
 
     // Resultado: sem orçamento e sem saldo; custos ilustrativos visíveis.
     expect(await screen.findByRole('button', { name: 'Salvar roteiro' })).toBeInTheDocument()
@@ -70,7 +70,7 @@ describe('Fluxo sem orçamento', () => {
     const user = userEvent.setup()
     render(<App />)
     await driveWizardToReview(user, { destination: 'Lisboa', days: 3, interests: ['Cultura'], budgetPerPerson: '400' })
-    await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
+    await user.click(screen.getByRole('button', { name: 'Gerar meu roteiro' }))
     const financial = await screen.findByRole('region', { name: 'Resumo financeiro' })
     expect(financial).toHaveTextContent('Orçamento informado')
     expect(financial).toHaveTextContent('Saldo não alocado')

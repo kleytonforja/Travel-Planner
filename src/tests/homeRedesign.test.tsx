@@ -200,7 +200,7 @@ describe('Nova home — ações preservadas', () => {
     const section = document.getElementById('planejar') as HTMLElement
     expect(within(section).getByRole('heading', { name: 'Planeje sua viagem' })).toBeInTheDocument()
     expect(document.getElementById('destino')).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Gerar roteiro' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Gerar meu roteiro' })).toBeNull()
     await user.click(within(section).getByRole('button', { name: 'Começar o planejamento' }))
     expect(onStartPlanning).toHaveBeenCalledTimes(1)
   })

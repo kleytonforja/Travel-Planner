@@ -39,7 +39,7 @@ export function PlanningPage({
       <main id="conteudo" className="bg-night-gradient text-night-ink">
         <div className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6">
           <div className="mb-6">
-            <Button variant="onDark" onClick={onBackHome}>
+            <Button variant="onDark" className="max-[769px]:min-h-11" onClick={onBackHome}>
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               Voltar para o início
             </Button>

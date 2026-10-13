@@ -209,7 +209,7 @@ describe('Etapa 6 — Orçamento', () => {
     expect(card).toHaveTextContent(/cerca de .*333,33.* por pessoa/)
     expect(screen.getByRole('region', { name: 'Datas e duração' })).toHaveTextContent('7 dias')
     expect(setItem).not.toHaveBeenCalled()
-    await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
+    await user.click(screen.getByRole('button', { name: 'Gerar meu roteiro' }))
     expect(await screen.findByRole('button', { name: 'Salvar roteiro' })).toBeInTheDocument()
   })
 
@@ -217,9 +217,9 @@ describe('Etapa 6 — Orçamento', () => {
     const user = userEvent.setup()
     await toBudget(user)
     await user.click(legacy())
-    expect(screen.getByRole('button', { name: 'Gerar roteiro' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Gerar meu roteiro' })).toBeEnabled()
     expect(screen.queryByRole('alert')).toBeNull()
-    expect(screen.getByRole('region', { name: 'Estilo e orçamento' })).toHaveTextContent('Orçamento não informado')
+    expect(screen.getByRole('region', { name: 'Estilo e orçamento' })).toHaveTextContent(/orçamento não informado/i)
     expect(screen.getByRole('region', { name: 'Estilo e orçamento' })).toHaveTextContent('Equilibrado')
   })
 

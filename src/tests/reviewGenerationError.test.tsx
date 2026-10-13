@@ -42,16 +42,16 @@ describe('Revisão — erro de geração', () => {
     await user.type(screen.getByLabelText(/^Valor por pessoa/), '1200')
     await user.click(screen.getByRole('button', { name: 'Continuar para Revisão' }))
 
-    await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
+    await user.click(screen.getByRole('button', { name: 'Gerar meu roteiro' }))
     expect(screen.getByRole('alert')).toHaveTextContent('Não encontramos atividades compatíveis (simulado).')
     // Continua na revisão, com tudo preservado.
     expect(screen.getByRole('heading', { name: 'Sua viagem está quase pronta!' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Interesses' })).toHaveTextContent('Cultura')
     expect(screen.getByRole('region', { name: 'Destino' })).toHaveTextContent('Rio de Janeiro')
-    expect(screen.getByRole('button', { name: 'Gerar roteiro' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Gerar meu roteiro' })).toBeEnabled()
 
     // Nova tentativa (agora o motor real responde) gera o roteiro.
-    await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
+    await user.click(screen.getByRole('button', { name: 'Gerar meu roteiro' }))
     expect(await screen.findByRole('button', { name: 'Salvar roteiro' })).toBeInTheDocument()
   })
 })

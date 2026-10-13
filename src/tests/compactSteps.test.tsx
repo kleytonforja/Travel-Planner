@@ -238,11 +238,12 @@ describe('Resumo e barra de navegação', () => {
     expect(line).toHaveAttribute('title', line.textContent as string)
   })
 
-  it('a Revisão mantém o resumo anterior (um parágrafo por item)', async () => {
+  it('a Revisão não repete o resumo do planejamento (os grupos da própria revisão o substituem)', async () => {
     const user = userEvent.setup()
     render(<App />)
     await driveWizardToReview(user, { destination: 'Lisboa', days: 2, interests: ['Cultura'], budgetPerPerson: null })
-    expect(summary().querySelectorAll('p').length).toBeGreaterThan(3)
+    expect(screen.queryByRole('region', { name: 'Resumo do planejamento' })).toBeNull()
+    expect(screen.getAllByRole('button', { name: 'Gerar meu roteiro' })).toHaveLength(1)
   })
 
   it('há uma única barra de navegação, fixa até 768 px, com um só par de botões', async () => {

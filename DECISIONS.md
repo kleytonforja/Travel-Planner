@@ -1308,3 +1308,27 @@ Revisão (inalterada) 2.199. "Continuar" visível sem rolagem em todas as etapas
 
 **Riscos**: a descrição dos cards compactos só aparece a partir de 640 px (continua no nome acessível); o recolhimento exige um
 clique extra para quem quer preencher os opcionais; só Chromium.
+
+## D48 — Revisão no modelo "Híbrido Tabi" (M4.4)
+
+**Decisão**: redesenhar a etapa 7 (Revisão) como cabeçalho com foto + grupos compactos + ação principal na barra de navegação,
+sem alterar motor, armazenamento, importação/exportação ou catálogo.
+- **Cabeçalho**: fotografia real já existente do destino (`DestinationPhotoImage`; ilustração original se a foto falhar; nenhuma
+  foto nova), país, nome e duração/datas sobre gradiente escuro; "Editar Destino" sobreposto.
+- **Grupos compactos** (ícone, título, valor, "Editar"): Datas e duração, Viajantes, Transporte até o destino, Deslocamentos
+  locais, Interesses, Ritmo da viagem, Estilo e orçamento. Nomes acessíveis ("Editar {grupo}") e regiões iguais aos anteriores;
+  "Editar" mantém as escolhas e oferece "Voltar para a revisão". Em telas ≤ 400 px o botão mostra só o ícone (nome acessível mantido).
+- **Resumo duplicado removido**: a Revisão não exibe mais o bloco "Resumo do planejamento" (nas etapas 1–6 ele continua).
+- **Avisos consolidados**: um `aside` "O que o gerador utiliza" com a linha essencial sempre visível (valores ilustrativos;
+  hospedagem/alimentação/transporte não calculados; datas exatas, viajantes, perfil, acessibilidade e transporte não influenciam o
+  roteiro) e um `Disclosure` com o detalhe do que será usado (com ou sem orçamento) e a nota do ritmo.
+- **Ação principal**: "Gerar meu roteiro" (antes "Gerar roteiro"), única, renderizada por portal no espaço da barra
+  Voltar/Continuar (fixa até 768 px; `actionSlot` em `StepProps`), com fallback inline sem barra; desabilitada com
+  `aria-describedby` quando há pendências; erro de geração com `role="alert"` que recebe o foco; escolhas nunca se perdem.
+- Em "Estilo e orçamento" o texto passou a ser o de `describeBudget` (ex.: "Equilibrado; orçamento não informado").
+- Também: "Voltar para o início" com altura mínima de 44 px até 768 px.
+
+**Medidas (bloco da Revisão, antes → depois)**: 375×812: 2.199 → 1.044 px (meta ≤ 1.100 atendida); 1366×768: 1.319 → 937 px.
+"Gerar meu roteiro" visível sem rolagem em 375 e 768 px.
+
+**Riscos**: só Chromium; o rótulo do botão mudou (testes e scripts atualizados).

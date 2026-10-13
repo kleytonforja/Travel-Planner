@@ -42,7 +42,7 @@ async function toReview(user: User, { destination = 'Rio de Janeiro', adults = 2
 }
 
 const card = (name: string) => screen.getByRole('region', { name })
-const generate = () => screen.getByRole('button', { name: 'Gerar roteiro' })
+const generate = () => screen.getByRole('button', { name: 'Gerar meu roteiro' })
 
 describe('Etapa 7 — Revisão e geração', () => {
   beforeEach(() => {
@@ -75,8 +75,8 @@ describe('Etapa 7 — Revisão e geração', () => {
     const note = screen.getByRole('complementary', { name: 'O que o gerador utiliza' })
     expect(note).toHaveTextContent('Destino, duração em dias, interesses, estilo, ritmo e orçamento por pessoa')
     expect(note).toHaveTextContent(/O ritmo limita a quantidade de atividades por dia e não indica esforço físico nem acessibilidade/)
-    expect(note).toHaveTextContent(/Ainda não influenciam o roteiro: datas exatas, composição dos viajantes, perfil, acessibilidade e transporte/)
-    expect(note).toHaveTextContent('não são salvas junto com o roteiro')
+    expect(note).toHaveTextContent(/Datas exatas, viajantes, perfil, acessibilidade e transporte ainda não influenciam o roteiro/)
+    expect(note).toHaveTextContent('ficam apenas nesta sessão e não são salvas junto com ele')
     expect(note).toHaveTextContent('estimativas ilustrativas')
   })
 
@@ -144,7 +144,7 @@ describe('Etapa 7 — Revisão e geração', () => {
   it('sem orçamento a revisão permite gerar, mostra "Orçamento não informado" e não inventa saldo', async () => {
     const user = userEvent.setup()
     await toReview(user, { budget: null })
-    expect(card('Estilo e orçamento')).toHaveTextContent('Orçamento não informado')
+    expect(card('Estilo e orçamento')).toHaveTextContent(/orçamento não informado/i)
     expect(card('Estilo e orçamento')).not.toHaveTextContent(/R\$|€|saldo/i)
     expect(generate()).toBeEnabled()
     expect(screen.queryByRole('alert')).toBeNull()

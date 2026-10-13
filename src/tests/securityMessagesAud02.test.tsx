@@ -134,7 +134,7 @@ describe('AUD-02 — mensagens correspondentes ao estado real', () => {
       style: 'Econômico',
       budgetPerPerson: '100',
     })
-    await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
+    await user.click(screen.getByRole('button', { name: 'Gerar meu roteiro' }))
 
     // A escrita real ocorre; apenas a confirmação e as leituras seguintes falham.
     const originalSet = Storage.prototype.setItem.bind(localStorage)

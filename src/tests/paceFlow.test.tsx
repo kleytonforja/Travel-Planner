@@ -36,7 +36,7 @@ describe('Ritmo no fluxo completo', () => {
     render(<App />)
     await driveWizardToReview(user, { destination: 'Lisboa', days: 1, interests: INTERESTS, style: 'Econômico', pace, budgetPerPerson: null })
     expect(screen.getByRole('region', { name: 'Ritmo da viagem' })).toHaveTextContent(pace)
-    await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
+    await user.click(screen.getByRole('button', { name: 'Gerar meu roteiro' }))
     await screen.findByRole('button', { name: 'Salvar roteiro' })
 
     // O resumo da viagem apresenta o ritmo utilizado e o limite.
@@ -57,7 +57,7 @@ describe('Ritmo no fluxo completo', () => {
     const user = userEvent.setup()
     render(<App />)
     await driveWizardToReview(user, { destination: 'Lisboa', days: 3, interests: ['Cultura', 'Gastronomia'], pace: 'Tranquilo' })
-    await user.click(screen.getByRole('button', { name: 'Gerar roteiro' }))
+    await user.click(screen.getByRole('button', { name: 'Gerar meu roteiro' }))
     await user.click(await screen.findByRole('button', { name: 'Salvar roteiro' }))
     await screen.findByText('Roteiro salvo neste navegador')
     await waitFor(() => expect(localStorage.getItem(STORAGE_KEY)).not.toBeNull())

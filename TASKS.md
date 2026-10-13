@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **M4.3** — compactação das etapas 1 a 6 e barra fixa no celular. Anteriores: M4.2 (commit `b828af7`), M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **M4.4** — redesign da Revisão (modelo Híbrido Tabi). Anteriores: M4.3 (commit `9478c10`), M4.2 (commit `b828af7`), M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | ✅ **M4.3 implementado e validado localmente** em 2026-10-12 (ver "Relatório do M4.3"); **sem commit do M4.3** (aguarda autorização) |
-| Próximo checkpoint  | Revisão/commit do M4.3, mediante autorização; depois a Revisão (M4.7, alternativa C) e a validação integrada do M4.1. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | ✅ **M4.4 implementado e validado localmente** em 2026-10-13 (ver "Relatório do M4.4"); **sem commit do M4.4** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do M4.4, mediante autorização; depois a validação integrada do M4.1. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -2101,3 +2101,18 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   O script antigo do V1-T3.7 (`rev_e2e`) ficou obsoleto (esperava orçamento obrigatório e exportação v1) e foi substituído
   pelos demais.
 - **Riscos**: apenas Chromium; interação extra para abrir opcionais; a descrição dos cards compactos só é visível a partir de 640 px.
+
+## Relatório do M4.4 — redesign da Revisão (2026-10-13)
+
+- **Consolidação do M4.3**: validado (854 testes, typecheck, lint, build, diff --check) e commitado localmente (`9478c10`); árvore
+  limpa antes do M4.4.
+- **Implementado** (D48): `ReviewStep` reescrita (cabeçalho com foto real, 7 grupos compactos com ícone e "Editar", aviso consolidado
+  com `Disclosure`, "Gerar meu roteiro" na barra via `actionSlot`); `PlanningFlow` sem o resumo duplicado na Revisão;
+  `StepProps.actionSlot`; "Voltar para o início" com 44 px até 768 px. Motor, armazenamento, JSON e catálogo intocados.
+- **Medidas (bloco da Revisão, antes → depois)**: 375×812: 2.199 → 1.044 px; 768: 937 px; 1366×768: 1.319 → 937 px; 1920: 937 px.
+- **Testes**: 862 em 48 arquivos, 2 execuções completas sem falha (8 novos em `reviewRedesign.test.tsx`; rótulo do botão e
+  textos de orçamento ajustados nos testes existentes; teste do resumo da Revisão substituído por "não repete o resumo").
+- **Chromium**: 32/32 (`m44`: 4 larguras sem overflow, ação única na barra, alvos ≥ 44 px até 768 px, foto correta por destino,
+  Editar por grupo com retorno e escolhas preservadas, geração com e sem orçamento, ritmo Tranquilo, foco visível, sem erros de
+  console) e regressões: 22/22, 18/18, 15/15, 23/23, 83/83.
+- **Riscos**: apenas Chromium; o botão principal mudou de nome. A foto do cabeçalho carrega sem `lazy` (`eager`, M4.5).
