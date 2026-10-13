@@ -1332,3 +1332,14 @@ sem alterar motor, armazenamento, importação/exportação ou catálogo.
 "Gerar meu roteiro" visível sem rolagem em 375 e 768 px.
 
 **Riscos**: só Chromium; o rótulo do botão mudou (testes e scripts atualizados).
+
+## D49 — Validação integrada do M4 e foto da Revisão sem `lazy` (M4.5)
+
+**Decisão**: encerrar o M4 (UX do planejamento) após validação integrada das sete etapas, corrigindo só o que foi comprovado.
+- **Correção única**: a fotografia do cabeçalho da Revisão está na primeira tela, então `DestinationPhotoImage` ganhou a prop
+  opcional `eager` (`loading="eager"`); os demais usos continuam `lazy`.
+- **Atraso de ~400 ms da barra (M4.3)**: mantido. Medido em Chromium (emulação de toque, 375 px): barra estática enquanto o campo está
+  em foco, volta a fixa ~400 ms após o blur; o toque em "Continuar" com o campo focado não perde o clique; Tab a partir do campo
+  segue funcionando; o atraso só adia a volta da barra, nunca bloqueia interação nem esconde campo ou mensagem.
+  **Não validado em Android real** (teclado virtual, `visualViewport`): teste manual pendente.
+- Sem mudança de motor, armazenamento, JSON ou catálogo.

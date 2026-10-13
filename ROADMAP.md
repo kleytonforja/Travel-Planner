@@ -139,9 +139,10 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
-- [~] **M4.4 — Revisão no modelo Híbrido Tabi (parcial)** (D48): cabeçalho com foto, grupos compactos com "Editar", avisos
-      consolidados e "Gerar meu roteiro" na barra de navegação (bloco de 2.199 → 1.044 px em 375 px). Validada localmente;
-      sem commit. Demais passos do M4.1 **pendentes**.
+- [x] **M4.5 — validação integrada do M4** (D49): fluxo completo em 375/768/1366/1920 px sem regressão; foto da Revisão sem
+      `lazy`. **M4 concluído**; pendente apenas o teste manual do teclado virtual em Android real. Sem push/deploy.
+- [x] **M4.4 — Revisão no modelo Híbrido Tabi** (D48, commit `d8861ce`): cabeçalho com foto, grupos compactos com "Editar", avisos
+      consolidados e "Gerar meu roteiro" na barra de navegação (bloco de 2.199 → 1.044 px em 375 px).
 - [x] **M4.3 — compactação das etapas 1 a 6 e barra fixa no celular** (D47, commit `9478c10`): filtros, opcionais e origem recolhíveis,
       cards compactos, orçamento em controle segmentado, resumo de uma linha e barra Voltar/Continuar fixa até 768 px (blocos
       de 666 a 1.287 px em 375 px, antes 690 a 2.099). A Revisão foi tratada no M4.4.
