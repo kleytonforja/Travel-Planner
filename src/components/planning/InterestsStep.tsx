@@ -75,8 +75,9 @@ export function InterestsStep({ draft, onDraftChange }: StepProps) {
       </fieldset>
 
       <p className="mt-4 text-sm text-night-ink-muted">
-        Por enquanto, os interesses orientam o roteiro gerado na revisão, mas o
-        ritmo é apenas guardado nesta sessão: o gerador ainda não ajusta o roteiro por ele.
+        Os interesses e o ritmo orientam o roteiro gerado na revisão. O ritmo só limita a
+        quantidade de atividades por dia (com poucos dias ou poucas opções no catálogo, pode não
+        haver diferença); ele não indica esforço físico nem acessibilidade.
       </p>
     </section>
   )

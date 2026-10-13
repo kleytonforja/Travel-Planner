@@ -142,13 +142,12 @@ describe('Contrato v2 — ritmo', () => {
     expect(result.errors.pace).toBeTruthy()
   })
 
-  it('o ritmo não altera a geração nesta etapa (não é aplicado à distribuição)', () => {
+  it('o ritmo Intenso equivale a não informar ritmo (sem limite adicional)', () => {
     const plain = generateItinerary(base(), rio)
-    for (const pace of ['tranquilo', 'equilibrado', 'intenso'] as TripPace[]) {
-      const paced = generateItinerary({ ...base(), pace }, rio)
-      expect(paced.ok && plain.ok && paced.itinerary.days).toEqual(plain.ok && plain.itinerary.days)
-      expect(paced.ok && paced.itinerary.totals).toEqual(plain.ok && plain.itinerary.totals)
-    }
+    const intense = generateItinerary({ ...base(), pace: 'intenso' }, rio)
+    expect(intense.ok && plain.ok && intense.itinerary.days).toEqual(plain.ok && plain.itinerary.days)
+    expect(intense.ok && plain.ok && intense.itinerary.totals).toEqual(plain.ok && plain.itinerary.totals)
+    expect(intense.ok && intense.itinerary.input.pace).toBe('intenso') // gravado no roteiro
   })
 })
 

@@ -11,6 +11,7 @@ import type {
 } from '../types'
 import {
   FULL_DAY_THRESHOLD_MINUTES,
+  PACE_MAX_ACTIVITIES_PER_DAY,
   SLOT_WINDOWS,
 } from './itineraryGenerator'
 import { isValidBudgetValue, isValidPace } from './planningValidation'
@@ -485,6 +486,11 @@ export function validateSavedItinerary(value: unknown): ItineraryValidationResul
     const day = itinerary.days[index]
     if (!validateItineraryDay(day, index + 1, reasons)) {
       return { ok: false, reasons }
+    }
+    // Ritmo (M3): o roteiro gerado com ritmo nunca excede o limite diário dele.
+    const paceCap = input.pace === undefined ? null : PACE_MAX_ACTIVITIES_PER_DAY[input.pace]
+    if (paceCap !== null && day.activities.length > paceCap) {
+      reasons.push(`dia ${index + 1} excede o limite de ${paceCap} atividades do ritmo ${input.pace}`)
     }
     for (const item of day.activities) {
       // A mesma atividade não pode se repetir no roteiro.

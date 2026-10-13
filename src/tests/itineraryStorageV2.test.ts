@@ -39,17 +39,16 @@ function clone<T>(value: T): T {
 
 /** Roteiro válido sem orçamento: propriedades `budget` e `unallocatedBudget` omitidas. */
 function budgetlessItinerary(pace?: TripPace): Itinerary {
-  const itinerary = clone(buildItineraryFromInput(INPUT))
+  const { budget: _omitted, ...rest } = INPUT
+  void _omitted
+  const itinerary = clone(buildItineraryFromInput({ ...rest, ...(pace ? { pace } : {}) }))
   delete itinerary.input.budget
-  delete itinerary.totals.unallocatedBudget
-  if (pace) itinerary.input.pace = pace
   return itinerary
 }
 
+/** Gera de novo com o ritmo (o limite diário do ritmo é invariante do roteiro). */
 function withPace(itinerary: Itinerary, pace: TripPace): Itinerary {
-  const copy = clone(itinerary)
-  copy.input.pace = pace
-  return copy
+  return clone(buildItineraryFromInput({ ...itinerary.input, pace }))
 }
 
 function record(itinerary: Itinerary, id = 'roteiro-v2-teste'): SavedItinerary {

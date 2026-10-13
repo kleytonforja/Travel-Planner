@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **M2.6** — consolidação e validação integrada do esquema v2. Anteriores: M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **M3** — ritmo da viagem aplicado pelo motor. Anteriores: M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | ✅ **Esquema v2 concluído e validado** em 2026-10-12 (ver "Relatório do M2.6"); ritmo no motor é o M3; **sem commit do M2.6** (aguarda autorização); 4 commits locais (M2.2–M2.5) aguardam decisão de push |
-| Próximo checkpoint  | Decisão de publicação (push/deploy) do esquema v2 e início do M3 (ritmo no motor), mediante autorização. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
+| Status              | ✅ **M3 implementado e validado localmente** em 2026-10-12 (ver "Relatório do M3"); **sem commit do M3** (aguarda autorização) |
+| Próximo checkpoint  | Revisão/commit do M3, mediante autorização; depois, otimização dos cards e do fluxo (M1: experiência) e ampliação do catálogo, em tarefas próprias. Fotografias das atrações (Rio de Janeiro primeiro) em fase posterior. Reauditoria independente da importação (e push/publicação somente com autorização). Pendentes gerais: nova verificação independente (AUD-01 a AUD-07); evidência da publicação no GitHub Pages (URL HTTPS e execução do workflow), ver "Estado do Git e da publicação" abaixo |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -2035,3 +2035,29 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   exigem autorização explícita); a publicação torna alcançável o cenário de downgrade descrito em D44.
 - **Riscos restantes**: downgrade para versão antiga com roteiros sem orçamento; ritmo ainda sem efeito; apenas Chromium;
   falha rara e não reproduzida de `itineraryImportInteraction` (registrada no M2.2, sem recorrência em mais de 30 execuções).
+
+## Relatório do M3 — ritmo da viagem aplicado pelo motor (2026-10-12)
+
+- **Status**: implementado e validado localmente; **sem commit, push ou deploy**.
+- **Motor** (D45): Tranquilo 2, Equilibrado 3, Intenso sem limite adicional por dia; distribuição entre os dias
+  abaixo do limite antes de qualquer descarte; atividades excluídas só pelo ritmo (as que caberiam em um dia cheio)
+  contadas no aviso "ficou/ficaram de fora pelo ritmo X"; restrições de duração, período, sobreposição e orçamento
+  preservadas; sem repetição de atrações; sem ritmo = comportamento anterior.
+- **Integração**: o adaptador envia o ritmo (padrão Equilibrado, agora gravado nos roteiros do fluxo); o resumo do
+  resultado e a pré-visualização da importação mostram o ritmo; roteiros sem ritmo não mostram nada; o validador de
+  armazenamento/importação rejeita dia acima do limite do ritmo declarado; esquema v2, orçamento (M2) e deduplicação
+  inalterados.
+- **Textos**: descrições do ritmo passam a ser fatos ("Até 2 atividades por dia" etc.); a etapa e a revisão dizem que o
+  ritmo só limita a quantidade e não indica esforço físico nem acessibilidade.
+- **Testes**: 830 em 45 arquivos, 2 execuções completas sem falha. `paceGeneration.test.ts` (22: constantes e textos;
+  limites em todos os cenários com e sem orçamento; Intenso ≡ sem ritmo; efeito real; sem descarte por ritmo ⇒ igual ao
+  Intenso; conta do aviso; invariantes de persistência; determinismo; sem repetição; orçamento do M2; adulteração
+  rejeitada; persistência, JSON e deduplicação), `paceFlow.test.tsx` (6: três ritmos no fluxo completo, salvar e
+  reabrir, roteiro antigo sem ritmo, textos). Os 432 cenários históricos seguem idênticos. Verificação por mutação
+  (limite do Tranquilo e filtro de dias cheios) derrubou os testes esperados. Ajustes: testes que geravam roteiros com
+  ritmo por mutação passaram a gerá-los pelo motor; asserções antigas de "ritmo sem efeito" foram atualizadas.
+- **Chromium (23/23)**: fluxo completo com os três ritmos (Tranquilo 2/2, Equilibrado 3/3, Intenso 4 sem aviso), salvar,
+  reabrir os três, exportar v2 com `resumo.ritmo`, importar com ritmo preservado, arquivo adulterado rejeitado, sem erros
+  de console, sem overflow em 375, 768, 1366 e 1920 px.
+- **Limitações do catálogo**: ver D45 (10 atividades por destino; o ritmo só muda o resultado em viagens curtas).
+- **Riscos**: roteiros anteriores ao M3 não têm ritmo; apenas Chromium.

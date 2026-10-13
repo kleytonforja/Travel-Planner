@@ -1,8 +1,9 @@
-import { Bus, CalendarDays, MapPin, Sparkles, Wallet } from 'lucide-react'
+import { Bus, CalendarDays, Gauge, MapPin, Sparkles, Wallet } from 'lucide-react'
 
 import { INTEREST_LABELS, STYLE_LABELS } from '../data/labels'
 import type { Destination, Itinerary } from '../types'
 import { formatCurrency } from '../utils/format'
+import { TRIP_PACES } from '../utils/interests'
 
 interface ItinerarySummaryProps {
   itinerary: Itinerary
@@ -18,6 +19,8 @@ export function ItinerarySummary({
   destination,
 }: ItinerarySummaryProps) {
   const { input } = itinerary
+  // Roteiros anteriores ao ritmo não têm `pace`: nada é exibido nem presumido.
+  const pace = TRIP_PACES.find((item) => item.id === input.pace)
 
   return (
     <section aria-labelledby="resumo-viagem">
@@ -38,7 +41,9 @@ export function ItinerarySummary({
           </p>
         </div>
 
-        <dl className="grid gap-4 px-6 py-6 sm:grid-cols-2 sm:px-8 lg:grid-cols-4">
+        <dl
+          className={`grid gap-4 px-6 py-6 sm:grid-cols-2 sm:px-8 ${input.pace ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}
+        >
           <div className="flex items-start gap-3">
             <CalendarDays
               className="mt-0.5 h-5 w-5 text-blue-600"
@@ -68,6 +73,23 @@ export function ItinerarySummary({
               </dd>
             </div>
           </div>
+
+          {pace && (
+            <div className="flex items-start gap-3">
+              <Gauge className="mt-0.5 h-5 w-5 text-blue-600" aria-hidden="true" />
+              <div>
+                <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                  Ritmo
+                </dt>
+                <dd className="mt-0.5 text-sm font-semibold text-slate-900">
+                  {pace.label}
+                  <span className="block text-xs font-normal text-slate-500">
+                    {pace.description}
+                  </span>
+                </dd>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-start gap-3">
             <Wallet

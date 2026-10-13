@@ -27,9 +27,9 @@ export const INTEREST_DESCRIPTIONS: Record<InterestCategory, string> = {
 }
 
 export const TRIP_PACES = [
-  { id: 'tranquilo', label: 'Tranquilo', description: 'Poucas atividades por dia, com tempo livre.' },
-  { id: 'equilibrado', label: 'Equilibrado', description: 'Um meio-termo entre passeios e descanso.' },
-  { id: 'intenso', label: 'Intenso', description: 'Aproveitar ao máximo cada dia.' },
+  { id: 'tranquilo', label: 'Tranquilo', description: 'Até 2 atividades por dia.' },
+  { id: 'equilibrado', label: 'Equilibrado', description: 'Até 3 atividades por dia.' },
+  { id: 'intenso', label: 'Intenso', description: 'Sem limite adicional de atividades por dia.' },
 ] as const
 
 export const DEFAULT_PACE: TripPace = 'equilibrado'

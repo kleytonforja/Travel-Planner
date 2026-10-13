@@ -164,6 +164,7 @@ export function ReviewStep({ draft, goToStep, onItineraryGenerated }: StepProps)
 
         <ReviewCard title="Ritmo da viagem" step="interesses" onEdit={edit}>
           <p className="font-semibold">{pace?.label}</p>
+          <p>{pace?.description}</p>
         </ReviewCard>
 
         <ReviewCard title="Estilo e orçamento" step="orcamento" onEdit={edit}>
@@ -183,16 +184,17 @@ export function ReviewStep({ draft, goToStep, onItineraryGenerated }: StepProps)
         <p className="font-semibold text-white">O que será usado na geração do roteiro</p>
         <p className="mt-1">
           {adapted.ok && adapted.input.budget === undefined
-            ? 'Destino, duração em dias, interesses e estilo. Sem orçamento informado, o roteiro não tem teto de custo: inclui as atividades compatíveis que couberem na agenda, com seus custos ilustrativos, sem saldo.'
-            : `Destino, duração em dias, interesses, estilo e orçamento por pessoa${
+            ? 'Destino, duração em dias, interesses, estilo e ritmo. Sem orçamento informado, o roteiro não tem teto de custo: inclui as atividades compatíveis que couberem na agenda, com seus custos ilustrativos, sem saldo.'
+            : `Destino, duração em dias, interesses, estilo, ritmo e orçamento por pessoa${
                 adapted.ok && currency && adapted.input.budget !== undefined
                   ? ` (${centsToMoney(Math.round(adapted.input.budget * 100), currency)}${draft.budget.basis === 'total' ? ', do valor total dividido igualmente entre os viajantes e arredondado para baixo' : ''})`
                   : ''
               }.`}
         </p>
         <p className="mt-2">
-          Ainda não influenciam o roteiro: datas exatas, composição dos viajantes, perfil,
-          acessibilidade, transporte e ritmo. Estas preferências ficam apenas nesta sessão e não
+          O ritmo limita a quantidade de atividades por dia e não indica esforço físico nem
+          acessibilidade. Ainda não influenciam o roteiro: datas exatas, composição dos viajantes,
+          perfil, acessibilidade e transporte; estas preferências ficam apenas nesta sessão e não
           são salvas junto com o roteiro. Valores de atrações são estimativas ilustrativas, e
           hospedagem, alimentação e transporte não são calculados.
         </p>

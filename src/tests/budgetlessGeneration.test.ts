@@ -174,11 +174,11 @@ describe('Adaptador sem orçamento', () => {
     budget,
   })
 
-  it('a entrada é válida e não leva orçamento nem ritmo ao motor', () => {
+  it('a entrada é válida, não leva orçamento ao motor e leva o ritmo', () => {
     const result = buildPlanningInput({ ...complete(), pace: 'intenso' })
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(Object.keys(result.input).sort()).toEqual(['days', 'destinationId', 'interests', 'style'])
+    expect(Object.keys(result.input).sort()).toEqual(['days', 'destinationId', 'interests', 'pace', 'style'])
     expect(generateItinerary(result.input, result.destination).ok).toBe(true)
   })
 })

@@ -159,6 +159,7 @@ describe('AUD-02 — mensagens correspondentes ao estado real', () => {
     expect(persisted[0].itinerary.input).toEqual({
       destinationId: 'florianopolis', days: 1, interests: ['cultura'],
       style: 'economico', budget: 100,
+      pace: 'equilibrado', // padrão do fluxo, agora aplicado e gravado (M3)
     })
 
     await user.click(screen.getByRole('button', { name: 'Novo planejamento' }))

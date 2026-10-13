@@ -7,6 +7,7 @@ import type {
   PlanningInput,
   ScheduledActivity,
   ScheduledPeriod,
+  TripPace,
 } from '../types'
 import { isValidBudgetValue } from './planningValidation'
 
@@ -46,6 +47,25 @@ export const BUFFER_MINUTES = 30
 /** Duração (em minutos) acima da qual a atividade vira "passeio de dia inteiro". */
 export const FULL_DAY_THRESHOLD_MINUTES = 4.5 * 60
 
+/**
+ * Ritmo da viagem (M3): máximo de atividades por dia. `null` = sem limite adicional
+ * (Intenso), que equivale ao comportamento do motor sem ritmo; as restrições de
+ * duração, período, sobreposição e orçamento continuam valendo em todos os ritmos.
+ * O ritmo NÃO indica esforço físico nem acessibilidade: só limita a quantidade.
+ */
+export const PACE_MAX_ACTIVITIES_PER_DAY: Record<TripPace, number | null> = {
+  tranquilo: 2,
+  equilibrado: 3,
+  intenso: null,
+}
+
+/** Rótulos do ritmo para mensagens do motor. */
+const PACE_LABELS: Record<TripPace, string> = {
+  tranquilo: 'Tranquilo',
+  equilibrado: 'Equilibrado',
+  intenso: 'Intenso',
+}
+
 /** Fim do horário sugerido para passeios de dia inteiro iniciados pela manhã. */
 const FULL_DAY_LATEST_END = SLOT_WINDOWS.tarde.end
 
@@ -65,6 +85,13 @@ function createDayState(): DayScheduleState {
     },
     activities: [],
   }
+}
+
+/** Verifica, sem alterar a agenda, se a atividade caberia no dia (mesmas regras de `trySchedule`). */
+function fitsInDay(day: DayScheduleState, activity: Activity): boolean {
+  return candidatePeriods(activity).some((period) =>
+    trySchedule({ cursors: { ...day.cursors }, activities: [...day.activities] }, activity, period) !== null,
+  )
 }
 
 function durationMinutes(activity: Activity): number {
@@ -250,12 +277,19 @@ export function generateItinerary(
   // equilibrar a agenda; em caso de empate, o dia mais cedo.
   const dayStates = Array.from({ length: input.days }, () => createDayState())
   const unplaced: Activity[] = []
+  // Atividades que ficaram de fora só por causa do limite do ritmo.
+  const paceCap = input.pace === undefined ? null : PACE_MAX_ACTIVITIES_PER_DAY[input.pace]
+  let skippedByPace = 0
 
   for (const activity of selected) {
-    const daysByLoad = [...dayStates.keys()].sort(
-      (a, b) =>
-        dayStates[a].activities.length - dayStates[b].activities.length || a - b,
-    )
+    const daysByLoad = [...dayStates.keys()]
+      .sort(
+        (a, b) =>
+          dayStates[a].activities.length - dayStates[b].activities.length || a - b,
+      )
+      // O limite do ritmo só retira dias já cheios: a atividade é distribuída entre
+      // os dias disponíveis antes de ser descartada por ritmo.
+      .filter((dayIndex) => paceCap === null || dayStates[dayIndex].activities.length < paceCap)
     let placed = false
     for (const dayIndex of daysByLoad) {
       for (const period of candidatePeriods(activity)) {
@@ -267,7 +301,13 @@ export function generateItinerary(
       if (placed) break
     }
     if (!placed) {
-      unplaced.push(activity)
+      // Não coube em nenhum dia disponível. Se caberia em um dia que já atingiu o limite do
+      // ritmo, o que a deixou de fora foi o ritmo; do contrário, foi a agenda.
+      const fitsWithoutPaceLimit = dayStates.some(
+        (state, index) => !daysByLoad.includes(index) && fitsInDay(state, activity),
+      )
+      if (fitsWithoutPaceLimit) skippedByPace += 1
+      else unplaced.push(activity)
     }
   }
 
@@ -288,6 +328,11 @@ export function generateItinerary(
   if (skippedByBudget > 0) {
     warnings.push(
       `O orçamento informado limitou a inclusão de ${skippedByBudget} ${skippedByBudget === 1 ? 'atividade compatível' : 'atividades compatíveis'}.`,
+    )
+  }
+  if (skippedByPace > 0 && input.pace !== undefined && paceCap !== null) {
+    warnings.push(
+      `${skippedByPace} ${skippedByPace === 1 ? 'atividade compatível ficou' : 'atividades compatíveis ficaram'} de fora pelo ritmo ${PACE_LABELS[input.pace]} (máximo de ${paceCap} atividades por dia). Escolha o ritmo Intenso ou mais dias para incluí-${skippedByPace === 1 ? 'la' : 'las'}.`,
     )
   }
   if (unplaced.length > 0) {

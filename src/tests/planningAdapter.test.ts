@@ -27,6 +27,7 @@ describe('buildPlanningInput', () => {
       interests: ['cultura', 'natureza'],
       style: 'equilibrado',
       budget: 1500,
+      pace: 'equilibrado', // padrão do fluxo: aplicado pelo motor e gravado (M3)
     })
     expect(result.destination.id).toBe('rio-de-janeiro')
   })
@@ -59,7 +60,7 @@ describe('buildPlanningInput', () => {
       expect(result.ok).toBe(true)
       if (!result.ok) return
       expect(result.input).not.toHaveProperty('budget')
-      expect(Object.keys(result.input).sort()).toEqual(['days', 'destinationId', 'interests', 'style'])
+      expect(Object.keys(result.input).sort()).toEqual(['days', 'destinationId', 'interests', 'pace', 'style'])
     }
   })
 
@@ -102,11 +103,23 @@ describe('buildPlanningInput', () => {
     expect(!noDestination.ok && noDestination.issues.map((i) => i.step)).toEqual(['destino'])
   })
 
-  it('não leva transporte, ritmo, perfil nem acessibilidade ao motor (contrato inalterado)', () => {
-    const result = buildPlanningInput(
-      complete({ pace: 'intenso', transport: { arrival: 'aviao', origin: 'Curitiba', local: ['taxi-app'] } }),
-    )
-    expect(result.ok && Object.keys(result.input).sort()).toEqual(['budget', 'days', 'destinationId', 'interests', 'style'])
+  it('leva o ritmo ao motor, mas não transporte, perfil nem acessibilidade', () => {
+    for (const pace of ['tranquilo', 'equilibrado', 'intenso'] as const) {
+      const result = buildPlanningInput(
+        complete({ pace, transport: { arrival: 'aviao', origin: 'Curitiba', local: ['taxi-app'] } }),
+      )
+      expect(result.ok && result.input.pace).toBe(pace)
+      expect(result.ok && Object.keys(result.input).sort()).toEqual(['budget', 'days', 'destinationId', 'interests', 'pace', 'style'])
+    }
+  })
+
+  it('o roteiro gerado respeita o limite diário do ritmo escolhido', () => {
+    for (const [pace, cap] of [['tranquilo', 2], ['equilibrado', 3]] as const) {
+      const result = buildPlanningInput(complete({ pace, interests: ['cultura', 'natureza', 'gastronomia'], durationDays: 2 }))
+      if (!result.ok) throw new Error('entrada inválida')
+      const generated = generateItinerary(result.input, result.destination)
+      expect(generated.ok && Math.max(...generated.itinerary.days.map((day) => day.activities.length))).toBeLessThanOrEqual(cap)
+    }
   })
 
   it('o roteiro gerado é idêntico ao do formulário tradicional para a mesma entrada', () => {

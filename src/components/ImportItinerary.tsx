@@ -14,6 +14,7 @@ import {
 } from '../services/itineraryStorage'
 import type { Itinerary } from '../types'
 import { formatCurrency, formatDateTime } from '../utils/format'
+import { TRIP_PACES } from '../utils/interests'
 
 interface ImportItineraryProps {
   /** Estado da leitura do armazenamento: só 'ok' e 'empty' permitem importar. */
@@ -322,6 +323,14 @@ export function ImportItinerary({
                     {STYLE_LABELS[preview.itinerary.input.style]}
                   </dd>
                 </div>
+                {preview.itinerary.input.pace && (
+                  <div>
+                    <dt className="font-semibold text-slate-700">Ritmo</dt>
+                    <dd className="text-slate-600">
+                      {TRIP_PACES.find((item) => item.id === preview.itinerary.input.pace)?.label}
+                    </dd>
+                  </div>
+                )}
                 <div>
                   <dt className="font-semibold text-slate-700">Interesses</dt>
                   <dd className="text-slate-600">

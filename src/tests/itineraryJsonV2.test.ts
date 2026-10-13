@@ -39,17 +39,17 @@ function withBudget(budget = 400): Itinerary {
 }
 
 function withoutBudget(pace?: TripPace): Itinerary {
-  const itinerary = structuredClone(withBudget())
-  delete itinerary.input.budget
-  delete itinerary.totals.unallocatedBudget
-  if (pace) itinerary.input.pace = pace
-  return itinerary
+  const result = generateItinerary({ ...INPUT, budget: undefined, ...(pace ? { pace } : {}) }, lisboa)
+  if (!result.ok) throw new Error(result.message)
+  // `budget: undefined` some na serialização; aqui garantimos a omissão real.
+  delete result.itinerary.input.budget
+  return result.itinerary
 }
 
 function withPace(pace: TripPace, budget = 400): Itinerary {
-  const itinerary = structuredClone(withBudget(budget))
-  itinerary.input.pace = pace
-  return itinerary
+  const result = generateItinerary({ ...INPUT, budget, pace }, lisboa)
+  if (!result.ok) throw new Error(result.message)
+  return result.itinerary
 }
 
 const saved = (itinerary: Itinerary): SavedItinerary => ({ id: 'sintetico-v2', savedAt: SAVED_AT, itinerary })

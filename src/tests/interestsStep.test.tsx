@@ -76,7 +76,7 @@ describe('Etapa 5 — Interesses e ritmo', () => {
     // Avanço para o Orçamento bloqueado sem interesse.
     expect(next()).toBeDisabled()
     expect(screen.getByText('Selecione pelo menos um interesse para continuar.')).toBeInTheDocument()
-    expect(screen.getByText(/o gerador ainda não ajusta o roteiro por ele/)).toBeInTheDocument()
+    expect(screen.getByText(/não indica esforço físico nem acessibilidade/)).toBeInTheDocument()
   })
 
   it('seleciona vários interesses e remove um sem perder os outros', async () => {

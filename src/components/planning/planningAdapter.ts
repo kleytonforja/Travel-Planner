@@ -14,8 +14,9 @@ import { resolveTripDays, type PlanningDraft, type PlanningStepId } from './plan
  * - Conversíveis sem perda de significado: duração (datas ou dias → `days`) e
  *   orçamento (valor total ou por pessoa → `budget` por pessoa, em centavos,
  *   arredondando para baixo; sem orçamento, `budget` fica omitido; nunca inventa valor).
+ * - Suportado desde o M3: ritmo (limite de atividades por dia).
  * - Não suportados pelo motor: datas exatas, composição dos viajantes (só entra
- *   no cálculo do orçamento por pessoa), transporte, ritmo, perfil e acessibilidade.
+ *   no cálculo do orçamento por pessoa), transporte, perfil e acessibilidade.
  */
 
 export interface PlanningIssue {
@@ -43,7 +44,7 @@ const FIELD_STEP: Record<string, PlanningStepId> = {
  * `budget` é OMITIDA (sem teto financeiro): nenhum valor é inventado. Com valor válido,
  * converte-se para valor por pessoa em centavos, arredondando para baixo. Texto inválido,
  * ou valor pequeno demais para dividir entre os viajantes, impede a geração.
- * O ritmo NÃO é repassado ao motor (aplicação prevista no M3).
+ * O ritmo é repassado ao motor (M3), que o aplica como limite de atividades por dia.
  */
 export function buildPlanningInput(draft: PlanningDraft): PlanningAdapterResult {
   const destination = destinations.find((item) => item.id === draft.destinationId)
@@ -73,6 +74,8 @@ export function buildPlanningInput(draft: PlanningDraft): PlanningAdapterResult 
     interests: draft.interests,
     style: draft.budget.style,
     ...budgetField,
+    // O ritmo é aplicado pelo motor (limite de atividades por dia) e fica gravado no roteiro.
+    pace: draft.pace,
   }
 
   const validation = validatePlanningInput(

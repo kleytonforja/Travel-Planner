@@ -1222,3 +1222,33 @@ persistidos; catálogo de 4 a 10 atividades por estilo e destino; sem mapas nem 
 
 **Próxima fase (M3)**: aplicar o ritmo como limite de atividades por dia, passar `pace` do adaptador ao motor e gravá-lo
 no roteiro, com aviso das atividades deixadas de fora (roteiros sem ritmo continuam "sem limite").
+
+## D45 — Ritmo da viagem aplicado pelo motor (M3)
+
+**Decisão**: o ritmo passa a limitar a quantidade de atividades **por dia** (`PACE_MAX_ACTIVITIES_PER_DAY`):
+**Tranquilo 2**, **Equilibrado 3**, **Intenso sem limite adicional**. O ritmo **não** indica esforço físico nem
+acessibilidade (textos da interface e mensagens evitam essa promessa).
+- **Distribuição antes do descarte**: a atividade tenta primeiro os dias abaixo do limite (menos carregado primeiro,
+  como antes). Só é descartada "pelo ritmo" se não coube em nenhum desses dias **mas caberia** (duração, período e
+  ausência de sobreposição) em um dia que já atingiu o limite — uma simulação sem alterar a agenda (`fitsInDay`). Se
+  não caberia nem sem o limite, continua sendo "não coube na agenda", como antes.
+- **Aviso**: "N atividade(s) compatível(is) ficou/ficaram de fora pelo ritmo X (máximo de K atividades por dia)…". A
+  contagem fecha: excluídas pelo ritmo = (colocadas + não couberam no Intenso) − (colocadas + não couberam no ritmo).
+- **Sem ritmo**: comportamento exatamente anterior (432 cenários históricos idênticos; gerados antes do esquema v2 e
+  conferidos contra o motor `d63812f`). **Intenso** produz o mesmo resultado que sem ritmo (só o campo `pace` é gravado).
+- **Persistência/JSON** (esquema v2 inalterado): o validador compartilhado por armazenamento e importação passa a
+  rejeitar roteiro cujo dia excede o limite do ritmo declarado (arquivo adulterado); roteiros sem ritmo não são
+  limitados. `resumo.ritmo` continua opcional; a deduplicação já considerava o ritmo (D41).
+- **Fluxo**: o adaptador envia o ritmo escolhido (padrão do fluxo: Equilibrado, que agora **fica gravado** em todo roteiro
+  gerado pelo fluxo). O resultado e a pré-visualização da importação mostram o ritmo; roteiros antigos não mostram nenhum.
+- **Orçamento**: regras do M2 inalteradas; o orçamento é aplicado na seleção e o ritmo na distribuição. Atividades
+  excluídas pelo ritmo continuam consumindo o orçamento da seleção (como as que não couberam na agenda), o que apenas
+  aumenta o saldo exibido.
+
+**Limitações do catálogo**: 10 atividades por destino (4 a 10 por estilo). Com 1 a 3 dias o ritmo muda o resultado
+(ex.: Lisboa, econômico, 1 dia: Intenso 4, Equilibrado 3, Tranquilo 2); com 5 ou mais dias o limite quase nunca é
+atingido e os dias vazios continuam sendo causados pela falta de atividades, não pelo ritmo. Nenhuma atração é repetida
+para preencher dias.
+
+**Riscos**: roteiros salvos antes do M3 não têm ritmo (válidos, sem limite); a regra de limite no validador torna inválido
+qualquer roteiro com ritmo e mais atividades por dia que o limite (impossível pelo gerador).
