@@ -3,11 +3,13 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { destinations } from '../data/destinations'
+import { HERO_FALLBACK_PHOTO, HERO_PHOTOS } from '../data/heroPhotos'
 import { INTEREST_LABELS } from '../data/labels'
-import { DESTINATION_PHOTOS, HERO_PHOTO } from '../data/photos'
+import { DESTINATION_PHOTOS } from '../data/photos'
 import { HomePage } from '../pages/HomePage'
 import { STORAGE_KEY } from '../services/itineraryStorage'
 import type { InterestCategory } from '../types'
+import { resetHeroPhotoForTests } from '../utils/heroPhoto'
 import { buildHistoricalValidRecord } from './fixtures/savedItineraries'
 import {
   installWebLocksMock,
@@ -34,6 +36,9 @@ describe('Nova home — estrutura e acessibilidade', () => {
     localStorage.clear()
     installWebLocksMock()
     Element.prototype.scrollIntoView = vi.fn()
+    // A Hero sorteia uma foto por visita: fixa o sorteio (primeira da biblioteca) e começa uma visita nova.
+    resetHeroPhotoForTests()
+    vi.spyOn(Math, 'random').mockReturnValue(0)
   })
 
   afterEach(() => {
@@ -72,23 +77,32 @@ describe('Nova home — estrutura e acessibilidade', () => {
     expect(hero).not.toHaveTextContent(/mapa|offline|fotos|rotas/i)
   })
 
-  it('o hero usa a fotografia priorizada, com dimensões declaradas, texto alternativo e caminho derivado da base do Vite', () => {
+  it('o hero usa a fotografia da visita, priorizada, com dimensões declaradas, texto alternativo e caminho derivado da base do Vite', () => {
     renderHome()
     const hero = document.getElementById('inicio')!
-    const photo = within(hero).getByRole('img', { name: HERO_PHOTO.alt })
+    const chosen = HERO_PHOTOS[0]
+    const photo = within(hero).getByRole('img', { name: chosen.alt })
     expect(photo).toHaveAttribute('fetchpriority', 'high')
     expect(photo).not.toHaveAttribute('loading', 'lazy')
     expect(photo).toHaveAttribute('width', '1920')
-    expect(photo).toHaveAttribute('height', '1280')
-    expect(photo.getAttribute('src')).toBe(`${BASE}images/hero/rio-de-janeiro-hero-1920.webp`)
-    expect(photo.getAttribute('srcset')).toContain(`${BASE}images/hero/rio-de-janeiro-hero-960.webp 960w`)
-    expect(photo.getAttribute('srcset')).toContain('rio-de-janeiro-hero-1920.webp 1920w')
+    expect(photo).toHaveAttribute('height', '1080')
+    expect(photo.getAttribute('src')).toBe(`${BASE}images/hero/rio-de-janeiro-corcovado-1920.webp`)
+    expect(photo.getAttribute('srcset')).toContain(`${BASE}images/hero/rio-de-janeiro-corcovado-960.webp 960w`)
+    expect(photo.getAttribute('srcset')).toContain('rio-de-janeiro-corcovado-1920.webp 1920w')
+    expect(photo).toHaveStyle({ objectPosition: chosen.objectPosition })
+    // Só a fotografia escolhida é carregada: nenhuma outra imagem de hero na página.
+    expect(document.querySelectorAll('img[src*="/images/hero/"]')).toHaveLength(1)
   })
 
-  it('se a fotografia do hero falhar, a ilustração original entra como substituta (decorativa)', () => {
+  it('se a fotografia do hero falhar, entra a anterior como substituta e, se também falhar, a ilustração original (decorativa)', () => {
     renderHome()
     const hero = document.getElementById('inicio')!
-    fireEvent.error(within(hero).getByRole('img', { name: HERO_PHOTO.alt }))
+    fireEvent.error(within(hero).getByRole('img', { name: HERO_PHOTOS[0].alt }))
+    const fallback = within(hero).getByRole('img', { name: HERO_FALLBACK_PHOTO.alt })
+    expect(fallback.getAttribute('src')).toBe(`${BASE}images/hero/rio-de-janeiro-hero-1920.webp`)
+    // O crédito acompanha a imagem exibida.
+    expect(screen.getByTestId('hero-photo-credit')).toHaveTextContent(`Foto da capa: ${HERO_FALLBACK_PHOTO.author}`)
+    fireEvent.error(fallback)
     expect(within(hero).queryByRole('img')).toBeNull()
     expect(hero.querySelectorAll('svg[aria-hidden="true"]').length).toBeGreaterThan(0)
   })
@@ -138,16 +152,23 @@ describe('Nova home — estrutura e acessibilidade', () => {
     expect(within(rio).getByRole('img', { name: DESTINATION_PHOTOS['rio-de-janeiro'].alt })).toBeInTheDocument()
   })
 
-  it('todas as fotografias têm crédito com fotógrafo e página de origem, exibidos no rodapé', () => {
+  it('todas as fotografias têm crédito com autor e página de origem, exibidos no rodapé; o da Hero corresponde à imagem exibida', () => {
     renderHome()
     const footer = screen.getByRole('contentinfo')
-    for (const photo of [HERO_PHOTO, ...Object.values(DESTINATION_PHOTOS)]) {
+    for (const photo of Object.values(DESTINATION_PHOTOS)) {
       const link = within(footer).getByRole('link', { name: photo.credit.photographer })
       expect(link).toHaveAttribute('href', photo.credit.sourceUrl)
       expect(link).toHaveAttribute('rel', 'noopener noreferrer')
       expect(photo.credit.photographerUrl.startsWith('https://unsplash.com/@')).toBe(true)
     }
     expect(within(footer).getByRole('link', { name: 'Unsplash' })).toHaveAttribute('href', 'https://unsplash.com/license')
+    // Hero (sorteio fixado na primeira): Rio, Wikimedia Commons, CC BY-SA 3.0, com a adaptação registrada.
+    const heroCredit = within(footer).getByTestId('hero-photo-credit')
+    const chosen = HERO_PHOTOS[0]
+    expect(heroCredit).toHaveTextContent(`Foto da capa: ${chosen.author}`)
+    expect(within(heroCredit).getByRole('link', { name: chosen.sourceName })).toHaveAttribute('href', chosen.sourceUrl)
+    expect(within(heroCredit).getByRole('link', { name: chosen.license.name })).toHaveAttribute('href', chosen.license.url)
+    expect(heroCredit).toHaveTextContent(/recortada|WebP/i)
   })
 
   it('a ordem da página segue a referência: hero, destinos, formulário e roteiros salvos', () => {

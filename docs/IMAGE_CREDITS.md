@@ -141,3 +141,42 @@ créditos acessíveis no roteiro ("Créditos das fotografias") e nota no rodapé
 - **Imagens do Ministério do Turismo (MTur)** marcadas como "domínio público" no Commons, mas com "crédito obrigatório" na descrição,
   foram descartadas por ambiguidade.
 - **Lagoa da Conceição**: crédito original do Panoramio (arquivo recuperado pelo Commons); qualidade modesta.
+
+## Cabeçalho do roteiro e Hero da home (M7 e M7.2)
+
+O cabeçalho da página do roteiro (`src/data/headerPhotos.ts`, chave = ID do destino; sem entrada, cabeçalho azul) e a Hero da home
+(`src/data/heroPhotos.ts`, uma foto por visita) usam estas fotografias. A de **Rio** e a de **Florianópolis** são as mesmas nos dois lugares
+(atribuição compartilhada). Créditos acessíveis: no próprio cabeçalho do roteiro e, na home, no rodapé ("Foto da capa", sempre igual à imagem exibida).
+
+| Uso | Arquivos em `public/images/` | Autor | Fonte (página original) | Licença | Alterações |
+| --- | --- | --- | --- | --- | --- |
+| Rio — cabeçalho e Hero | `headers/rio-de-janeiro-corcovado-640|1200.webp`; `hero/rio-de-janeiro-corcovado-960|1920.webp` | Artyominc | https://commons.wikimedia.org/wiki/File:Christ_on_Corcovado_mountain.JPG | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) | arquivo do Commons já recortado/corrigido por outro usuário; aqui, recorte 16:9 e WebP (qualidade 74–76) |
+| Florianópolis — cabeçalho e Hero | `headers/florianopolis-ponte-640|1200.webp`; `hero/florianopolis-ponte-960|1920.webp` | Rodneycruz | https://commons.wikimedia.org/wiki/File:Cores_ap%C3%B3s_o_p%C3%B4r-do-sol.JPG | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | recorte 16:9 e WebP (qualidade 74–76) |
+| Lisboa — cabeçalho | `destinations/lisboa-640|1200.webp` (existentes) | Sarah Markstaller | https://unsplash.com/photos/a-yellow-tram-travels-down-a-street-in-lisbon-r_ShROkN3E8 | [Unsplash License](https://unsplash.com/license) | já recortada e em WebP (V1-T2.1) |
+| Lisboa — Hero | `hero/lisboa-bonde-960|1920.webp` | Sarah Markstaller | a mesma página do Unsplash | [Unsplash License](https://unsplash.com/license) | a mesma foto, obtida do CDN público do Unsplash em 960 e 1920 px (recorte 16:9, `fm=webp`, qualidade 50/42) |
+| Hero — substituta técnica | `hero/rio-de-janeiro-hero-960|1920.webp` (existentes) | Mauro Lima | https://unsplash.com/photos/gcj__gzMick | [Unsplash License](https://unsplash.com/license) | já recortada e em WebP (V1-T2.1); só aparece se a foto escolhida falhar |
+
+### Verificação de autoria e licença (2026-10-13)
+- **Rio — "Christ on Corcovado mountain.JPG"** (a ambiguidade apontada no M7.1 foi **resolvida**). Histórico do arquivo no Commons: o usuário **Artyominc** enviou
+  o original em 2010-02-19, com o modelo `{{self|cc-by-sa-3.0|GFDL}}` (obra própria, **CC BY-SA 3.0** e GFDL) e `Author=[[User:Artyominc]]`; a versão atual
+  (3702×2088) foi **recortada, girada e corrigida por Piisamson** (2010-11-12) e reenviada por Chronus (2012-12-14), mantendo a licença — é obra derivada sob a mesma licença.
+  O campo "fonte" traz `{{Artyom Sharbatyan}}`, um **modelo que não existe** (daí o "crédito" estranho exibido pela API): é o nome que acompanha o autor, não outro autor, mas
+  **não foi possível confirmar** que "Artyom Sharbatyan" é a mesma pessoa. Decisão: o crédito exibido segue o **campo "autor" (Artyominc)**, com a licença CC BY-SA 3.0, o link da página e
+  a menção de que o arquivo já tinha sido recortado e corrigido. Ressalvas: a autoria "obra própria" é declaração do uploader (não verificada de forma independente); GFDL ignorada (usamos só CC BY-SA 3.0);
+  a atribuição segue o campo do autor e pode ser ajustada se o autor indicar outra forma. Imagem aberta e conferida: estátua, Pão de Açúcar, Botafogo e baía; pessoas minúsculas ou ausentes.
+- **Florianópolis — "Cores após o pôr-do-sol.JPG"**: enviado por **Rodneycruz** em 2015-09-07 (UploadWizard, campanha Wiki Loves Monuments 2015 Brasil), `{{own}}` (obra própria),
+  `{{self|cc-by-sa-4.0}}`, descrição original "Ponte Hercílio Luz" e identificador do patrimônio (`Cultural Heritage Brazil 1137`); data 2014-12-27 20:17. A versão atual foi reenviada
+  em 2022-01-05 por R8cocin8 (mesmas dimensões 5184×3456, tamanho menor — provável otimização, **sem registro do motivo conferido**). Imagem aberta e conferida (ponte iluminada ao crepúsculo).
+  A descrição atual do arquivo é genérica (modelo de monumento); a identificação se apoia na descrição original, no identificador do patrimônio e na imagem.
+- **Lisboa**: a mesma fotografia já usada no card (Unsplash License); a página do Unsplash passou a bloquear o acesso automatizado (HTTP 401), então a **licença foi reconfirmada só pelo registro anterior**
+  (2026-10-12) e o arquivo foi obtido do CDN público a partir do identificador já documentado.
+- **Direitos de terceiros**: a licença da foto não libera obras em espaço público (a estátua do Cristo, a ponte), marcas nem pessoas; o Commons as hospeda amparado na liberdade de panorama brasileira
+  (Lei 9.610/98, art. 48), **sem revisão jurídica**. BY-SA: as versões derivadas (WebP) permanecem sob a mesma licença; isso não se estende ao código.
+- **Descartadas/substituídas**: a fotografia do Cristo Redentor de Chensiyuan (R1, CC BY-SA 4.0), usada provisoriamente no M7 (não commitado), **não foi aprovada** e seus WebP foram removidos;
+  a fotografia anterior do cabeçalho de Florianópolis (Henrique Pereira) continua apenas no card da home.
+
+### Pesos (WebP)
+Cabeçalhos: 24–110 KB (640/1200 px). Hero: 41–235 KB (960/1920 px); só **uma** é baixada por visita.
+
+### Pendências
+Sem revisão jurídica; identidade "Artyom Sharbatyan" × "Artyominc" não confirmada; licença do Unsplash de Lisboa reconfirmada sem acesso à página; novos destinos exigem nova verificação.

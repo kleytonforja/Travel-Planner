@@ -1,9 +1,76 @@
 import { Bus, CalendarDays, Gauge, MapPin, Sparkles, Wallet } from 'lucide-react'
+import { useState } from 'react'
 
+import { HEADER_PHOTOS } from '../data/headerPhotos'
 import { INTEREST_LABELS, STYLE_LABELS } from '../data/labels'
 import type { Destination, Itinerary } from '../types'
 import { formatCurrency } from '../utils/format'
 import { TRIP_PACES } from '../utils/interests'
+
+function DestinationHeader({ destination }: { destination: Destination }) {
+  const photo = HEADER_PHOTOS[destination.id]
+  const [failed, setFailed] = useState(false)
+
+  const title = (
+    <>
+      <p className="flex items-center gap-2 text-sm font-medium text-white">
+        <MapPin className="h-4 w-4" aria-hidden="true" />
+        {destination.country}
+      </p>
+      <h2 id="resumo-viagem" className="mt-1 text-3xl font-bold tracking-tight">
+        {destination.name}
+      </h2>
+    </>
+  )
+
+  // Sem fotografia (ou se ela falhar): o cabeçalho azul original.
+  if (!photo || failed) {
+    return (
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-white sm:px-8">
+        {title}
+        <p className="mt-2 max-w-2xl text-sm text-white">{destination.description}</p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {/* Altura fixa: a foto não desloca o layout ao carregar. */}
+      <div className="relative h-44 bg-slate-800 sm:h-56 lg:h-64">
+        <img
+          src={photo.small}
+          srcSet={`${photo.small} ${photo.smallWidth}w, ${photo.large} ${photo.largeWidth}w`}
+          sizes="(min-width: 1152px) 1152px, 100vw"
+          width={photo.width}
+          height={photo.height}
+          alt={photo.alt}
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          onError={() => setFailed(true)}
+          style={{ objectPosition: photo.objectPosition }}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/10" />
+        <div className="absolute inset-x-0 bottom-0 px-6 pb-5 text-white sm:px-8">{title}</div>
+      </div>
+      <div className="px-6 pt-4 sm:px-8">
+        <p className="max-w-2xl text-sm text-slate-700">{destination.description}</p>
+        <p className="mt-2 text-xs text-slate-600" data-testid="header-photo-credit">
+          Foto: {photo.author} (
+          <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline focus-ring">
+            {photo.sourceName}
+          </a>
+          ), licença{' '}
+          <a href={photo.license.url} target="_blank" rel="noopener noreferrer" className="underline focus-ring">
+            {photo.license.name}
+          </a>
+          . {photo.changes}
+        </p>
+      </div>
+    </>
+  )
+}
 
 interface ItinerarySummaryProps {
   itinerary: Itinerary
@@ -25,21 +92,7 @@ export function ItinerarySummary({
   return (
     <section aria-labelledby="resumo-viagem">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-white sm:px-8">
-          <p className="flex items-center gap-2 text-sm font-medium text-white">
-            <MapPin className="h-4 w-4" aria-hidden="true" />
-            {destination.country}
-          </p>
-          <h2
-            id="resumo-viagem"
-            className="mt-1 text-3xl font-bold tracking-tight"
-          >
-            {destination.name}
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm text-white">
-            {destination.description}
-          </p>
-        </div>
+        <DestinationHeader destination={destination} />
 
         <dl
           className={`grid gap-4 px-6 py-6 sm:grid-cols-2 sm:px-8 ${input.pace ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}

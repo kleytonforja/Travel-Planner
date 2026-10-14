@@ -9,11 +9,11 @@
 
 | Campo               | Valor                                                                  |
 | ------------------- | ---------------------------------------------------------------------- |
-| Tarefa ativa        | **M6** — validação final do MVP. Anteriores: M5.5 (commit `4fd1f07`), M5.4 (curadoria, no mesmo commit), M5.3 (commit `5a9688b`), M5.2 (pesquisa), M5.1 (commit `b52e377`), M4.5 (commit `c97b7ef`), M4.4 (commit `d8861ce`), M4.3 (commit `9478c10`), M4.2 (commit `b828af7`), M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
+| Tarefa ativa        | **M7.2** — fotografias aprovadas e Hero dinâmica. Anteriores: M7.1 (curadoria), M7 (cabeçalho, sem commit), M6 (commit `6a97da9`), M5.5 (commit `4fd1f07`), M5.4 (curadoria, no mesmo commit), M5.3 (commit `5a9688b`), M5.2 (pesquisa), M5.1 (commit `b52e377`), M4.5 (commit `c97b7ef`), M4.4 (commit `d8861ce`), M4.3 (commit `9478c10`), M4.2 (commit `b828af7`), M3 (commit `b9737f1`), M2.6 (commit `0893712`), M2.5 (commit `eda5188`), M2.4 (commit `0338fe8`), M2.3 (commit `7ed1ef0`), M2.2 (commit `b5b45af`), V1-T3.8 (commit `d63812f`), V1-T3.7 (commit `a7ba23f`), V1-T3.6 (commit `0d6bcc5`), V1-T3.5 (commit `b8ccfe8`), V1-T3.4 (commit `6518f12`), V1-T3.3 (commit `a36d506`), V1-T3.2 (commit `3f5d9e2`), V1-T3.1 (commit `9f18f51`), V1-T2/T2.1/T2.2 (commit `d6d70d0`) e V1-T1 (`2a3580c`) |
 | Agente responsável  | Claude Code (Sonnet 5.5)                                               |
 | Arquivos previstos  | `src/components/planning/*` (novo), `src/pages/PlanningPage.tsx` (novo), `src/utils/destinationSearch.ts` (novo), `src/App.tsx`, `src/pages/HomePage.tsx`, `src/components/Hero.tsx`, `src/components/ui/ProgressSteps.tsx`, `src/tests/{planningFlow,destinationSearch}.test.tsx` (novos), `PROJECT.md`, `ROADMAP.md`, `DECISIONS.md` (D32), `TASKS.md` |
-| Status              | ✅ **M6 concluído em 2026-10-13** (ver "Relatório do M6"): MVP validado de ponta a ponta, **sem P0 e sem P1**; 4 itens P2; sem alteração de código; **sem push/deploy** |
-| Próximo checkpoint  | Decisão do usuário sobre a publicação (push/deploy) e sobre o risco jurídico das fotografias; itens P2 do "Relatório do M6" depois. |
+| Status              | ✅ **M7.2 implementado e validado localmente** em 2026-10-13 (ver "Relatório do M7.2"); **M7, M7.1 e M7.2 ainda sem commit** (aguardam autorização); sem push/deploy |
+| Próximo checkpoint  | Autorização do commit do M7/M7.1/M7.2; **próximas fases: avaliação comercial, monetização, expansão gradual do catálogo e avaliação da Claude Skills Founder** (ver `ROADMAP.md`, "Próximas fases"). |
 
 > Registro anterior da fila (C5-T3/C5-T4, preservado): importação JSON e favicon concluídos, commits `2c883f2` e `bb441d4`.
 
@@ -2323,3 +2323,78 @@ alerta genérico e o estado local que a condicionava; ver relatório ao final.
   créditos atuais **aceitando o risco jurídico** ou aguardar a revisão (alternativa de baixo custo: remover as entradas de
   `ACTIVITY_PHOTOS`, que volta aos placeholders sem outra mudança); (3) após o deploy, conferir a URL do GitHub Pages (imagens com o caminho
   base `/Travel-Planner/` e créditos) e a execução do workflow.
+
+## Relatório do M7 — cabeçalho fotográfico dos roteiros (2026-10-13)
+
+- **Implementado** (D54): `src/data/headerPhotos.ts` (mapa por ID do destino); `ItinerarySummary` ganhou `DestinationHeader` (foto com degradê,
+  país e nome; descrição e crédito abaixo; fallback azul sem foto ou em `onError`). Rio: **nova** fotografia do Cristo Redentor
+  (Chensiyuan, CC BY-SA 4.0; licença e autoria reconferidas na página do arquivo; original baixado e inspecionado; WebP 640/1200 px,
+  29/90 KB). Florianópolis e Lisboa: fotos existentes (Unsplash, 1200×675). Resto do roteiro, motor, catálogo, armazenamento e JSON intocados.
+- **Testes**: `itineraryHeaderPhoto.test.tsx` (8: foto, nome, país e créditos corretos por destino, tamanho reservado/srcSet/prioridade,
+  conteúdo preservado, fallback sem entrada e com erro, arquivos e pesos, IDs do catálogo).
+- **Chromium** (`m7`): 20/20 — 3 destinos × 375/768/1366/1920 px (foto correta, faixa 176/224/256 px, título branco com contraste real de 6,6 a
+  13 contra o branco, sem overflow), sem salto de layout (833 → 833 px com a imagem atrasada em 1,5 s), imagem bloqueada → cabeçalho azul,
+  armazenamento e exportação v2 sem campos de foto, roteiro salvo reaberto e importado com a foto, links de crédito pelo teclado, console limpo.
+- **Registros de planejamento** (sem implementação, sem instalar skills, sem tocar na biblioteca global): próxima fase **avaliação
+  comercial e monetização**; **expansão gradual do catálogo**; **avaliação da Claude Skills Founder** para a Skill Library global.
+- **Riscos**: sem revisão jurídica; a foto do Rio exige atribuição e a mesma licença na versão derivada; a foto de Florianópolis não nomeia a Ponte
+  Hercílio Luz (alt genérico); a foto de Lisboa de 1200 px pesa 248 KB (no celular usa-se a de 640 px); só Chromium.
+
+## Relatório do M7.1 — curadoria visual e planejamento da Hero dinâmica (2026-10-13)
+
+- **Estado preservado**: o trabalho do M7 (cabeçalho fotográfico) está intacto e **sem commit** (`headerPhotos.ts`, `ItinerarySummary.tsx`, WebP do Rio, testes e docs).
+  Nenhum componente, foto existente, motor, catálogo ou JSON foi tocado; nada foi baixado para o projeto e nada foi instalado.
+- **Hero hoje**: `Hero` → `HeroPhoto` (`ui/photos.tsx`) mostra **uma foto fixa** (`HERO_PHOTO`, Rio ao pôr do sol, Mauro Lima, Unsplash; `public/images/hero/*-960|1920.webp`),
+  `fetchPriority="high"`, créditos no rodapé (`PHOTO_CREDITS`). Não há alternância (confirmado: é a causa do que o usuário viu).
+- **Método**: API do Commons (licença, autor, resolução, descrição, categorias e GPS lidos por arquivo) e miniaturas de até 1280 px, **só no scratchpad**, para a
+  inspeção e a prévia. Página comparativa (miniaturas + prévia do cabeçalho em desktop e celular): `scratchpad/m71/curadoria.html` (arquivo local; não faz parte do repositório).
+- **Candidatas** (links = páginas do Wikimedia Commons; todas CC com atribuição; uso comercial permitido pela licença; BY-SA exige a mesma licença na versão derivada):
+
+| # | Destino | Foto (autor) | Licença | Resolução | Composição / risco principal | Avaliação |
+| --- | --- | --- | --- | --- | --- | --- |
+| R1 | Rio | [1 cristor redentor 2014](https://commons.wikimedia.org/wiki/File:1_cristor_redentor_2014.jpg) (Chensiyuan) | CC BY-SA 4.0 | 6432×4300 | Cristo aéreo, luz dourada; já no M7; pessoas minúsculas | **Recomendada** (cabeçalho e Hero) |
+| R2 | Rio | [Christ on Corcovado mountain](https://commons.wikimedia.org/wiki/File:Christ_on_Corcovado_mountain.JPG) (Artyominc) | CC BY-SA 3.0 | 3702×2088 | Cristo + Pão de Açúcar, céu azul; crédito do arquivo ambíguo ("Template:Artyom Sharbatyan") | Boa para a Hero |
+| R3 | Rio | [Christ the Redeemer - From Above](https://commons.wikimedia.org/wiki/File:Christ_the_Redeemer_-_From_Above.jpg) (A. C. Salem e Silva) | CC BY-SA 3.0 | 3659×1672 | zenital; multidão na plataforma; 2,2:1 | Opcional |
+| F1 | Florianópolis | [Hercilio Luz.jpg](https://commons.wikimedia.org/wiki/File:Hercilio_Luz.jpg) (Rodrigo Graeff) | CC BY 2.0 | 5184×3456 | pôr do sol com a ponte em silhueta; foto de 2011 (ponte antes da restauração) | **Recomendada** (cabeçalho e Hero) |
+| F2 | Florianópolis | [Cores após o pôr-do-sol](https://commons.wikimedia.org/wiki/File:Cores_ap%C3%B3s_o_p%C3%B4r-do-sol.JPG) (Rodneycruz) | CC BY-SA 4.0 | 5184×3456 | ponte iluminada, céu roxo; descrição genérica (WLM) | Alternativa para a Hero |
+| F3 | Florianópolis | [Ponte Hercílio Luz FREITASFOTOS](https://commons.wikimedia.org/wiki/File:Ponte_Herc%C3%ADlio_Luz_FREITASFOTOS.jpg) (FREITASFOTOS) | CC BY-SA 3.0 | 5760×3840 | noturna, topo preto | Não recomendada |
+| L1 | Lisboa | [Panoramic Lisbon Cityscape … at Dusk](https://commons.wikimedia.org/wiki/File:Panoramic_Lisbon_Cityscape_from_Miradouro_da_Senhora_do_Monte_at_Dusk_(54715110886).jpg) (Dale Cruse) | CC BY 4.0 | 11656×3279 | cidade histórica e castelo; proporção 3,6:1 ideal para a faixa; 17:48 (não é pôr do sol) | **Recomendada** (cabeçalho) |
+| L2 | Lisboa | [Alfama Rooftops and Tagus River View](https://commons.wikimedia.org/wiki/File:Alfama_Rooftops_and_Tagus_River_View,_Lisbon_(54733828355).jpg) (Dale Cruse) | CC BY 4.0 | 11656×6556 | telhados e Tejo, luz da manhã | Boa para a Hero |
+| L3 | Lisboa | [Sunset by the river Tagus (36202692782)](https://commons.wikimedia.org/wiki/File:Sunset_by_the_river_Tagus_(36202692782).jpg) (Maria Eklind) | CC BY-SA 2.0 | 5982×3764 | pôr do sol com a Ponte 25 de Abril, sem o casario; obra moderna (liberdade de panorama em Portugal não verificada) | Alto impacto; só Hero |
+
+- **Lacunas (não foi encontrado)**: (1) Florianópolis — **nenhuma fotografia aérea panorâmica** da ponte com baía e cidade entre as imagens livres do Commons (as aéreas
+  achadas são de janela de avião, sem a ponte); (2) Lisboa — **nenhum panorama da cidade histórica com luz dourada de fim de tarde**. O Unsplash/Pexels não permitem busca verificável
+  por este fluxo; uma aérea licenciada exigiria outra fonte (ex.: acervo contratado) ou autorização do fotógrafo.
+- **Recomendação por destino** (cabeçalho do roteiro): **Rio R1** (já incorporada), **Florianópolis F1** (maior impacto, licença CC BY 2.0 simples) e **Lisboa L1** (cidade histórica,
+  proporção da faixa). **Nenhuma foi selecionada definitivamente**: aguardam a aprovação do usuário.
+- **Hero dinâmica — proposta mínima** (não implementada): (a) **lista** `HERO_PHOTOS` (id, destino, 960/1920, alt, `objectPosition`, autor, fonte, licença) em `src/data/photos.ts`
+  (a foto atual vira o primeiro item); (b) **sorteio uma vez por carregamento da página**, evitando a anterior: `pickHeroPhoto(lista, ultimoId, aleatorio)` em `src/utils/heroPhoto.ts`,
+  com o último id em `localStorage` (chave própria, em `try/catch`; sem armazenamento, sorteia entre todas); (c) o resultado fica **memorizado no módulo**, então a imagem é estável durante a
+  navegação (home ↔ planejamento ↔ roteiro) e só muda na próxima visita; (d) **sem carrossel**, sem temporizador, sem pré-carregar as outras (baixa só a escolhida, com `fetchPriority="high"`);
+  (e) `Hero` passa a ler a foto escolhida; `HeroPhoto` recebe a foto por prop; **rodapé** lê a mesma escolha para mostrar o crédito correto (hoje fixo); (f) cada foto traz seu `objectPosition`
+  e o degradê atual de legibilidade é reavaliado por foto; (g) novo destino = nova entrada na lista (mais arquivos em `public/images/hero`), sem alterar componentes.
+- **Arquivos mínimos a alterar na Hero dinâmica**: `src/data/photos.ts`; `src/utils/heroPhoto.ts` (novo); `src/components/ui/photos.tsx`; `src/components/Hero.tsx`; `src/components/Footer.tsx`;
+  `public/images/hero/*` (novos WebP 960/1920, ≤ 220 KB cada o de 1920); `src/tests/homeRedesign.test.tsx` (ajuste) e `src/tests/heroPhoto.test.ts` (novo); `docs/IMAGE_CREDITS.md`, `DECISIONS.md`, `TASKS.md`.
+- **Critérios de aceite**: nunca a mesma foto em duas visitas seguidas (com ≥ 2 fotos); estável em toda a navegação da sessão; sem troca visível após o carregamento; sem erro com
+  `localStorage` indisponível; só 1 imagem de Hero baixada por visita; texto legível (contraste ≥ 4,5 medido nos pixels) em 375/768/1366/1920 px para **cada** foto; crédito do rodapé igual à foto exibida;
+  sem salto de layout; testes de seleção determinísticos (aleatório injetado); sem alterar motor, catálogo, armazenamento do roteiro ou JSON.
+- **Riscos**: peso do LCP (1920 px); créditos desatualizados se rodapé e Hero divergirem; legibilidade por foto (o degradê atual foi ajustado ao pôr do sol do Rio); licenças BY-SA nas versões derivadas;
+  direitos de terceiros (obras em espaço público, marcas, pessoas) **sem revisão jurídica**; sem fotos aéreas panorâmicas de Florianópolis e Lisboa; aprovação visual pendente.
+
+## Relatório do M7.2 — fotografias aprovadas e Hero dinâmica (2026-10-13)
+
+- **Aprovação do usuário** (M7.1): Rio **R2**, Florianópolis **F2**, Lisboa **mantida** (não substituir por L1/L2/L3). O trabalho do M7 foi preservado e ajustado (a R1 provisória foi retirada).
+- **Autoria e licença da R2 (bloqueio resolvido)**: histórico do arquivo no Commons — original enviado pelo próprio **Artyominc** (2010, `{{self|cc-by-sa-3.0|GFDL}}`, autor = Artyominc); versão atual recortada/corrigida por Piisamson
+  e reenviada em 2012; o "Template:Artyom Sharbatyan" é um modelo **inexistente** no campo fonte. Crédito = autor "Artyominc", **CC BY-SA 3.0**, com a menção da adaptação. Ressalvas: obra própria declarada pelo uploader
+  e identidade "Artyom Sharbatyan" não confirmadas (detalhes em `docs/IMAGE_CREDITS.md`). **F2**: obra própria de Rodneycruz (WLM 2015), CC BY-SA 4.0, descrição original "Ponte Hercílio Luz" e ID de patrimônio 1137.
+- **Implementado** (D55): `headerPhotos.ts` (Rio R2, Florianópolis F2, Lisboa mantida; atribuição compartilhada); `heroPhotos.ts` (biblioteca: Rio, Florianópolis, Lisboa + substituta técnica = foto anterior da Hero);
+  `utils/heroPhoto.ts` (sorteio sem repetir, `localStorage` em `try/catch`, escolha memorizada na visita, troca para a substituta em falha); `utils/useHeroPhoto.ts`; `HeroPhoto` (usa a foto da visita, 960/1920, só ela é baixada);
+  `Footer` (crédito "Foto da capa" só na home); `HomePage` (passa a foto). 14 WebP novos (cabeçalhos 640/1200 e Hero 960/1920 para Rio e Florianópolis; Hero de Lisboa 960/1920 do CDN público do Unsplash;
+  a licença do Unsplash de Lisboa foi reconfirmada só pelo registro anterior porque a página passou a bloquear o acesso automatizado). Motor, catálogo, armazenamento do roteiro, JSON e dependências intocados.
+- **Testes**: `heroPhoto.test.tsx` (14: biblioteca, arquivos e pesos, atribuição compartilhada com os cabeçalhos, seleção sem repetição em todas as combinações, cobertura das fotos, escolha estável na visita, registro da última foto,
+  `localStorage` bloqueado, falha → substituta, hook); `homeRedesign.test.tsx` e `itineraryHeaderPhoto.test.tsx` atualizados (sorteio fixado; substituta e ilustração em duas falhas; crédito da Hero igual à imagem).
+- **Chromium**: `m72` 20/20 — Hero com as 3 fotos × 375/768/1366/1920 px (foto correta, **um** arquivo de Hero baixado, crédito correto, contraste do texto e dos botões **medido nos pixels** ≥ 5,4 contra o branco, sem overflow);
+  mesma foto ao navegar home ↔ planejamento ↔ destino; **15 visitas seguidas sem repetição imediata e com as 3 fotos**; CLS 0,0000 com a imagem atrasada em 1,2 s; foto bloqueada → substituta com o crédito de Mauro Lima; ambas
+  bloqueadas → ilustração; `localStorage` bloqueado → Home funcional. Cabeçalhos (`m72h`) 20/20: 3 destinos × 4 larguras (foto, contraste, sem overflow), sem salto de layout, fallback azul, armazenamento e exportação v2 sem campos de foto, roteiro salvo e importado com foto, links de crédito pelo teclado.
+- **Registros de planejamento** (não implementados; nenhuma skill instalada; biblioteca global intocada): avaliação comercial, monetização, expansão gradual do catálogo e avaliação da Claude Skills Founder (ver `ROADMAP.md`, "Próximas fases").
+- **Riscos**: sem revisão jurídica; identidade do autor da R2 e licença do Unsplash de Lisboa (reconfirmada sem acesso à página); Hero de Lisboa com 235 KB em 1920 px; só Chromium; o contraste foi medido sem os efeitos de sobreposição das caixas de botão (conservador).

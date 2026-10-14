@@ -139,6 +139,9 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       Categorias dos destinos. Etapas 2 a 7 (Datas, Viajantes, Transporte,
       Interesses, Orçamento, Revisão) **pendentes**. Validada localmente;
       commit local feito, sem push.
+- [~] **M7.2 — fotografias aprovadas e Hero dinâmica** (D55): cabeçalhos com Rio (Corcovado) e Florianópolis (ponte) aprovados e Lisboa mantida; Hero da home
+      alterna entre visitas (sem repetir a anterior, estável na sessão, só uma foto baixada), créditos conforme a imagem exibida. Inclui o M7 (D54) e a curadoria do M7.1.
+      Validada localmente; **sem commit**.
 - [x] **M6 — validação final do MVP** (D53): matriz de 27 roteiros e regressões em Chromium, 879 testes; **sem P0/P1**; P2 registrados. Publicação
       recomendada, aguardando autorização do usuário (push/deploy) e decisão sobre o risco jurídico das fotos.
 - [x] **M5.5 — fotografias de Florianópolis e Lisboa** (D52, commit `4fd1f07`): 15 de 20 atrações com foto do Wikimedia Commons (8 + 7), 5 com
@@ -226,6 +229,15 @@ Conforme `docs/PERSISTENCE_REMEDIATION_PLAN.md`:
       transições suaves (D33).
 - [ ] V1-T3.3 e seguintes: demais etapas do planejamento e demais telas — aguardam
       autorização.
+
+## Próximas fases (decididas em 2026-10-13 — planejamento; nada disto foi implementado)
+
+1. **Avaliação comercial e monetização** — **próxima fase do projeto**: levantar público, proposta de valor, modelos de receita e custos
+   (incluindo licenças de imagem e dados), sem alterar o produto até haver decisão.
+2. **Expansão gradual do catálogo turístico** — novos destinos e atrações, um de cada vez, com curadoria de dados e de fotografias
+   (mesmo processo de verificação de licenças do M5) e entrada em `HEADER_PHOTOS`/`ACTIVITY_PHOTOS`.
+3. **Avaliação da "Claude Skills Founder" para a Skill Library global** — **somente avaliar**: nenhuma skill foi instalada e a biblioteca
+   global **não** foi alterada.
 
 ## Evolução futura (pós-MVP, fora do escopo atual — NÃO implementar agora)
 

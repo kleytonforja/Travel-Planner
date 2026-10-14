@@ -1,19 +1,23 @@
 import { useState } from 'react'
 
-import { DESTINATION_PHOTOS, HERO_PHOTO } from '../../data/photos'
+import { HERO_FALLBACK_PHOTO } from '../../data/heroPhotos'
+import { DESTINATION_PHOTOS } from '../../data/photos'
+import { reportHeroPhotoFailure } from '../../utils/heroPhoto'
+import { useHeroPhoto } from '../../utils/useHeroPhoto'
 import { DestinationScene, HeroScene } from './scenes'
 
 /**
- * Fotografia do hero: priorizada no carregamento, com dimensões declaradas
- * (sem deslocamento de layout) e, se falhar, a ilustração original como
- * substituta.
+ * Fotografia do hero: a escolhida para esta visita (`src/utils/heroPhoto.ts`), priorizada no carregamento
+ * (só ela é baixada), com dimensões declaradas (sem deslocamento de layout). Se falhar, entra a fotografia
+ * anterior da Hero como substituta técnica e, se esta também falhar, a ilustração original.
  */
 export function HeroPhoto() {
-  const [failed, setFailed] = useState(false)
-  if (failed) return <HeroScene />
-  const photo = HERO_PHOTO
+  const photo = useHeroPhoto()
+  const [sceneOnly, setSceneOnly] = useState(false)
+  if (sceneOnly) return <HeroScene />
   return (
     <img
+      key={photo.id}
       src={photo.large}
       srcSet={`${photo.small} ${photo.smallWidth}w, ${photo.large} ${photo.largeWidth}w`}
       sizes="100vw"
@@ -22,8 +26,9 @@ export function HeroPhoto() {
       alt={photo.alt}
       fetchPriority="high"
       decoding="async"
-      onError={() => setFailed(true)}
-      className="absolute inset-0 h-full w-full object-cover object-[60%_40%]"
+      onError={() => (photo.id === HERO_FALLBACK_PHOTO.id ? setSceneOnly(true) : reportHeroPhotoFailure())}
+      style={{ objectPosition: photo.objectPosition }}
+      className="absolute inset-0 h-full w-full object-cover"
     />
   )
 }

@@ -11,7 +11,8 @@ O MVP **não** utiliza inteligência artificial generativa nem serviços de
 preços em tempo real.
 
 > **Estado em 2026-10-13 (M6)**: o MVP foi validado de ponta a ponta (879 testes e QA em Chromium; sem P0/P1). A publicação depende
-> de autorização do usuário e de decisão sobre o risco jurídico das fotografias (ver `TASKS.md`, "Relatório do M6").
+> de autorização do usuário e de decisão sobre o risco jurídico das fotografias (ver `TASKS.md`, "Relatório do M6"). O cabeçalho do roteiro (M7) passou a mostrar a
+> fotografia do destino e a Hero da home alterna fotografias entre visitas (M7.2). Próxima fase: avaliação comercial e monetização (ver `ROADMAP.md`, "Próximas fases").
 
 ## Escopo do MVP
 

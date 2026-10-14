@@ -1400,3 +1400,33 @@ P0/P1/P2 (ver "Relatório do M6" em `TASKS.md`).
   sensibilidade a carga dos testes de fluxo foi **registrada, não mascarada** — os timeouts de 20 s **não** foram aumentados.
 - **Publicação**: recomendada, condicionada à autorização do `push` e à decisão sobre o risco jurídico das fotografias; reversão simples
   das fotos (esvaziar `ACTIVITY_PHOTOS`).
+
+## D54 — Cabeçalho fotográfico do roteiro (M7)
+
+**Decisão**: o cabeçalho da página do roteiro (`ItinerarySummary`) passa a exibir a fotografia do destino, escolhida por um **mapa por ID do
+destino** (`src/data/headerPhotos.ts`); destinos sem entrada mantêm o cabeçalho azul original. Sem alteração de motor, catálogo,
+armazenamento ou JSON — a foto é resolvida em tempo de exibição, então roteiros antigos, salvos e importados também a mostram.
+- **Layout**: faixa de altura fixa (176/224/256 px) com `<img>` `object-cover`, `width/height` declarados, `srcSet` 640/1200,
+  carregamento prioritário (está na primeira tela) e `object-position` por foto; degradê preto decorativo (`aria-hidden`) e título
+  branco sobre ele (contraste medido sobre os pixels reais: 6,6 a 13 contra o branco, mínimo exigido 4,5). Descrição, créditos e o
+  restante (duração, estilo, ritmo, orçamento, interesses e orientações) ficam abaixo, inalterados. Sem rotação automática.
+- **Fotos** (atualizado no M7.2, D55): Rio — Corcovado (Artyominc, CC BY-SA 3.0); Florianópolis — ponte ao crepúsculo (Rodneycruz, CC BY-SA 4.0); Lisboa — a
+  foto de card já existente (Unsplash). Fallback: sem entrada ou `onError` → cabeçalho azul.
+- **Créditos**: linha no cabeçalho com autor, fonte, licença (link) e alterações; `docs/IMAGE_CREDITS.md`. **Sem revisão jurídica**.
+- **Extensão**: novo destino = nova entrada em `HEADER_PHOTOS` + arquivos em `public/images`; o componente não muda.
+
+## D55 — Fotografias aprovadas nos cabeçalhos e Hero dinâmica (M7.2)
+
+**Decisão**: aplicar as fotografias aprovadas pelo usuário (Rio R2, Florianópolis F2, Lisboa mantida) nos cabeçalhos dos roteiros e criar uma Hero da home que
+**alterna entre visitas**, sem carrossel, sem tocar em motor, catálogo, armazenamento do roteiro ou JSON.
+- **Cabeçalhos**: `HEADER_PHOTOS` (D54) passa a Rio = "Christ on Corcovado mountain" e Florianópolis = "Cores após o pôr-do-sol"; Lisboa inalterada. A foto R1 do M7 foi retirada.
+- **Autoria da R2**: o histórico do arquivo mostra o original enviado pelo próprio Artyominc (obra própria, CC BY-SA 3.0 + GFDL) e uma versão derivada recortada/corrigida por Piisamson; o
+  "crédito" estranho vinha de um modelo inexistente no campo "fonte". Crédito exibido = campo "autor" (Artyominc), com a licença e a menção da adaptação; ressalvas em `docs/IMAGE_CREDITS.md`.
+- **Hero**: biblioteca `HERO_PHOTOS` (`src/data/heroPhotos.ts`) — Rio (Corcovado), Florianópolis (ponte), Lisboa (bonde) —, **uma foto por visita** (carregamento da página), escolhida em
+  `src/utils/heroPhoto.ts` **sem repetir a anterior**; o último id vai para `localStorage` (`travel-planner:hero-last`) sempre em `try/catch` e o app **não depende** dele (sem armazenamento, sorteia entre todas);
+  a escolha fica **memorizada no módulo**, então não muda na navegação home ↔ planejamento ↔ roteiro; **só a foto escolhida é baixada** (`fetchPriority="high"`, 960/1920 px).
+- **Falha**: a foto escolhida que não carrega é trocada pela **foto anterior da Hero** (Rio ao pôr do sol, Unsplash), mantida só como substituta técnica; se esta também falhar, a ilustração original. O crédito do
+  rodapé (`Footer heroPhoto`, só na home) acompanha a imagem exibida via `useHeroPhoto` (`useSyncExternalStore`).
+- **Extensão**: novo destino = nova entrada em `HERO_PHOTOS` e/ou `HEADER_PHOTOS` + WebP; nenhum componente muda.
+- **Legibilidade**: o degradê da Hero foi mantido; o contraste do texto e dos botões foi **medido sobre os pixels reais** nas três fotos e quatro larguras (mínimo 5,4 contra o branco; exigido 4,5).
+- **Riscos**: sem revisão jurídica; identidade do autor da R2 não confirmada; licença do Unsplash de Lisboa reconfirmada sem acesso à página (bloqueio de bot); Hero de Lisboa com 235 KB em 1920 px.

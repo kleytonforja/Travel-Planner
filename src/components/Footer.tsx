@@ -1,9 +1,9 @@
 import { Plane } from 'lucide-react'
 
-import { DESTINATION_PHOTOS, HERO_PHOTO } from '../data/photos'
+import type { HeroPhotoEntry } from '../data/heroPhotos'
+import { DESTINATION_PHOTOS } from '../data/photos'
 
 const PHOTO_CREDITS = [
-  { label: 'capa', credit: HERO_PHOTO.credit },
   { label: 'Florianópolis', credit: DESTINATION_PHOTOS.florianopolis.credit },
   { label: 'Rio de Janeiro', credit: DESTINATION_PHOTOS['rio-de-janeiro'].credit },
   { label: 'Lisboa', credit: DESTINATION_PHOTOS.lisboa.credit },
@@ -15,8 +15,13 @@ const PHOTO_CREDITS = [
  */
 const CURRENT_YEAR = new Date().getFullYear()
 
+interface FooterProps {
+  /** Fotografia da Hero exibida na home: o crédito aparece só onde a foto aparece (M7.2). */
+  heroPhoto?: HeroPhotoEntry
+}
+
 /** Rodapé da aplicação. */
-export function Footer() {
+export function Footer({ heroPhoto }: FooterProps = {}) {
   return (
     <footer className="border-t border-slate-200 bg-white">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -106,6 +111,19 @@ export function Footer() {
           ))}
           .
         </p>
+        {heroPhoto && (
+          <p className="mt-2 text-sm text-slate-500" data-testid="hero-photo-credit">
+            Foto da capa: {heroPhoto.author} (
+            <a href={heroPhoto.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline focus-ring">
+              {heroPhoto.sourceName}
+            </a>
+            ), licença{' '}
+            <a href={heroPhoto.license.url} target="_blank" rel="noopener noreferrer" className="underline focus-ring">
+              {heroPhoto.license.name}
+            </a>
+            . {heroPhoto.changes}
+          </p>
+        )}
         <p className="mt-2 text-sm text-slate-500">
           Fotografias das atrações (Rio de Janeiro, Florianópolis e Lisboa): Wikimedia Commons (licenças CC0, CC BY e CC BY-SA); os
           créditos de cada foto aparecem no roteiro.

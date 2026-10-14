@@ -25,6 +25,7 @@ import {
   type StorageLoadResult,
 } from '../services/itineraryStorage'
 import type { SavedItinerary } from '../types'
+import { useHeroPhoto } from '../utils/useHeroPhoto'
 
 interface HomePageProps {
   /** Chamado quando o usuário reabre um roteiro salvo. */
@@ -63,6 +64,8 @@ export function HomePage({
   onStartPlanning,
 }: HomePageProps) {
   const [destinationId, setDestinationId] = useState(initialDestinationId)
+  // Fotografia da Hero desta visita: o rodapé mostra o crédito exatamente da imagem exibida.
+  const heroPhoto = useHeroPhoto()
 
   function changeDestination(id: string) {
     setDestinationId(id)
@@ -712,7 +715,7 @@ export function HomePage({
         <HowItWorks />
       </main>
 
-      <Footer />
+      <Footer heroPhoto={heroPhoto} />
     </div>
   )
 }
